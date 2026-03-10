@@ -233,7 +233,7 @@ export default function DataRDTR() {
               </div>
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Peta RDTR Terintegrasi</h3>
+              <h3 className="font-semibold text-foreground mb-4">Peta RDTR Terintegrasi per Provinsi</h3>
               <IndonesiaMap data={provinsiData} mode="terintegrasi" />
             </div>
           </div>
