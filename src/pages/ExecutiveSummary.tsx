@@ -41,9 +41,9 @@ export default function ExecutiveSummary() {
 
       {/* KPI Cards Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard title="RDTR Per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" />
+        <KPICard title="RDTR per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" />
         <KPICard title="RDTR Terintegrasi per Provinsi" value={provinsiData.filter(p => p.terintegrasi > 0).length} icon={Map} gradient="emerald" subtitle="Provinsi" />
-        <KPICard title="RDTR Per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" />
+        <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" />
       </div>
 
       {/* Charts */}
