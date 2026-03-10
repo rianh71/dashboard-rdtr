@@ -27,29 +27,8 @@ function DashboardLayout() {
     }
   }, [dataUpdatedAt]);
 
-  const handleExportExcel = () => {
-    if (data) {
-      exportToExcel(data as unknown as Record<string, unknown>[], 'RDTR_All_Data');
-    }
-  };
 
-  const handleExportPDF = () => {
-    if (data) {
-      exportToPDF(
-        data as unknown as Record<string, unknown>[],
-        [
-          { header: 'No', dataKey: 'no' },
-          { header: 'Provinsi', dataKey: 'provinsi' },
-          { header: 'Kab/Kota', dataKey: 'kabKota' },
-          { header: 'Nama RDTR', dataKey: 'namaRDTR' },
-          { header: 'Cluster', dataKey: 'cluster' },
-          { header: 'Status', dataKey: 'tanggalIntegrasi' },
-        ],
-        'RDTR_All_Data',
-        'Data RDTR Nasional'
-      );
-    }
-  };
+
 
   return (
     <SidebarProvider>
