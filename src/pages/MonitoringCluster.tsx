@@ -45,7 +45,8 @@ export default function MonitoringCluster({ title, subtitle, data, isLoading, er
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+    <div className={hideHeader ? "space-y-4" : "p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto"}>
+      {!hideHeader && (
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-foreground">{title}</h2>
