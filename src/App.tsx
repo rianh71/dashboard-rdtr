@@ -3,10 +3,83 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/dashboard/AppSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { useRefreshAll, useMainData } from "@/hooks/useRDTRData";
+import { exportToExcel, exportToPDF } from "@/lib/export-utils";
+import Index from "./pages/Index";
+import DataRDTR from "./pages/DataRDTR";
+import ClusterDPage from "./pages/ClusterDPage";
+import ClusterEPage from "./pages/ClusterEPage";
+import ClusterFPage from "./pages/ClusterFPage";
+import NotFound from "./pages/NotFound";
+import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient();
+
+function DashboardLayout() {
+  const refreshAll = useRefreshAll();
+  const { data, isFetching, dataUpdatedAt } = useMainData();
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (dataUpdatedAt) {
+      setLastUpdated(new Date(dataUpdatedAt));
+    }
+  }, [dataUpdatedAt]);
+
+  const handleExportExcel = () => {
+    if (data) {
+      exportToExcel(data as unknown as Record<string, unknown>[], 'RDTR_All_Data');
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (data) {
+      exportToPDF(
+        data as unknown as Record<string, unknown>[],
+        [
+          { header: 'No', dataKey: 'no' },
+          { header: 'Provinsi', dataKey: 'provinsi' },
+          { header: 'Kab/Kota', dataKey: 'kabKota' },
+          { header: 'Nama RDTR', dataKey: 'namaRDTR' },
+          { header: 'Cluster', dataKey: 'cluster' },
+          { header: 'Status', dataKey: 'tanggalIntegrasi' },
+        ],
+        'RDTR_All_Data',
+        'Data RDTR Nasional'
+      );
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <DashboardHeader
+            lastUpdated={lastUpdated}
+            onRefresh={refreshAll}
+            isRefreshing={isFetching}
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+          />
+          <main className="flex-1 overflow-auto">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/data-rdtr" element={<DataRDTR />} />
+              <Route path="/cluster-d" element={<ClusterDPage />} />
+              <Route path="/cluster-e" element={<ClusterEPage />} />
+              <Route path="/cluster-f" element={<ClusterFPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -14,11 +87,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <DashboardLayout />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
