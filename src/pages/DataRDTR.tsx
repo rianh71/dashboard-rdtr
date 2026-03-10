@@ -99,6 +99,16 @@ export default function DataRDTR() {
           {/* Filters */}
           <div className="flex flex-wrap gap-3 items-end">
             <div className="w-40">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
+              <Select value={filterWilayah} onValueChange={setFilterWilayah}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua</SelectItem>
+                  {wilayahOptions.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-40">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Pulau</label>
               <Select value={filterPulau} onValueChange={setFilterPulau}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
