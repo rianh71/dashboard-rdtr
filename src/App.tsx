@@ -10,9 +10,7 @@ import { useRefreshAll, useMainData } from "@/hooks/useRDTRData";
 import { exportToExcel, exportToPDF } from "@/lib/export-utils";
 import Index from "./pages/Index";
 import DataRDTR from "./pages/DataRDTR";
-import ClusterDPage from "./pages/ClusterDPage";
-import ClusterEPage from "./pages/ClusterEPage";
-import ClusterFPage from "./pages/ClusterFPage";
+import MonitoringRDTR from "./pages/MonitoringRDTR";
 import NotFound from "./pages/NotFound";
 import { useState, useEffect } from "react";
 
@@ -69,9 +67,7 @@ function DashboardLayout() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/data-rdtr" element={<DataRDTR />} />
-              <Route path="/cluster-d" element={<ClusterDPage />} />
-              <Route path="/cluster-e" element={<ClusterEPage />} />
-              <Route path="/cluster-f" element={<ClusterFPage />} />
+              <Route path="/monitoring" element={<MonitoringRDTR />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

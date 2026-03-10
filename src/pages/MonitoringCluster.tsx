@@ -12,9 +12,10 @@ interface MonitoringClusterProps {
   data: MonitoringRecord[] | undefined;
   isLoading: boolean;
   error: Error | null;
+  hideHeader?: boolean;
 }
 
-export default function MonitoringCluster({ title, subtitle, data, isLoading, error }: MonitoringClusterProps) {
+export default function MonitoringCluster({ title, subtitle, data, isLoading, error, hideHeader }: MonitoringClusterProps) {
   const columns = useMemo(() => {
     if (!data || data.length === 0) return [];
     const keys = Object.keys(data[0]);
@@ -44,7 +45,8 @@ export default function MonitoringCluster({ title, subtitle, data, isLoading, er
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+    <div className={hideHeader ? "space-y-4" : "p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto"}>
+      {!hideHeader && (
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-foreground">{title}</h2>
@@ -59,6 +61,18 @@ export default function MonitoringCluster({ title, subtitle, data, isLoading, er
           </Button>
         </div>
       </div>
+      )}
+
+      {hideHeader && (
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" /> PDF
+          </Button>
+        </div>
+      )}
 
       <div className="bg-card rounded-xl card-shadow p-1">
         <DataTable

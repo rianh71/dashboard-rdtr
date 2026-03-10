@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface ProvinceData {
   provinsi: string;
@@ -11,155 +13,126 @@ interface IndonesiaMapProps {
   mode?: 'total' | 'terintegrasi';
 }
 
-// Simplified Indonesia province coordinates for visualization
-const PROVINCE_COORDS: Record<string, [number, number]> = {
-  'Aceh': [5.55, 95.32],
-  'Sumatera Utara': [2.59, 98.71],
-  'Sumatera Barat': [-0.74, 100.80],
-  'Riau': [0.51, 101.45],
-  'Jambi': [-1.61, 103.61],
-  'Sumatera Selatan': [-3.32, 104.91],
-  'Bengkulu': [-3.80, 102.26],
-  'Lampung': [-4.56, 105.41],
-  'Bangka Belitung': [-2.74, 106.44],
-  'Kepulauan Riau': [1.07, 104.03],
-  'DKI Jakarta': [-6.21, 106.85],
-  'Jawa Barat': [-6.91, 107.61],
-  'Jawa Tengah': [-7.15, 110.14],
-  'DI Yogyakarta': [-7.87, 110.43],
-  'Jawa Timur': [-7.54, 112.24],
-  'Banten': [-6.41, 106.14],
-  'Bali': [-8.41, 115.19],
-  'Nusa Tenggara Barat': [-8.65, 117.36],
-  'Nusa Tenggara Timur': [-8.66, 121.08],
-  'Kalimantan Barat': [-0.13, 109.34],
-  'Kalimantan Tengah': [-1.49, 113.29],
-  'Kalimantan Selatan': [-3.09, 115.25],
-  'Kalimantan Timur': [1.17, 116.42],
-  'Kalimantan Utara': [3.07, 116.04],
-  'Sulawesi Utara': [0.62, 123.97],
-  'Sulawesi Tengah': [-1.43, 121.44],
-  'Sulawesi Selatan': [-3.67, 119.97],
-  'Sulawesi Tenggara': [-4.14, 122.17],
-  'Gorontalo': [0.54, 123.06],
-  'Sulawesi Barat': [-2.84, 119.23],
-  'Maluku': [-3.24, 130.14],
-  'Maluku Utara': [1.57, 127.81],
-  'Papua': [-4.27, 138.08],
-  'Papua Barat': [-1.34, 133.17],
-  'Papua Selatan': [-6.50, 139.50],
-  'Papua Tengah': [-3.70, 136.50],
-  'Papua Pegunungan': [-4.10, 138.90],
-  'Papua Barat Daya': [-2.00, 132.00],
+// Mapping from GeoJSON PROVINSI names to data province names
+const PROVINCE_NAME_MAP: Record<string, string> = {
+  'Dki Jakarta': 'DKI Jakarta',
+  'Di Yogyakarta': 'DI Yogyakarta',
+  'Kepulauan Bangka Belitung': 'Bangka Belitung',
 };
 
+function normalizeProvince(name: string): string {
+  return PROVINCE_NAME_MAP[name] || name;
+}
+
 function getColor(value: number, max: number): string {
-  if (value === 0) return 'hsl(210, 20%, 92%)';
+  if (value === 0) return '#e2e8f0';
   const intensity = Math.min(value / Math.max(max, 1), 1);
-  const lightness = 80 - intensity * 45;
-  return `hsl(215, 80%, ${lightness}%)`;
+  if (intensity < 0.25) return '#93c5fd';
+  if (intensity < 0.5) return '#3b82f6';
+  if (intensity < 0.75) return '#1d4ed8';
+  return '#1e3a8a';
 }
 
 export function IndonesiaMap({ data, mode = 'total' }: IndonesiaMapProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const geoLayerRef = useRef<L.GeoJSON | null>(null);
 
-  const maxVal = Math.max(...data.map(d => mode === 'total' ? d.total : d.terintegrasi), 1);
+  const dataMap = useMemo(() => {
+    const m = new Map<string, ProvinceData>();
+    data.forEach(d => m.set(d.provinsi, d));
+    return m;
+  }, [data]);
 
-  // Map bounds for Indonesia
-  const minLat = -11, maxLat = 6;
-  const minLon = 94, maxLon = 141;
-  const width = 800, height = 340;
+  const maxVal = useMemo(
+    () => Math.max(...data.map(d => mode === 'total' ? d.total : d.terintegrasi), 1),
+    [data, mode]
+  );
 
-  function toSVG(lat: number, lon: number): [number, number] {
-    const x = ((lon - minLon) / (maxLon - minLon)) * width;
-    const y = ((maxLat - lat) / (maxLat - minLat)) * height;
-    return [x, y];
-  }
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
 
-  const provinces = data.map(d => {
-    const coords = PROVINCE_COORDS[d.provinsi];
-    if (!coords) return null;
-    const [x, y] = toSVG(coords[0], coords[1]);
-    const value = mode === 'total' ? d.total : d.terintegrasi;
-    const radius = Math.max(6, Math.min(24, 6 + (value / maxVal) * 18));
-    return { ...d, x, y, value, radius };
-  }).filter(Boolean);
+    const map = L.map(mapContainerRef.current, {
+      center: [-2.5, 118],
+      zoom: 5,
+      minZoom: 4,
+      maxZoom: 8,
+      zoomControl: true,
+      attributionControl: false,
+      scrollWheelZoom: true,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+    }).addTo(map);
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (geoLayerRef.current) {
+      map.removeLayer(geoLayerRef.current);
+    }
+
+    fetch('/indonesia-provinces.geojson')
+      .then(r => r.json())
+      .then((geojson) => {
+        const layer = L.geoJSON(geojson, {
+          style: (feature) => {
+            const name = normalizeProvince(feature?.properties?.PROVINSI || '');
+            const d = dataMap.get(name);
+            const value = d ? (mode === 'total' ? d.total : d.terintegrasi) : 0;
+            return {
+              fillColor: getColor(value, maxVal),
+              weight: 1,
+              color: '#94a3b8',
+              fillOpacity: 0.8,
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const name = normalizeProvince(feature?.properties?.PROVINSI || '');
+            const d = dataMap.get(name);
+            const total = d?.total ?? 0;
+            const terintegrasi = d?.terintegrasi ?? 0;
+            layer.bindTooltip(
+              `<div class="text-xs font-semibold">${name}</div>
+               <div class="text-xs">Total RDTR: <b>${total}</b></div>
+               <div class="text-xs">Terintegrasi: <b>${terintegrasi}</b></div>`,
+              { sticky: true, className: 'leaflet-tooltip-custom' }
+            );
+          },
+        });
+        layer.addTo(map);
+        geoLayerRef.current = layer;
+      });
+  }, [dataMap, maxVal, mode]);
 
   return (
     <div className="relative w-full">
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-auto"
-        style={{ minHeight: 280 }}
-      >
-        {/* Background */}
-        <rect width={width} height={height} fill="hsl(210, 20%, 98%)" rx="8" />
-        
-        {/* Province bubbles */}
-        {provinces.map((p) => (
-          <g key={p!.provinsi}>
-            <circle
-              cx={p!.x}
-              cy={p!.y}
-              r={p!.radius}
-              fill={getColor(p!.value, maxVal)}
-              stroke="hsl(215, 80%, 50%)"
-              strokeWidth={1}
-              opacity={0.85}
-              className="cursor-pointer transition-all duration-200 hover:opacity-100"
-              onMouseEnter={(e) => {
-                const rect = svgRef.current?.getBoundingClientRect();
-                if (rect) {
-                  setTooltip({
-                    x: e.clientX - rect.left,
-                    y: e.clientY - rect.top - 10,
-                    content: `${p!.provinsi}\nTotal RDTR: ${p!.total}\nTerintegrasi: ${p!.terintegrasi}`,
-                  });
-                }
-              }}
-              onMouseLeave={() => setTooltip(null)}
-            />
-            {p!.value > 0 && p!.radius > 10 && (
-              <text
-                x={p!.x}
-                y={p!.y + 4}
-                textAnchor="middle"
-                fontSize={9}
-                fontWeight="bold"
-                fill="hsl(215, 80%, 25%)"
-                className="pointer-events-none"
-              >
-                {p!.value}
-              </text>
-            )}
-          </g>
-        ))}
-      </svg>
-
-      {/* Tooltip */}
-      {tooltip && (
-        <div
-          className="absolute pointer-events-none bg-foreground text-primary-foreground text-xs rounded-lg px-3 py-2 shadow-lg z-10 whitespace-pre-line"
-          style={{ left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -100%)' }}
-        >
-          {tooltip.content}
-        </div>
-      )}
-
-      {/* Legend */}
+      <div ref={mapContainerRef} className="w-full rounded-lg overflow-hidden" style={{ height: 400 }} />
       <div className="flex items-center gap-4 mt-3 justify-center">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <div className="w-3 h-3 rounded-full" style={{ background: 'hsl(210, 20%, 92%)' }} />
+          <div className="w-3 h-3 rounded" style={{ background: '#e2e8f0' }} />
           <span>0</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <div className="w-3 h-3 rounded-full" style={{ background: 'hsl(215, 80%, 65%)' }} />
+          <div className="w-3 h-3 rounded" style={{ background: '#93c5fd' }} />
           <span>Rendah</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <div className="w-3 h-3 rounded-full" style={{ background: 'hsl(215, 80%, 35%)' }} />
+          <div className="w-3 h-3 rounded" style={{ background: '#3b82f6' }} />
+          <span>Sedang</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="w-3 h-3 rounded" style={{ background: '#1e3a8a' }} />
           <span>Tinggi</span>
         </div>
       </div>
