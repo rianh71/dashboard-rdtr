@@ -8,9 +8,17 @@ interface ProvinceData {
   terintegrasi: number;
 }
 
+interface PulauData {
+  pulau: string;
+  jumlah: number;
+}
+
 interface IndonesiaMapProps {
   data: ProvinceData[];
   mode?: 'total' | 'terintegrasi';
+  pulauData?: PulauData[];
+  provinceToPulau?: Map<string, string>;
+  pulauMode?: boolean;
 }
 
 // Mapping from GeoJSON PROVINSI names to data province names
