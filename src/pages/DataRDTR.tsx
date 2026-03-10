@@ -260,17 +260,8 @@ export default function DataRDTR() {
               </table>
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Sebaran RDTR per Pulau</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={pulauData} dataKey="jumlah" nameKey="pulau" cx="50%" cy="50%" outerRadius={100} label={(entry) => `${entry.pulau}: ${entry.jumlah}`} labelLine fontSize={11}>
-                    {pulauData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <h3 className="font-semibold text-foreground mb-4">Peta RDTR per Pulau</h3>
+              <IndonesiaMap data={provinsiData} pulauData={pulauData} provinceToPulau={provinceToPulau} pulauMode={true} />
             </div>
           </div>
         </div>
