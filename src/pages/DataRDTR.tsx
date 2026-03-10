@@ -43,6 +43,7 @@ export default function DataRDTR() {
   const filtered = useMemo(() => {
     if (!data) return [];
     return data.filter(r => {
+      if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
       if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
