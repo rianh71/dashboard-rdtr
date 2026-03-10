@@ -183,7 +183,7 @@ export default function DataRDTR() {
           {/* Sebaran per Provinsi Table + Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Sebaran RDTR per Provinsi</h3>
+              <h3 className="font-semibold text-foreground mb-4">RDTR per Provinsi</h3>
               <div className="overflow-y-auto max-h-[400px]">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-card">
