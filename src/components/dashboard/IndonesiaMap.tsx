@@ -32,6 +32,16 @@ function normalizeProvince(name: string): string {
   return PROVINCE_NAME_MAP[name] || name;
 }
 
+const PULAU_COLORS: Record<string, string> = {
+  'Sumatera': '#2962FF',
+  'Jawa': '#00897B',
+  'Kalimantan': '#F57C00',
+  'Sulawesi': '#7B1FA2',
+  'Bali dan Nusa Tenggara': '#C62828',
+  'Maluku': '#00838F',
+  'Papua': '#558B2F',
+};
+
 function getColor(value: number, max: number): string {
   if (value === 0) return '#e2e8f0';
   const intensity = Math.min(value / Math.max(max, 1), 1);
@@ -39,6 +49,12 @@ function getColor(value: number, max: number): string {
   if (intensity < 0.5) return '#3b82f6';
   if (intensity < 0.75) return '#1d4ed8';
   return '#1e3a8a';
+}
+
+function getPulauColor(pulau: string, jumlah: number, maxVal: number): string {
+  if (!pulau || jumlah === 0) return '#e2e8f0';
+  const baseColor = PULAU_COLORS[pulau] || '#6D4C41';
+  return baseColor;
 }
 
 export function IndonesiaMap({ data, mode = 'total' }: IndonesiaMapProps) {
