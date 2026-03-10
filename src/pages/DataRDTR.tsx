@@ -32,8 +32,10 @@ export default function DataRDTR() {
   const [filterProvinsi, setFilterProvinsi] = useState('all');
   const [filterCluster, setFilterCluster] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterWilayah, setFilterWilayah] = useState('all');
   const [activeTab, setActiveTab] = useState<'table' | 'analytics'>('table');
 
+  const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
   const provinsiOptions = useMemo(() => data ? [...new Set(data.map(r => r.provinsi).filter(Boolean))].sort() : [], [data]);
   const clusterOptions = useMemo(() => data ? [...new Set(data.map(r => r.cluster).filter(Boolean))].sort() : [], [data]);
@@ -41,6 +43,7 @@ export default function DataRDTR() {
   const filtered = useMemo(() => {
     if (!data) return [];
     return data.filter(r => {
+      if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
       if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
@@ -48,7 +51,7 @@ export default function DataRDTR() {
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
       return true;
     });
-  }, [data, filterPulau, filterProvinsi, filterCluster, filterStatus]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterCluster, filterStatus]);
 
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
@@ -98,6 +101,16 @@ export default function DataRDTR() {
         <>
           {/* Filters */}
           <div className="flex flex-wrap gap-3 items-end">
+            <div className="w-40">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
+              <Select value={filterWilayah} onValueChange={setFilterWilayah}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua</SelectItem>
+                  {wilayahOptions.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="w-40">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Pulau</label>
               <Select value={filterPulau} onValueChange={setFilterPulau}>
