@@ -8,9 +8,8 @@ import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileSpreadsheet, FileText } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['#2962FF', '#00897B', '#F57C00', '#7B1FA2', '#C62828', '#00838F', '#558B2F', '#6D4C41'];
+
 
 const MAIN_COLUMNS = [
   { key: 'no', header: 'No', width: '50px' },
@@ -55,6 +54,15 @@ export default function DataRDTR() {
 
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
+
+  const provinceToPulau = useMemo(() => {
+    if (!data) return new Map<string, string>();
+    const m = new Map<string, string>();
+    data.forEach(r => {
+      if (r.provinsi && r.pulau) m.set(r.provinsi, r.pulau);
+    });
+    return m;
+  }, [data]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {error.message}</div>;
@@ -175,7 +183,7 @@ export default function DataRDTR() {
           {/* Sebaran per Provinsi Table + Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Sebaran RDTR per Provinsi</h3>
+              <h3 className="font-semibold text-foreground mb-4">RDTR per Provinsi</h3>
               <div className="overflow-y-auto max-h-[400px]">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-card">
@@ -196,7 +204,7 @@ export default function DataRDTR() {
               </div>
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Peta Sebaran RDTR</h3>
+              <h3 className="font-semibold text-foreground mb-4">Peta RDTR per Provinsi</h3>
               <IndonesiaMap data={provinsiData} mode="total" />
             </div>
           </div>
@@ -225,7 +233,7 @@ export default function DataRDTR() {
               </div>
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Peta RDTR Terintegrasi</h3>
+              <h3 className="font-semibold text-foreground mb-4">Peta RDTR Terintegrasi per Provinsi</h3>
               <IndonesiaMap data={provinsiData} mode="terintegrasi" />
             </div>
           </div>
@@ -233,7 +241,7 @@ export default function DataRDTR() {
           {/* Sebaran per Pulau */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Sebaran RDTR per Pulau</h3>
+              <h3 className="font-semibold text-foreground mb-4">RDTR per Pulau</h3>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
@@ -252,17 +260,8 @@ export default function DataRDTR() {
               </table>
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
-              <h3 className="font-semibold text-foreground mb-4">Sebaran RDTR per Pulau</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={pulauData} dataKey="jumlah" nameKey="pulau" cx="50%" cy="50%" outerRadius={100} label={(entry) => `${entry.pulau}: ${entry.jumlah}`} labelLine fontSize={11}>
-                    {pulauData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <h3 className="font-semibold text-foreground mb-4">Peta RDTR per Pulau</h3>
+              <IndonesiaMap data={provinsiData} pulauData={pulauData} provinceToPulau={provinceToPulau} pulauMode={true} />
             </div>
           </div>
         </div>
