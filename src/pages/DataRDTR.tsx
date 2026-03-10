@@ -35,6 +35,7 @@ export default function DataRDTR() {
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [activeTab, setActiveTab] = useState<'table' | 'analytics'>('table');
 
+  const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
   const provinsiOptions = useMemo(() => data ? [...new Set(data.map(r => r.provinsi).filter(Boolean))].sort() : [], [data]);
   const clusterOptions = useMemo(() => data ? [...new Set(data.map(r => r.cluster).filter(Boolean))].sort() : [], [data]);
