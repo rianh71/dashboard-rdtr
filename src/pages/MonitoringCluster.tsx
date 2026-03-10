@@ -15,7 +15,7 @@ interface MonitoringClusterProps {
   hideHeader?: boolean;
 }
 
-export default function MonitoringCluster({ title, subtitle, data, isLoading, error }: MonitoringClusterProps) {
+export default function MonitoringCluster({ title, subtitle, data, isLoading, error, hideHeader }: MonitoringClusterProps) {
   const columns = useMemo(() => {
     if (!data || data.length === 0) return [];
     const keys = Object.keys(data[0]);
