@@ -67,9 +67,7 @@ function DashboardLayout() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/data-rdtr" element={<DataRDTR />} />
-              <Route path="/cluster-d" element={<ClusterDPage />} />
-              <Route path="/cluster-e" element={<ClusterEPage />} />
-              <Route path="/cluster-f" element={<ClusterFPage />} />
+              <Route path="/monitoring" element={<MonitoringRDTR />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

@@ -17,9 +17,7 @@ import {
 const menuItems = [
   { title: 'Executive Summary', url: '/', icon: LayoutDashboard },
   { title: 'Data RDTR', url: '/data-rdtr', icon: Database },
-  { title: 'Monitoring Cluster D', url: '/cluster-d', icon: MonitorDot },
-  { title: 'Monitoring Cluster E', url: '/cluster-e', icon: MonitorDot },
-  { title: 'Monitoring Cluster F', url: '/cluster-f', icon: MonitorDot },
+  { title: 'Monitoring RDTR', url: '/monitoring', icon: MonitorDot },
 ];
 
 export function AppSidebar() {
