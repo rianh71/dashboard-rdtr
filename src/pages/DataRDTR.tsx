@@ -55,6 +55,15 @@ export default function DataRDTR() {
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
 
+  const provinceToPulau = useMemo(() => {
+    if (!data) return new Map<string, string>();
+    const m = new Map<string, string>();
+    data.forEach(r => {
+      if (r.provinsi && r.pulau) m.set(r.provinsi, r.pulau);
+    });
+    return m;
+  }, [data]);
+
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {error.message}</div>;
 
