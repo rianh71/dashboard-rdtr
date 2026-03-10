@@ -60,8 +60,6 @@ function DashboardLayout() {
             lastUpdated={lastUpdated}
             onRefresh={refreshAll}
             isRefreshing={isFetching}
-            onExportExcel={handleExportExcel}
-            onExportPDF={handleExportPDF}
           />
           <main className="flex-1 overflow-auto">
             <Routes>
