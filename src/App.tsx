@@ -7,7 +7,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useRefreshAll, useMainData } from "@/hooks/useRDTRData";
-import { exportToExcel, exportToPDF } from "@/lib/export-utils";
+
 import Index from "./pages/Index";
 import DataRDTR from "./pages/DataRDTR";
 import MonitoringRDTR from "./pages/MonitoringRDTR";
@@ -27,29 +27,8 @@ function DashboardLayout() {
     }
   }, [dataUpdatedAt]);
 
-  const handleExportExcel = () => {
-    if (data) {
-      exportToExcel(data as unknown as Record<string, unknown>[], 'RDTR_All_Data');
-    }
-  };
 
-  const handleExportPDF = () => {
-    if (data) {
-      exportToPDF(
-        data as unknown as Record<string, unknown>[],
-        [
-          { header: 'No', dataKey: 'no' },
-          { header: 'Provinsi', dataKey: 'provinsi' },
-          { header: 'Kab/Kota', dataKey: 'kabKota' },
-          { header: 'Nama RDTR', dataKey: 'namaRDTR' },
-          { header: 'Cluster', dataKey: 'cluster' },
-          { header: 'Status', dataKey: 'tanggalIntegrasi' },
-        ],
-        'RDTR_All_Data',
-        'Data RDTR Nasional'
-      );
-    }
-  };
+
 
   return (
     <SidebarProvider>
@@ -60,8 +39,6 @@ function DashboardLayout() {
             lastUpdated={lastUpdated}
             onRefresh={refreshAll}
             isRefreshing={isFetching}
-            onExportExcel={handleExportExcel}
-            onExportPDF={handleExportPDF}
           />
           <main className="flex-1 overflow-auto">
             <Routes>
