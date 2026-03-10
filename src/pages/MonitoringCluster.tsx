@@ -61,6 +61,18 @@ export default function MonitoringCluster({ title, subtitle, data, isLoading, er
           </Button>
         </div>
       </div>
+      )}
+
+      {hideHeader && (
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" /> PDF
+          </Button>
+        </div>
+      )}
 
       <div className="bg-card rounded-xl card-shadow p-1">
         <DataTable
