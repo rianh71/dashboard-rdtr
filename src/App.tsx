@@ -10,9 +10,7 @@ import { useRefreshAll, useMainData } from "@/hooks/useRDTRData";
 import { exportToExcel, exportToPDF } from "@/lib/export-utils";
 import Index from "./pages/Index";
 import DataRDTR from "./pages/DataRDTR";
-import ClusterDPage from "./pages/ClusterDPage";
-import ClusterEPage from "./pages/ClusterEPage";
-import ClusterFPage from "./pages/ClusterFPage";
+import MonitoringRDTR from "./pages/MonitoringRDTR";
 import NotFound from "./pages/NotFound";
 import { useState, useEffect } from "react";
 
