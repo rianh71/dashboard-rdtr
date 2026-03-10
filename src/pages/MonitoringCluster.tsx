@@ -12,6 +12,7 @@ interface MonitoringClusterProps {
   data: MonitoringRecord[] | undefined;
   isLoading: boolean;
   error: Error | null;
+  hideHeader?: boolean;
 }
 
 export default function MonitoringCluster({ title, subtitle, data, isLoading, error }: MonitoringClusterProps) {
