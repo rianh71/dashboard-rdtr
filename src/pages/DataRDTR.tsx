@@ -139,16 +139,6 @@ export default function DataRDTR() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-32">
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Cluster</label>
-              <Select value={filterCluster} onValueChange={setFilterCluster}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua</SelectItem>
-                  {clusterOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="w-44">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Status Integrasi</label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
