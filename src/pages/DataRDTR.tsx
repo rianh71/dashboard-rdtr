@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMainData } from '@/hooks/useRDTRData';
-import { getSebaranPerProvinsi, getSebaranPerPulau } from '@/lib/data-service';
+import { getSebaranPerProvinsi, getSebaranPerPulau, getClusterDistribution } from '@/lib/data-service';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
@@ -29,7 +29,7 @@ export default function DataRDTR() {
   const { data, isLoading, error } = useMainData();
   const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
-  const [filterCluster, setFilterCluster] = useState('all');
+  
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [activeTab, setActiveTab] = useState<'table' | 'analytics'>('table');
@@ -37,7 +37,7 @@ export default function DataRDTR() {
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
   const provinsiOptions = useMemo(() => data ? [...new Set(data.map(r => r.provinsi).filter(Boolean))].sort() : [], [data]);
-  const clusterOptions = useMemo(() => data ? [...new Set(data.map(r => r.cluster).filter(Boolean))].sort() : [], [data]);
+  const clusterDistribution = useMemo(() => data ? getClusterDistribution(data) : [], [data]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -45,12 +45,12 @@ export default function DataRDTR() {
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
-      if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
+      
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
       return true;
     });
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterCluster, filterStatus]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
 
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
@@ -139,16 +139,6 @@ export default function DataRDTR() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-32">
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Cluster</label>
-              <Select value={filterCluster} onValueChange={setFilterCluster}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua</SelectItem>
-                  {clusterOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="w-44">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Status Integrasi</label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -168,6 +158,16 @@ export default function DataRDTR() {
                 <FileText className="h-3.5 w-3.5" /> PDF
               </Button>
             </div>
+          </div>
+
+          {/* Cluster Summary */}
+          <div className="flex flex-wrap gap-3">
+            {clusterDistribution.map(c => (
+              <div key={c.cluster} className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2">
+                <span className="text-sm font-semibold text-foreground">Cluster {c.cluster}</span>
+                <span className="text-sm text-muted-foreground">({c.jumlah})</span>
+              </div>
+            ))}
           </div>
 
           <DataTable
