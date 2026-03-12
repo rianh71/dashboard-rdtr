@@ -1,4 +1,5 @@
 import { LucideIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface KPICardProps {
   title: string;
@@ -6,6 +7,7 @@ interface KPICardProps {
   icon: LucideIcon;
   gradient: 'blue' | 'emerald' | 'orange' | 'purple';
   subtitle?: string;
+  linkTo?: string;
 }
 
 const gradientClasses = {
@@ -15,9 +17,20 @@ const gradientClasses = {
   purple: 'kpi-gradient-purple',
 };
 
-export function KPICard({ title, value, icon: Icon, gradient, subtitle }: KPICardProps) {
+export function KPICard({ title, value, icon: Icon, gradient, subtitle, linkTo }: KPICardProps) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (linkTo) navigate(linkTo);
+  };
+
   return (
-    <div className="rounded-xl bg-card card-shadow p-5 animate-fade-in flex items-start gap-4">
+    <div
+      onClick={handleClick}
+      className={`rounded-xl bg-card card-shadow p-5 animate-fade-in flex items-start gap-4 transition-colors ${
+        linkTo ? 'cursor-pointer hover:bg-muted/50' : ''
+      }`}
+    >
       <div className={`${gradientClasses[gradient]} rounded-lg p-3 flex-shrink-0`}>
         <Icon className="h-6 w-6 text-primary-foreground" />
       </div>
