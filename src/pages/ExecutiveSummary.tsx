@@ -33,7 +33,12 @@ export default function ExecutiveSummary() {
     if (!data) return [];
     const clusterF = data.filter(r => r.cluster === 'F');
     return REPORT_CATEGORIES.map(cat => {
-      const count = clusterF.filter(r => r.keterangan && r.keterangan.trim().toLowerCase().includes(cat.toLowerCase().slice(0, 20))).length;
+      const catLower = cat.toLowerCase();
+      const count = clusterF.filter(r => {
+        if (!r.keterangan) return false;
+        const ket = r.keterangan.trim().toLowerCase();
+        return ket === catLower || ket.includes(catLower) || catLower.includes(ket);
+      }).length;
       return { kategori: cat, jumlah: count };
     });
   }, [data]);
