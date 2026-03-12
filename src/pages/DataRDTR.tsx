@@ -45,7 +45,7 @@ export default function DataRDTR() {
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
-      if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
+      
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
       return true;
