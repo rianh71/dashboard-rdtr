@@ -4,11 +4,20 @@ import { getKPIData, getSebaranPerProvinsi, getSebaranPerPulau, getTimelineData 
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { FileStack, CheckCircle, XCircle, Globe, Map, Layers } from 'lucide-react';
+import { FileStack, CheckCircle, XCircle, Globe, Map, Layers, ClipboardList } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+
+const REPORT_CATEGORIES = [
+  'RDTR Menunggu Jadwal Uji Coba Integrasi',
+  'RDTR Menunggu Release Note (RDTR Belum Mengirimkan Surat Pernyataan)',
+  'RDTR Sudah dilakukan Uji Coba Integrasi Namun Terdapat Kendala Substansi',
+  'RDTR Sudah Dilakukan Uji Coba Namun Ada Kendala Teknis',
+  'Permintaan Pemda Untuk Penundaan Uji Coba Integrasi OSS',
+  'RDTR Menunggu Kesepakatan Id-Wilayah',
+];
 
 const COLORS = ['#2962FF', '#00897B', '#F57C00', '#7B1FA2', '#C62828', '#00838F', '#558B2F', '#6D4C41'];
 
