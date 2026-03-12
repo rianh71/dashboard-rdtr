@@ -29,7 +29,7 @@ export default function DataRDTR() {
   const { data, isLoading, error } = useMainData();
   const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
-  const [filterCluster, setFilterCluster] = useState('all');
+  
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [activeTab, setActiveTab] = useState<'table' | 'analytics'>('table');
