@@ -29,6 +29,15 @@ export default function ExecutiveSummary() {
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
   const timelineData = useMemo(() => data ? getTimelineData(data) : [], [data]);
 
+  const clusterFReport = useMemo(() => {
+    if (!data) return [];
+    const clusterF = data.filter(r => r.cluster === 'F');
+    return REPORT_CATEGORIES.map(cat => {
+      const count = clusterF.filter(r => r.keterangan && r.keterangan.trim().toLowerCase().includes(cat.toLowerCase().slice(0, 20))).length;
+      return { kategori: cat, jumlah: count };
+    });
+  }, [data]);
+
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error loading data: {error.message}</div>;
   if (!kpi) return null;
