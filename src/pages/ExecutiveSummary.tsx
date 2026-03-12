@@ -4,11 +4,20 @@ import { getKPIData, getSebaranPerProvinsi, getSebaranPerPulau, getTimelineData 
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { FileStack, CheckCircle, XCircle, Globe, Map, Layers } from 'lucide-react';
+import { FileStack, CheckCircle, XCircle, Globe, Map, Layers, ClipboardList } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+
+const REPORT_CATEGORIES = [
+  'RDTR Menunggu Jadwal Uji Coba Integrasi',
+  'RDTR Menunggu Release Note (RDTR Belum Mengirimkan Surat Pernyataan)',
+  'RDTR Sudah dilakukan Uji Coba Integrasi Namun Terdapat Kendala Substansi',
+  'RDTR Sudah Dilakukan Uji Coba Namun Ada Kendala Teknis',
+  'Permintaan Pemda Untuk Penundaan Uji Coba Integrasi OSS',
+  'RDTR Menunggu Kesepakatan Id-Wilayah',
+];
 
 const COLORS = ['#2962FF', '#00897B', '#F57C00', '#7B1FA2', '#C62828', '#00838F', '#558B2F', '#6D4C41'];
 
@@ -19,6 +28,20 @@ export default function ExecutiveSummary() {
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
   const timelineData = useMemo(() => data ? getTimelineData(data) : [], [data]);
+
+  const clusterFReport = useMemo(() => {
+    if (!data) return [];
+    const clusterF = data.filter(r => r.cluster === 'F');
+    return REPORT_CATEGORIES.map(cat => {
+      const catLower = cat.toLowerCase();
+      const count = clusterF.filter(r => {
+        if (!r.keterangan) return false;
+        const ket = r.keterangan.trim().toLowerCase();
+        return ket === catLower || ket.includes(catLower) || catLower.includes(ket);
+      }).length;
+      return { kategori: cat, jumlah: count };
+    });
+  }, [data]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error loading data: {error.message}</div>;
@@ -43,6 +66,27 @@ export default function ExecutiveSummary() {
         <KPICard title="RDTR per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" linkTo="/data-rdtr?tab=analytics" />
         <KPICard title="RDTR Terintegrasi per Provinsi" value={provinsiData.filter(p => p.terintegrasi > 0).length} icon={Map} gradient="emerald" subtitle="Provinsi" linkTo="/data-rdtr?tab=analytics" />
         <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" linkTo="/data-rdtr?tab=analytics" />
+      </div>
+
+      {/* Report KPI - Cluster F */}
+      <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="kpi-gradient-purple rounded-lg p-2.5">
+            <ClipboardList className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Rekap Report Darat RDTR Cluster F</h3>
+            <p className="text-xs text-muted-foreground">Rincian keterangan RDTR Cluster F</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {clusterFReport.map((item, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <span className="text-sm text-foreground leading-tight">{item.kategori}</span>
+              <span className="text-lg font-bold text-foreground flex-shrink-0">{item.jumlah}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Charts */}
