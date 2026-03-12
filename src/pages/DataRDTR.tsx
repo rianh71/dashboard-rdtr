@@ -50,7 +50,7 @@ export default function DataRDTR() {
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
       return true;
     });
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterCluster, filterStatus]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
 
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
