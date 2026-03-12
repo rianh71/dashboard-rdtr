@@ -63,6 +63,27 @@ export default function ExecutiveSummary() {
         <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" linkTo="/data-rdtr?tab=analytics" />
       </div>
 
+      {/* Report KPI - Cluster F */}
+      <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="kpi-gradient-purple rounded-lg p-2.5">
+            <ClipboardList className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Rekap Report Darat RDTR Cluster F</h3>
+            <p className="text-xs text-muted-foreground">Rincian keterangan RDTR Cluster F</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {clusterFReport.map((item, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <span className="text-sm text-foreground leading-tight">{item.kategori}</span>
+              <span className="text-lg font-bold text-foreground flex-shrink-0">{item.jumlah}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-card rounded-xl card-shadow p-5">
