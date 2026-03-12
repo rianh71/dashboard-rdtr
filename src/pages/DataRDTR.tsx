@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMainData } from '@/hooks/useRDTRData';
-import { getSebaranPerProvinsi, getSebaranPerPulau } from '@/lib/data-service';
+import { getSebaranPerProvinsi, getSebaranPerPulau, getClusterDistribution } from '@/lib/data-service';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
