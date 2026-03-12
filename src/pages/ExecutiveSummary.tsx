@@ -4,7 +4,7 @@ import { getKPIData, getSebaranPerProvinsi, getSebaranPerPulau, getTimelineData 
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { FileStack, CheckCircle, XCircle, MapPin, Globe, Map, Layers } from 'lucide-react';
+import { FileStack, CheckCircle, XCircle, Globe, Map, Layers } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -32,23 +32,21 @@ export default function ExecutiveSummary() {
       </div>
 
       {/* KPI Cards Row 1 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" />
-        <KPICard title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" />
-        <KPICard title="Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" />
-        <KPICard title="Provinsi dengan RDTR" value={kpi.totalProvinsi} icon={MapPin} gradient="purple" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" linkTo="/data-rdtr" />
+        <KPICard title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" linkTo="/data-rdtr?status=terintegrasi" />
+        <KPICard title="RDTR Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" linkTo="/data-rdtr?status=belum" />
       </div>
 
       {/* KPI Cards Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard title="RDTR per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" />
-        <KPICard title="RDTR Terintegrasi per Provinsi" value={provinsiData.filter(p => p.terintegrasi > 0).length} icon={Map} gradient="emerald" subtitle="Provinsi" />
-        <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" />
+        <KPICard title="RDTR per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" linkTo="/data-rdtr?tab=analytics" />
+        <KPICard title="RDTR Terintegrasi per Provinsi" value={provinsiData.filter(p => p.terintegrasi > 0).length} icon={Map} gradient="emerald" subtitle="Provinsi" linkTo="/data-rdtr?tab=analytics" />
+        <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" linkTo="/data-rdtr?tab=analytics" />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Timeline Chart */}
         <div className="bg-card rounded-xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Timeline RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
@@ -56,20 +54,12 @@ export default function ExecutiveSummary() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 92%)" />
               <XAxis dataKey="tahun" fontSize={12} />
               <YAxis fontSize={12} />
-              <Tooltip
-                contentStyle={{
-                  background: 'hsl(0, 0%, 100%)',
-                  border: '1px solid hsl(214, 20%, 92%)',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-              />
+              <Tooltip contentStyle={{ background: 'hsl(0, 0%, 100%)', border: '1px solid hsl(214, 20%, 92%)', borderRadius: '8px', fontSize: '12px' }} />
               <Line type="monotone" dataKey="jumlahTerintegrasi" stroke="#2962FF" strokeWidth={2.5} dot={{ r: 4, fill: '#2962FF' }} name="Kumulatif" />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Bar Chart */}
         <div className="bg-card rounded-xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Penambahan RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
@@ -77,14 +67,7 @@ export default function ExecutiveSummary() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 92%)" />
               <XAxis dataKey="tahun" fontSize={12} />
               <YAxis fontSize={12} />
-              <Tooltip
-                contentStyle={{
-                  background: 'hsl(0, 0%, 100%)',
-                  border: '1px solid hsl(214, 20%, 92%)',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-              />
+              <Tooltip contentStyle={{ background: 'hsl(0, 0%, 100%)', border: '1px solid hsl(214, 20%, 92%)', borderRadius: '8px', fontSize: '12px' }} />
               <Bar dataKey="penambahan" fill="#00897B" radius={[4, 4, 0, 0]} name="Penambahan" />
             </BarChart>
           </ResponsiveContainer>
@@ -113,7 +96,6 @@ export default function ExecutiveSummary() {
           </ResponsiveContainer>
         </div>
 
-        {/* Top Provinces Table */}
         <div className="bg-card rounded-xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Top 15 Provinsi - Jumlah RDTR</h3>
           <div className="overflow-y-auto max-h-[300px]">

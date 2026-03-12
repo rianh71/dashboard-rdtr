@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useMainData } from '@/hooks/useRDTRData';
 import { getSebaranPerProvinsi, getSebaranPerPulau, getClusterDistribution } from '@/lib/data-service';
 import { DataTable } from '@/components/dashboard/DataTable';
@@ -8,8 +8,7 @@ import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileSpreadsheet, FileText } from 'lucide-react';
-
-
+import { useSearchParams } from 'react-router-dom';
 
 const MAIN_COLUMNS = [
   { key: 'no', header: 'No', width: '50px' },
@@ -27,17 +26,26 @@ const MAIN_COLUMNS = [
 
 export default function DataRDTR() {
   const { data, isLoading, error } = useMainData();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
-  
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWilayah, setFilterWilayah] = useState('all');
+  const [filterCluster, setFilterCluster] = useState('all');
   const [activeTab, setActiveTab] = useState<'table' | 'analytics'>('table');
+
+  // Read URL params on mount
+  useEffect(() => {
+    const status = searchParams.get('status');
+    const tab = searchParams.get('tab');
+    if (status) setFilterStatus(status);
+    if (tab === 'analytics') setActiveTab('analytics');
+  }, [searchParams]);
 
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
   const provinsiOptions = useMemo(() => data ? [...new Set(data.map(r => r.provinsi).filter(Boolean))].sort() : [], [data]);
-  const clusterDistribution = useMemo(() => data ? getClusterDistribution(data) : [], [data]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -45,12 +53,29 @@ export default function DataRDTR() {
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
-      
+      if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
       return true;
     });
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterCluster, filterStatus]);
+
+  // Cluster distribution based on FILTERED data
+  const clusterDistribution = useMemo(() => {
+    if (!data) return [];
+    // Get all clusters from full data for consistent display
+    const allClusters = getClusterDistribution(data);
+    // Count from filtered data
+    const filteredCounts = new Map<string, number>();
+    filtered.forEach(r => {
+      const c = r.cluster || 'N/A';
+      filteredCounts.set(c, (filteredCounts.get(c) || 0) + 1);
+    });
+    return allClusters.map(c => ({
+      ...c,
+      jumlah: filteredCounts.get(c.cluster) || 0,
+    }));
+  }, [data, filtered]);
 
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
@@ -78,6 +103,10 @@ export default function DataRDTR() {
       'Data_RDTR',
       'Data RDTR'
     );
+  };
+
+  const handleClusterClick = (cluster: string) => {
+    setFilterCluster(prev => prev === cluster ? 'all' : cluster);
   };
 
   return (
@@ -160,13 +189,21 @@ export default function DataRDTR() {
             </div>
           </div>
 
-          {/* Cluster Summary */}
+          {/* Cluster Summary - clickable and reactive to filters */}
           <div className="flex flex-wrap gap-3">
             {clusterDistribution.map(c => (
-              <div key={c.cluster} className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2">
-                <span className="text-sm font-semibold text-foreground">Cluster {c.cluster}</span>
-                <span className="text-sm text-muted-foreground">({c.jumlah})</span>
-              </div>
+              <button
+                key={c.cluster}
+                onClick={() => handleClusterClick(c.cluster)}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors cursor-pointer ${
+                  filterCluster === c.cluster
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card hover:bg-muted/50'
+                }`}
+              >
+                <span className={`text-sm font-semibold ${filterCluster === c.cluster ? 'text-primary-foreground' : 'text-foreground'}`}>Cluster {c.cluster}</span>
+                <span className={`text-sm ${filterCluster === c.cluster ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>({c.jumlah})</span>
+              </button>
             ))}
           </div>
 
@@ -180,7 +217,6 @@ export default function DataRDTR() {
 
       {activeTab === 'analytics' && (
         <div className="space-y-6">
-          {/* Sebaran per Provinsi Table + Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-card rounded-xl card-shadow p-5">
               <h3 className="font-semibold text-foreground mb-4">RDTR per Provinsi</h3>
@@ -209,7 +245,6 @@ export default function DataRDTR() {
             </div>
           </div>
 
-          {/* Terintegrasi per Provinsi */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-card rounded-xl card-shadow p-5">
               <h3 className="font-semibold text-foreground mb-4">RDTR Terintegrasi per Provinsi</h3>
@@ -238,7 +273,6 @@ export default function DataRDTR() {
             </div>
           </div>
 
-          {/* Sebaran per Pulau */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-card rounded-xl card-shadow p-5">
               <h3 className="font-semibold text-foreground mb-4">RDTR per Pulau</h3>
