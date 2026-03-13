@@ -1,4 +1,4 @@
-import { BarChart3, Database, MonitorDot, LayoutDashboard } from 'lucide-react';
+import { BarChart3, Database, MonitorDot, LayoutDashboard, RefreshCw, ClipboardList } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -18,6 +18,8 @@ const menuItems = [
   { title: 'Executive Summary', url: '/', icon: LayoutDashboard },
   { title: 'Data RDTR', url: '/data-rdtr', icon: Database },
   { title: 'Monitoring RDTR', url: '/monitoring', icon: MonitorDot },
+  { title: 'Perubahan RDTR', url: '/perubahan', icon: RefreshCw },
+  { title: 'Report', url: '/report', icon: ClipboardList },
 ];
 
 export function AppSidebar() {

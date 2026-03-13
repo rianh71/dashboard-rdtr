@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMainData } from '@/hooks/useRDTRData';
 import { getKPIData, getSebaranPerProvinsi, getSebaranPerPulau, getTimelineData } from '@/lib/data-service';
 import { KPICard } from '@/components/dashboard/KPICard';
@@ -7,22 +8,24 @@ import { LoadingState } from '@/components/dashboard/LoadingState';
 import { FileStack, CheckCircle, XCircle, Globe, Map, Layers, ClipboardList } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
 const REPORT_CATEGORIES = [
-  'RDTR Menunggu Jadwal Uji Coba Integrasi',
-  'RDTR Menunggu Release Note (RDTR Belum Mengirimkan Surat Pernyataan)',
-  'RDTR Sudah dilakukan Uji Coba Integrasi Namun Terdapat Kendala Substansi',
-  'RDTR Sudah Dilakukan Uji Coba Namun Ada Kendala Teknis',
-  'Permintaan Pemda Untuk Penundaan Uji Coba Integrasi OSS',
-  'RDTR Menunggu Kesepakatan Id-Wilayah',
+  { label: 'RDTR Menunggu Jadwal Uji Coba Integrasi', match: 'menunggu jadwal uji coba' },
+  { label: 'RDTR Belum Mengirim Surat Pernyataan', match: 'belum mengirimkan surat pernyataan' },
+  { label: 'RDTR Sudah Mengirim Surat Pernyataan', match: 'sudah mengirimkan surat pernyataan' },
+  { label: 'RDTR Sudah dilakukan Uji Coba Integrasi Namun Terdapat Kendala Substansi', match: 'kendala substansi' },
+  { label: 'RDTR Sudah Dilakukan Uji Coba Namun Ada Kendala Teknis', match: 'kendala teknis' },
+  { label: 'Permintaan Pemda Untuk Penundaan Uji Coba Integrasi OSS', match: 'penundaan uji coba' },
+  { label: 'RDTR Menunggu Kesepakatan Id-Wilayah', match: 'kesepakatan id-wilayah' },
 ];
 
 const COLORS = ['#2962FF', '#00897B', '#F57C00', '#7B1FA2', '#C62828', '#00838F', '#558B2F', '#6D4C41'];
 
 export default function ExecutiveSummary() {
   const { data, isLoading, error } = useMainData();
+  const navigate = useNavigate();
 
   const kpi = useMemo(() => data ? getKPIData(data) : null, [data]);
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
@@ -33,13 +36,11 @@ export default function ExecutiveSummary() {
     if (!data) return [];
     const clusterF = data.filter(r => r.cluster === 'F');
     return REPORT_CATEGORIES.map(cat => {
-      const catLower = cat.toLowerCase();
       const count = clusterF.filter(r => {
-        if (!r.keterangan) return false;
-        const ket = r.keterangan.trim().toLowerCase();
-        return ket === catLower || ket.includes(catLower) || catLower.includes(ket);
+        const ket = (r.keterangan || '').toLowerCase();
+        return ket.includes(cat.match);
       }).length;
-      return { kategori: cat, jumlah: count };
+      return { label: cat.label, jumlah: count };
     });
   }, [data]);
 
@@ -81,10 +82,14 @@ export default function ExecutiveSummary() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {clusterFReport.map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
-              <span className="text-sm text-foreground leading-tight">{item.kategori}</span>
+            <button
+              key={idx}
+              onClick={() => navigate('/report')}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3 hover:bg-muted/60 transition-colors cursor-pointer text-left"
+            >
+              <span className="text-sm text-foreground leading-tight">{item.label}</span>
               <span className="text-lg font-bold text-foreground flex-shrink-0">{item.jumlah}</span>
-            </div>
+            </button>
           ))}
         </div>
       </div>

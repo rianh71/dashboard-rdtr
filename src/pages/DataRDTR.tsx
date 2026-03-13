@@ -7,8 +7,10 @@ import { LoadingState } from '@/components/dashboard/LoadingState';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSpreadsheet, FileText } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { FileSpreadsheet, FileText, History, Eye } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { getChangeLogs, detectChanges, ChangeLogEntry } from '@/lib/change-tracker';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const MAIN_COLUMNS = [
   { key: 'no', header: 'No', width: '50px' },
@@ -27,21 +29,36 @@ const MAIN_COLUMNS = [
 export default function DataRDTR() {
   const { data, isLoading, error } = useMainData();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [filterCluster, setFilterCluster] = useState('all');
-  const [activeTab, setActiveTab] = useState<'table' | 'analytics'>('table');
+  const [activeTab, setActiveTab] = useState<'table' | 'analytics' | 'logs'>('table');
+  const [selectedLog, setSelectedLog] = useState<ChangeLogEntry[] | null>(null);
+  const [selectedLogName, setSelectedLogName] = useState('');
 
-  // Read URL params on mount
+  // Read URL params on mount and when they change
   useEffect(() => {
     const status = searchParams.get('status');
     const tab = searchParams.get('tab');
+    const provinsi = searchParams.get('provinsi');
+    const pulau = searchParams.get('pulau');
+
     if (status) setFilterStatus(status);
+    if (provinsi) setFilterProvinsi(provinsi);
+    if (pulau) setFilterPulau(pulau);
     if (tab === 'analytics') setActiveTab('analytics');
+    else if (tab === 'logs') setActiveTab('logs');
+    else if (status || provinsi || pulau) setActiveTab('table');
   }, [searchParams]);
+
+  // Detect changes when data loads
+  useEffect(() => {
+    if (data) detectChanges(data);
+  }, [data]);
 
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
@@ -60,22 +77,30 @@ export default function DataRDTR() {
     });
   }, [data, filterWilayah, filterPulau, filterProvinsi, filterCluster, filterStatus]);
 
-  // Cluster distribution based on FILTERED data
+  // Cluster distribution: show TOTAL counts always, highlight filtered
   const clusterDistribution = useMemo(() => {
     if (!data) return [];
-    // Get all clusters from full data for consistent display
     const allClusters = getClusterDistribution(data);
-    // Count from filtered data
+    const filteredWithoutCluster = data.filter(r => {
+      if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
+      if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
+      if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
+      if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
+      if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
+      return true;
+    });
     const filteredCounts = new Map<string, number>();
-    filtered.forEach(r => {
+    filteredWithoutCluster.forEach(r => {
       const c = r.cluster || 'N/A';
       filteredCounts.set(c, (filteredCounts.get(c) || 0) + 1);
     });
+    const hasActiveFilter = filterWilayah !== 'all' || filterPulau !== 'all' || filterProvinsi !== 'all' || filterStatus !== 'all';
     return allClusters.map(c => ({
       ...c,
-      jumlah: filteredCounts.get(c.cluster) || 0,
+      filteredCount: filteredCounts.get(c.cluster) || 0,
+      hasActiveFilter,
     }));
-  }, [data, filtered]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
 
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
@@ -88,6 +113,23 @@ export default function DataRDTR() {
     });
     return m;
   }, [data]);
+
+  // Change logs
+  const changeLogs = useMemo(() => getChangeLogs(), [data]);
+  const groupedLogs = useMemo(() => {
+    const map = new Map<string, ChangeLogEntry[]>();
+    changeLogs.forEach(log => {
+      const key = `${log.namaRDTR}__${log.kabKota}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(log);
+    });
+    return Array.from(map.entries()).map(([key, logs]) => ({
+      namaRDTR: logs[0].namaRDTR,
+      kabKota: logs[0].kabKota,
+      provinsi: logs[0].provinsi,
+      logs: logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    }));
+  }, [changeLogs]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {error.message}</div>;
@@ -109,6 +151,30 @@ export default function DataRDTR() {
     setFilterCluster(prev => prev === cluster ? 'all' : cluster);
   };
 
+  const handleProvinsiClick = (provinsi: string) => {
+    setFilterProvinsi(provinsi);
+    setActiveTab('table');
+    setSearchParams({});
+  };
+
+  const handlePulauClick = (pulau: string) => {
+    setFilterPulau(pulau);
+    setActiveTab('table');
+    setSearchParams({});
+  };
+
+  const handleMapProvinceClick = (provinsi: string) => {
+    setFilterProvinsi(provinsi);
+    setActiveTab('table');
+    setSearchParams({});
+  };
+
+  const handleMapPulauClick = (pulau: string) => {
+    setFilterPulau(pulau);
+    setActiveTab('table');
+    setSearchParams({});
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -117,19 +183,14 @@ export default function DataRDTR() {
           <p className="text-sm text-muted-foreground mt-1">Database lengkap RDTR Nasional</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant={activeTab === 'table' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('table')}
-          >
+          <Button variant={activeTab === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('table')}>
             Tabel Data
           </Button>
-          <Button
-            variant={activeTab === 'analytics' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('analytics')}
-          >
+          <Button variant={activeTab === 'analytics' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('analytics')}>
             Sebaran Analytics
+          </Button>
+          <Button variant={activeTab === 'logs' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('logs')} className="gap-1.5">
+            <History className="h-3.5 w-3.5" /> Logs
           </Button>
         </div>
       </div>
@@ -189,7 +250,7 @@ export default function DataRDTR() {
             </div>
           </div>
 
-          {/* Cluster Summary - clickable and reactive to filters */}
+          {/* Cluster Summary */}
           <div className="flex flex-wrap gap-3">
             {clusterDistribution.map(c => (
               <button
@@ -201,8 +262,17 @@ export default function DataRDTR() {
                     : 'bg-card hover:bg-muted/50'
                 }`}
               >
-                <span className={`text-sm font-semibold ${filterCluster === c.cluster ? 'text-primary-foreground' : 'text-foreground'}`}>Cluster {c.cluster}</span>
-                <span className={`text-sm ${filterCluster === c.cluster ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>({c.jumlah})</span>
+                <span className={`text-sm font-semibold ${filterCluster === c.cluster ? 'text-primary-foreground' : 'text-foreground'}`}>
+                  Cluster {c.cluster}
+                </span>
+                <span className={`text-sm ${filterCluster === c.cluster ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                  ({c.jumlah})
+                </span>
+                {c.hasActiveFilter && (
+                  <span className={`text-xs ${filterCluster === c.cluster ? 'text-primary-foreground/60' : 'text-muted-foreground/60'}`}>
+                    / {c.filteredCount} filtered
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -230,8 +300,12 @@ export default function DataRDTR() {
                   </thead>
                   <tbody>
                     {provinsiData.map(p => (
-                      <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30">
-                        <td className="py-1.5 px-2 text-foreground">{p.provinsi}</td>
+                      <tr
+                        key={p.provinsi}
+                        className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer"
+                        onClick={() => handleProvinsiClick(p.provinsi)}
+                      >
+                        <td className="py-1.5 px-2 text-primary hover:underline">{p.provinsi}</td>
                         <td className="py-1.5 px-2 text-right font-medium text-foreground">{p.total}</td>
                       </tr>
                     ))}
@@ -241,7 +315,7 @@ export default function DataRDTR() {
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
               <h3 className="font-semibold text-foreground mb-4">Peta RDTR per Provinsi</h3>
-              <IndonesiaMap data={provinsiData} mode="total" />
+              <IndonesiaMap data={provinsiData} mode="total" onProvinceClick={handleMapProvinceClick} />
             </div>
           </div>
 
@@ -258,8 +332,12 @@ export default function DataRDTR() {
                   </thead>
                   <tbody>
                     {provinsiData.filter(p => p.terintegrasi > 0).map(p => (
-                      <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30">
-                        <td className="py-1.5 px-2 text-foreground">{p.provinsi}</td>
+                      <tr
+                        key={p.provinsi}
+                        className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer"
+                        onClick={() => handleProvinsiClick(p.provinsi)}
+                      >
+                        <td className="py-1.5 px-2 text-primary hover:underline">{p.provinsi}</td>
                         <td className="py-1.5 px-2 text-right font-medium text-accent">{p.terintegrasi}</td>
                       </tr>
                     ))}
@@ -269,7 +347,7 @@ export default function DataRDTR() {
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
               <h3 className="font-semibold text-foreground mb-4">Peta RDTR Terintegrasi per Provinsi</h3>
-              <IndonesiaMap data={provinsiData} mode="terintegrasi" />
+              <IndonesiaMap data={provinsiData} mode="terintegrasi" onProvinceClick={handleMapProvinceClick} />
             </div>
           </div>
 
@@ -285,8 +363,12 @@ export default function DataRDTR() {
                 </thead>
                 <tbody>
                   {pulauData.map(p => (
-                    <tr key={p.pulau} className="border-b last:border-b-0 hover:bg-muted/30">
-                      <td className="py-1.5 px-2 text-foreground">{p.pulau}</td>
+                    <tr
+                      key={p.pulau}
+                      className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer"
+                      onClick={() => handlePulauClick(p.pulau)}
+                    >
+                      <td className="py-1.5 px-2 text-primary hover:underline">{p.pulau}</td>
                       <td className="py-1.5 px-2 text-right font-medium text-foreground">{p.jumlah}</td>
                     </tr>
                   ))}
@@ -295,11 +377,71 @@ export default function DataRDTR() {
             </div>
             <div className="bg-card rounded-xl card-shadow p-5">
               <h3 className="font-semibold text-foreground mb-4">Peta RDTR per Pulau</h3>
-              <IndonesiaMap data={provinsiData} pulauData={pulauData} provinceToPulau={provinceToPulau} pulauMode={true} />
+              <IndonesiaMap data={provinsiData} pulauData={pulauData} provinceToPulau={provinceToPulau} pulauMode={true} onPulauClick={handleMapPulauClick} />
             </div>
           </div>
         </div>
       )}
+
+      {activeTab === 'logs' && (
+        <div className="bg-card rounded-xl card-shadow p-5">
+          <h3 className="font-semibold text-foreground mb-4">Log Perubahan Status RDTR</h3>
+          {groupedLogs.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <History className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p className="text-sm">Belum ada perubahan yang terdeteksi.</p>
+              <p className="text-xs mt-1">Perubahan status cluster dan keterangan akan tercatat otomatis saat data diperbarui.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {groupedLogs.map((group, idx) => (
+                <div key={idx} className="flex items-center justify-between gap-3 rounded-lg border border-border px-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{group.namaRDTR}</p>
+                    <p className="text-xs text-muted-foreground">{group.kabKota} - {group.provinsi}</p>
+                    <p className="text-xs text-muted-foreground">{group.logs.length} perubahan terdeteksi</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 flex-shrink-0"
+                    onClick={() => {
+                      setSelectedLog(group.logs);
+                      setSelectedLogName(group.namaRDTR);
+                    }}
+                  >
+                    <Eye className="h-3.5 w-3.5" /> View
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Log Detail Dialog */}
+      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base">Timeline: {selectedLogName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            {selectedLog?.map((log, idx) => (
+              <div key={idx} className="border-l-2 border-primary/30 pl-4 py-2">
+                <p className="text-xs text-muted-foreground">
+                  {new Date(log.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+                <p className="text-sm mt-1">
+                  <span className="text-muted-foreground">{log.field === 'cluster' ? 'Cluster' : 'Keterangan'}: </span>
+                  <span className="text-destructive line-through">{log.oldValue}</span>
+                  <span className="text-muted-foreground"> → </span>
+                  <span className="text-primary font-medium">{log.newValue}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -11,6 +11,8 @@ import { useRefreshAll, useMainData } from "@/hooks/useRDTRData";
 import Index from "./pages/Index";
 import DataRDTR from "./pages/DataRDTR";
 import MonitoringRDTR from "./pages/MonitoringRDTR";
+import PerubahanRDTR from "./pages/PerubahanRDTR";
+import ReportPage from "./pages/ReportPage";
 import NotFound from "./pages/NotFound";
 import { useState, useEffect } from "react";
 
@@ -27,9 +29,6 @@ function DashboardLayout() {
     }
   }, [dataUpdatedAt]);
 
-
-
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -45,9 +44,14 @@ function DashboardLayout() {
               <Route path="/" element={<Index />} />
               <Route path="/data-rdtr" element={<DataRDTR />} />
               <Route path="/monitoring" element={<MonitoringRDTR />} />
+              <Route path="/perubahan" element={<PerubahanRDTR />} />
+              <Route path="/report" element={<ReportPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
+          <footer className="border-t border-border py-3 text-center text-xs text-muted-foreground">
+            © 2026 RDTR Monitoring Dashboard
+          </footer>
         </div>
       </div>
     </SidebarProvider>
