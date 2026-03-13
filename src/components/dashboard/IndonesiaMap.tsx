@@ -19,9 +19,10 @@ interface IndonesiaMapProps {
   pulauData?: PulauData[];
   provinceToPulau?: Map<string, string>;
   pulauMode?: boolean;
+  onProvinceClick?: (provinsi: string) => void;
+  onPulauClick?: (pulau: string) => void;
 }
 
-// Mapping from GeoJSON PROVINSI names to data province names
 const PROVINCE_NAME_MAP: Record<string, string> = {
   'Dki Jakarta': 'DKI Jakarta',
   'Di Yogyakarta': 'DI Yogyakarta',
@@ -51,16 +52,17 @@ function getColor(value: number, max: number): string {
   return '#1e3a8a';
 }
 
-function getPulauColor(pulau: string, jumlah: number, maxVal: number): string {
-  if (!pulau || jumlah === 0) return '#e2e8f0';
-  const baseColor = PULAU_COLORS[pulau] || '#6D4C41';
-  return baseColor;
+function getPulauColor(pulau: string): string {
+  if (!pulau) return '#e2e8f0';
+  return PULAU_COLORS[pulau] || '#6D4C41';
 }
 
-export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau, pulauMode = false }: IndonesiaMapProps) {
+export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau, pulauMode = false, onProvinceClick, onPulauClick }: IndonesiaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const geoLayerRef = useRef<L.GeoJSON | null>(null);
+  const callbacksRef = useRef({ onProvinceClick, onPulauClick });
+  callbacksRef.current = { onProvinceClick, onPulauClick };
 
   const dataMap = useMemo(() => {
     const m = new Map<string, ProvinceData>();
@@ -123,9 +125,8 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
             const name = normalizeProvince(feature?.properties?.PROVINSI || '');
             if (pulauMode && provinceToPulau) {
               const pulau = provinceToPulau.get(name) || '';
-              const jumlah = pulauMap.get(pulau) || 0;
               return {
-                fillColor: getPulauColor(pulau, jumlah, maxVal),
+                fillColor: getPulauColor(pulau),
                 weight: 1,
                 color: '#94a3b8',
                 fillOpacity: 0.8,
@@ -148,9 +149,13 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
               layer.bindTooltip(
                 `<div class="text-xs font-semibold">${pulau}</div>
                  <div class="text-xs">${name}</div>
-                 <div class="text-xs">Total RDTR: <b>${jumlah}</b></div>`,
+                 <div class="text-xs">Total RDTR: <b>${jumlah}</b></div>
+                 <div class="text-xs text-blue-600 mt-1">Klik untuk filter</div>`,
                 { sticky: true, className: 'leaflet-tooltip-custom' }
               );
+              layer.on('click', () => {
+                callbacksRef.current.onPulauClick?.(pulau);
+              });
             } else {
               const d = dataMap.get(name);
               const total = d?.total ?? 0;
@@ -158,10 +163,20 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
               layer.bindTooltip(
                 `<div class="text-xs font-semibold">${name}</div>
                  <div class="text-xs">Total RDTR: <b>${total}</b></div>
-                 <div class="text-xs">Terintegrasi: <b>${terintegrasi}</b></div>`,
+                 <div class="text-xs">Terintegrasi: <b>${terintegrasi}</b></div>
+                 <div class="text-xs text-blue-600 mt-1">Klik untuk filter</div>`,
                 { sticky: true, className: 'leaflet-tooltip-custom' }
               );
+              layer.on('click', () => {
+                callbacksRef.current.onProvinceClick?.(name);
+              });
             }
+            (layer as L.Path).on('mouseover', function () {
+              (this as L.Path).setStyle({ weight: 3, color: '#2962FF', fillOpacity: 0.9 });
+            });
+            (layer as L.Path).on('mouseout', function () {
+              (this as L.Path).setStyle({ weight: 1, color: '#94a3b8', fillOpacity: 0.8 });
+            });
           },
         });
         layer.addTo(map);
@@ -171,7 +186,7 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
 
   return (
     <div className="relative w-full">
-      <div ref={mapContainerRef} className="w-full rounded-lg overflow-hidden" style={{ height: 400 }} />
+      <div ref={mapContainerRef} className="w-full rounded-lg overflow-hidden cursor-pointer" style={{ height: 400 }} />
       {pulauMode ? (
         <div className="flex flex-wrap items-center gap-3 mt-3 justify-center">
           {Object.entries(PULAU_COLORS).map(([pulau, color]) => (
