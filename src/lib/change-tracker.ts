@@ -1,5 +1,7 @@
 import { RDTRRecord } from './data-service';
 
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwBdeXyJCZ6LwvNiJhpGKhjjmRrn_yJ9_cTA13_frDYsDfw3btk9Don_s84Ev3WvHWP/exec';
+
 export interface ChangeLogEntry {
   timestamp: string;
   namaRDTR: string;
@@ -44,13 +46,40 @@ function saveSnapshot(data: RDTRRecord[]) {
   localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
 }
 
+async function postLogsToGAS(entries: ChangeLogEntry[]) {
+  try {
+    const payload = entries.map(e => ({
+      tanggal: new Date(e.timestamp).toLocaleString('id-ID', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      }),
+      namaRDTR: e.namaRDTR,
+      kabKota: e.kabKota,
+      provinsi: e.provinsi,
+      cluster: e.field === 'cluster' ? `${e.oldValue} → ${e.newValue}` : '',
+      keterangan: e.field === 'keterangan' ? `${e.oldValue} → ${e.newValue}` : '',
+      nilaiLama: e.oldValue,
+      nilaiBaru: e.newValue,
+    }));
+
+    await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    });
+    console.log(`[ChangeTracker] ${entries.length} logs sent to Google Sheets`);
+  } catch (err) {
+    console.warn('[ChangeTracker] Failed to post logs to GAS:', err);
+  }
+}
+
 export function detectChanges(currentData: RDTRRecord[]): ChangeLogEntry[] {
   const previousSnapshot = getSnapshot();
   const newEntries: ChangeLogEntry[] = [];
   const now = new Date().toISOString();
 
   if (Object.keys(previousSnapshot).length === 0) {
-    // First load - save snapshot, no changes to detect
     saveSnapshot(currentData);
     return [];
   }
@@ -89,6 +118,9 @@ export function detectChanges(currentData: RDTRRecord[]): ChangeLogEntry[] {
     const existingLogs = getChangeLogs();
     const allLogs = [...newEntries, ...existingLogs].slice(0, 500);
     saveChangeLogs(allLogs);
+
+    // Auto-send to Google Sheets
+    postLogsToGAS(newEntries);
   }
 
   saveSnapshot(currentData);
