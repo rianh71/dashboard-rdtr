@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useMainData } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { DataTable } from '@/components/dashboard/DataTable';
-import { getChangeLogs, ChangeLogEntry } from '@/lib/change-tracker';
+import { fetchLogsFromSheet, ChangeLogEntry } from '@/lib/change-tracker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, History } from 'lucide-react';
+import { ClipboardList, History, RefreshCw } from 'lucide-react';
 
 const CLUSTER_F_CATEGORIES = [
   { key: 'menunggu-jadwal', label: 'RDTR Menunggu Jadwal Uji Coba Integrasi', match: 'menunggu jadwal uji coba' },
