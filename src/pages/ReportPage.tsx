@@ -44,7 +44,17 @@ export default function ReportPage() {
     });
   }, [clusterFData]);
 
-  const changeLogs = useMemo(() => getChangeLogs(), []);
+  const [changeLogs, setChangeLogs] = useState<ChangeLogEntry[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+
+  const loadLogs = async () => {
+    setLogsLoading(true);
+    const logs = await fetchLogsFromSheet();
+    setChangeLogs(logs);
+    setLogsLoading(false);
+  };
+
+  useEffect(() => { loadLogs(); }, []);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
