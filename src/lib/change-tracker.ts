@@ -132,3 +132,42 @@ export function getClusterFLogs(): ChangeLogEntry[] {
   const logs = getChangeLogs();
   return logs.filter(l => l.field === 'keterangan');
 }
+
+export async function fetchLogsFromSheet(): Promise<ChangeLogEntry[]> {
+  try {
+    const res = await fetch(LOGS_CSV_URL);
+    if (!res.ok) throw new Error('Failed to fetch logs CSV');
+    const csv = await res.text();
+    const rows = csv.split('\n').slice(1).filter(r => r.trim());
+    return rows.map(row => {
+      // Parse CSV row (handle quoted fields)
+      const cols: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (const char of row) {
+        if (char === '"') { inQuotes = !inQuotes; }
+        else if (char === ',' && !inQuotes) { cols.push(current.trim()); current = ''; }
+        else { current += char; }
+      }
+      cols.push(current.trim());
+
+      const [tanggal, namaRDTR, kabKota, provinsi, cluster, keterangan, nilaiLama, nilaiBaru] = cols;
+      const field = cluster ? 'cluster' : 'keterangan';
+      const oldValue = nilaiLama || '-';
+      const newValue = nilaiBaru || '-';
+
+      return {
+        timestamp: tanggal || '',
+        namaRDTR: namaRDTR || '',
+        kabKota: kabKota || '',
+        provinsi: provinsi || '',
+        field,
+        oldValue,
+        newValue,
+      };
+    }).filter(l => l.namaRDTR);
+  } catch (err) {
+    console.warn('[ChangeTracker] Failed to fetch logs from sheet:', err);
+    return getChangeLogs(); // fallback to localStorage
+  }
+}
