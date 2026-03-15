@@ -1,6 +1,7 @@
 import { RDTRRecord } from './data-service';
 
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwBdeXyJCZ6LwvNiJhpGKhjjmRrn_yJ9_cTA13_frDYsDfw3btk9Don_s84Ev3WvHWP/exec';
+const LOGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRzIZ_QFz70eFoWUSuykYace85X7HWYh806x7q1KtTsxBYDQiiQCcW8QVVhqGgOTVWekPBBHprFVbpo/pub?output=csv';
 
 export interface ChangeLogEntry {
   timestamp: string;
@@ -130,4 +131,43 @@ export function detectChanges(currentData: RDTRRecord[]): ChangeLogEntry[] {
 export function getClusterFLogs(): ChangeLogEntry[] {
   const logs = getChangeLogs();
   return logs.filter(l => l.field === 'keterangan');
+}
+
+export async function fetchLogsFromSheet(): Promise<ChangeLogEntry[]> {
+  try {
+    const res = await fetch(LOGS_CSV_URL);
+    if (!res.ok) throw new Error('Failed to fetch logs CSV');
+    const csv = await res.text();
+    const rows = csv.split('\n').slice(1).filter(r => r.trim());
+    return rows.map(row => {
+      // Parse CSV row (handle quoted fields)
+      const cols: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (const char of row) {
+        if (char === '"') { inQuotes = !inQuotes; }
+        else if (char === ',' && !inQuotes) { cols.push(current.trim()); current = ''; }
+        else { current += char; }
+      }
+      cols.push(current.trim());
+
+      const [tanggal, namaRDTR, kabKota, provinsi, cluster, keterangan, nilaiLama, nilaiBaru] = cols;
+      const field = cluster ? 'cluster' : 'keterangan';
+      const oldValue = nilaiLama || '-';
+      const newValue = nilaiBaru || '-';
+
+      return {
+        timestamp: tanggal || '',
+        namaRDTR: namaRDTR || '',
+        kabKota: kabKota || '',
+        provinsi: provinsi || '',
+        field,
+        oldValue,
+        newValue,
+      };
+    }).filter(l => l.namaRDTR);
+  } catch (err) {
+    console.warn('[ChangeTracker] Failed to fetch logs from sheet:', err);
+    return getChangeLogs(); // fallback to localStorage
+  }
 }

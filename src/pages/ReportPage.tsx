@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useMainData } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { DataTable } from '@/components/dashboard/DataTable';
-import { getChangeLogs, ChangeLogEntry } from '@/lib/change-tracker';
+import { fetchLogsFromSheet, ChangeLogEntry } from '@/lib/change-tracker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, History } from 'lucide-react';
+import { ClipboardList, History, RefreshCw } from 'lucide-react';
 
 const CLUSTER_F_CATEGORIES = [
   { key: 'menunggu-jadwal', label: 'RDTR Menunggu Jadwal Uji Coba Integrasi', match: 'menunggu jadwal uji coba' },
@@ -44,7 +44,17 @@ export default function ReportPage() {
     });
   }, [clusterFData]);
 
-  const changeLogs = useMemo(() => getChangeLogs(), []);
+  const [changeLogs, setChangeLogs] = useState<ChangeLogEntry[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+
+  const loadLogs = async () => {
+    setLogsLoading(true);
+    const logs = await fetchLogsFromSheet();
+    setChangeLogs(logs);
+    setLogsLoading(false);
+  };
+
+  useEffect(() => { loadLogs(); }, []);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
@@ -91,7 +101,12 @@ export default function ReportPage() {
 
         <TabsContent value="logs" className="mt-4">
           <div className="bg-card rounded-xl card-shadow p-5">
-            <h3 className="font-semibold text-foreground mb-4">Tracking Timeline Perubahan Keterangan Cluster F</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-foreground">Tracking Timeline Perubahan Data RDTR</h3>
+              <button onClick={loadLogs} disabled={logsLoading} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                <RefreshCw className={`h-3.5 w-3.5 ${logsLoading ? 'animate-spin' : ''}`} /> Refresh
+              </button>
+            </div>
             {changeLogs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <History className="h-10 w-10 mx-auto mb-3 opacity-40" />
