@@ -1,6 +1,6 @@
 import { RDTRRecord } from './data-service';
 
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwHY2QA7eSlEiqig-Q9YrFj8asiuFIVwD9CV8uBVcYAja-6bVhXWZ-4R51gQrPYCs7ihw/exec';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzLtWghbDP1c5qgRucxPIFAcXLROhEoc9f2TTZCwcjNERiEhGWiirAusLt1OJppV52JMQ/exec';
 const LOGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRzIZ_QFz70eFoWUSuykYace85X7HWYh806x7q1KtTsxBYDQiiQCcW8QVVhqGgOTVWekPBBHprFVbpo/pub?output=csv';
 
 export interface ChangeLogEntry {
