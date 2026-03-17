@@ -4,7 +4,7 @@ import { getSebaranPerProvinsi, getSebaranPerPulau } from '@/lib/data-service';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { Globe, Map, Layers } from 'lucide-react';
+import { Globe, Map as MapIcon, Layers } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
