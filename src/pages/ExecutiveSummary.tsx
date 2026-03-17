@@ -1,27 +1,25 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMainData } from '@/hooks/useRDTRData';
-import { getKPIData, getSebaranPerProvinsi, getSebaranPerPulau, getTimelineData } from '@/lib/data-service';
+import { getKPIData, getSebaranPerProvinsi, getTimelineData } from '@/lib/data-service';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { FileStack, CheckCircle, XCircle, Globe, Map, Layers, ClipboardList } from 'lucide-react';
+import { FileStack, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
 const REPORT_CATEGORIES = [
-  { label: 'RDTR Menunggu Jadwal Uji Coba Integrasi', match: 'menunggu jadwal uji coba' },
-  { label: 'RDTR Belum Mengirim Surat Pernyataan', match: 'belum mengirimkan surat pernyataan' },
-  { label: 'RDTR Sudah Mengirim Surat Pernyataan', match: 'sudah mengirimkan surat pernyataan' },
-  { label: 'RDTR Sudah dilakukan Uji Coba Integrasi Namun Terdapat Kendala Substansi', match: 'kendala substansi' },
-  { label: 'RDTR Sudah Dilakukan Uji Coba Namun Ada Kendala Teknis', match: 'kendala teknis' },
-  { label: 'Permintaan Pemda Untuk Penundaan Uji Coba Integrasi OSS', match: 'penundaan uji coba' },
-  { label: 'RDTR Menunggu Kesepakatan Id-Wilayah', match: 'kesepakatan id-wilayah' },
+  { label: 'RDTR Menunggu Jadwal Uji Coba Integrasi', match: 'menunggu jadwal uji coba', reportFilter: 'menunggu-jadwal' },
+  { label: 'RDTR Belum Mengirim Surat Pernyataan', match: 'belum mengirimkan surat pernyataan', reportFilter: 'belum-surat' },
+  { label: 'RDTR Sudah Mengirim Surat Pernyataan', match: 'sudah mengirimkan surat pernyataan', reportFilter: 'sudah-surat' },
+  { label: 'RDTR Sudah dilakukan Uji Coba Integrasi Namun Terdapat Kendala Substansi', match: 'kendala substansi', reportFilter: 'kendala-substansi' },
+  { label: 'RDTR Sudah Dilakukan Uji Coba Namun Ada Kendala Teknis', match: 'kendala teknis', reportFilter: 'kendala-teknis' },
+  { label: 'Permintaan Pemda Untuk Penundaan Uji Coba Integrasi OSS', match: 'penundaan uji coba', reportFilter: 'penundaan' },
+  { label: 'RDTR Menunggu Kesepakatan Id-Wilayah', match: 'kesepakatan id-wilayah', reportFilter: 'id-wilayah' },
 ];
-
-const COLORS = ['#2962FF', '#00897B', '#F57C00', '#7B1FA2', '#C62828', '#00838F', '#558B2F', '#6D4C41'];
 
 export default function ExecutiveSummary() {
   const { data, isLoading, error } = useMainData();
@@ -29,7 +27,6 @@ export default function ExecutiveSummary() {
 
   const kpi = useMemo(() => data ? getKPIData(data) : null, [data]);
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
-  const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
   const timelineData = useMemo(() => data ? getTimelineData(data) : [], [data]);
 
   const clusterFReport = useMemo(() => {
@@ -40,7 +37,7 @@ export default function ExecutiveSummary() {
         const ket = (r.keterangan || '').toLowerCase();
         return ket.includes(cat.match);
       }).length;
-      return { label: cat.label, jumlah: count };
+      return { ...cat, jumlah: count };
     });
   }, [data]);
 
@@ -55,18 +52,11 @@ export default function ExecutiveSummary() {
         <p className="text-sm text-muted-foreground mt-1">Ringkasan data RDTR nasional</p>
       </div>
 
-      {/* KPI Cards Row 1 */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" linkTo="/data-rdtr" />
-        <KPICard title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" linkTo="/data-rdtr?status=terintegrasi" />
-        <KPICard title="RDTR Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" linkTo="/data-rdtr?status=belum" />
-      </div>
-
-      {/* KPI Cards Row 2 */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard title="RDTR per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" linkTo="/data-rdtr?tab=analytics" />
-        <KPICard title="RDTR Terintegrasi per Provinsi" value={provinsiData.filter(p => p.terintegrasi > 0).length} icon={Map} gradient="emerald" subtitle="Provinsi" linkTo="/data-rdtr?tab=analytics" />
-        <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" linkTo="/data-rdtr?tab=analytics" />
+        <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" linkTo="/data-rdtr?view=total" />
+        <KPICard title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" linkTo="/data-rdtr?view=terintegrasi" />
+        <KPICard title="RDTR Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" linkTo="/data-rdtr?view=belum" />
       </div>
 
       {/* Report KPI - Cluster F */}
@@ -84,7 +74,7 @@ export default function ExecutiveSummary() {
           {clusterFReport.map((item, idx) => (
             <button
               key={idx}
-              onClick={() => navigate('/report')}
+              onClick={() => navigate(`/report?filter=${item.reportFilter}`)}
               className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3 hover:bg-muted/60 transition-colors cursor-pointer text-left"
             >
               <span className="text-sm text-foreground leading-tight">{item.label}</span>
@@ -127,47 +117,6 @@ export default function ExecutiveSummary() {
       <div className="bg-card rounded-xl card-shadow p-5">
         <h3 className="font-semibold text-foreground mb-4">Peta Sebaran RDTR per Provinsi</h3>
         <IndonesiaMap data={provinsiData} mode="total" />
-      </div>
-
-      {/* Pie Chart - Sebaran per Pulau */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Sebaran RDTR per Pulau</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={pulauData} dataKey="jumlah" nameKey="pulau" cx="50%" cy="50%" outerRadius={100} label={(entry) => `${entry.pulau}: ${entry.jumlah}`} labelLine={true} fontSize={11}>
-                {pulauData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Top 15 Provinsi - Jumlah RDTR</h3>
-          <div className="overflow-y-auto max-h-[300px]">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-card">
-                <tr className="border-b">
-                  <th className="text-left py-2 px-2 font-semibold text-foreground">Provinsi</th>
-                  <th className="text-right py-2 px-2 font-semibold text-foreground">Total</th>
-                  <th className="text-right py-2 px-2 font-semibold text-foreground">Terintegrasi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {provinsiData.slice(0, 15).map((p) => (
-                  <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30">
-                    <td className="py-1.5 px-2 text-foreground">{p.provinsi}</td>
-                    <td className="py-1.5 px-2 text-right font-medium text-foreground">{p.total}</td>
-                    <td className="py-1.5 px-2 text-right font-medium text-accent">{p.terintegrasi}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
     </div>
   );

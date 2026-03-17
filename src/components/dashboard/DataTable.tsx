@@ -7,6 +7,7 @@ interface Column {
   key: string;
   header: string;
   width?: string;
+  render?: (value: unknown, row: Record<string, unknown>, index: number) => React.ReactNode;
 }
 
 interface DataTableProps {
@@ -14,9 +15,11 @@ interface DataTableProps {
   columns: Column[];
   pageSize?: number;
   searchable?: boolean;
+  autoNumber?: boolean;
+  onRowClick?: (row: Record<string, unknown>, index: number) => void;
 }
 
-export function DataTable({ data, columns, pageSize = 15, searchable = true }: DataTableProps) {
+export function DataTable({ data, columns, pageSize = 15, searchable = true, autoNumber = false, onRowClick }: DataTableProps) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -96,15 +99,26 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true }: D
                 </td>
               </tr>
             ) : (
-              paged.map((row, idx) => (
-                <tr key={idx} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
-                  {columns.map(col => (
-                    <td key={col.key} className="px-3 py-2 text-foreground">
-                      {String(row[col.key] || '-')}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              paged.map((row, idx) => {
+                const globalIdx = page * pageSize + idx;
+                return (
+                  <tr
+                    key={idx}
+                    className={`border-b last:border-b-0 hover:bg-muted/30 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                    onClick={() => onRowClick?.(row, globalIdx)}
+                  >
+                    {columns.map(col => (
+                      <td key={col.key} className="px-3 py-2 text-foreground">
+                        {col.render
+                          ? col.render(row[col.key], row, globalIdx)
+                          : autoNumber && col.key === 'no'
+                            ? globalIdx + 1
+                            : String(row[col.key] || '-')}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
