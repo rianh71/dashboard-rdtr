@@ -10,6 +10,7 @@ import { useRefreshAll, useMainData } from "@/hooks/useRDTRData";
 
 import Index from "./pages/Index";
 import DataRDTR from "./pages/DataRDTR";
+import SebaranRDTR from "./pages/SebaranRDTR";
 import MonitoringRDTR from "./pages/MonitoringRDTR";
 import PerubahanRDTR from "./pages/PerubahanRDTR";
 import ReportPage from "./pages/ReportPage";
@@ -43,6 +44,7 @@ function DashboardLayout() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/data-rdtr" element={<DataRDTR />} />
+              <Route path="/sebaran" element={<SebaranRDTR />} />
               <Route path="/monitoring" element={<MonitoringRDTR />} />
               <Route path="/perubahan" element={<PerubahanRDTR />} />
               <Route path="/report" element={<ReportPage />} />
