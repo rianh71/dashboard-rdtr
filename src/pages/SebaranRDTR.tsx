@@ -18,8 +18,8 @@ export default function SebaranRDTR() {
   const pulauData = useMemo(() => data ? getSebaranPerPulau(data) : [], [data]);
 
   const provinceToPulau = useMemo(() => {
-    if (!data) return new Map<string, string>();
-    const m = new Map<string, string>();
+    if (!data) return new Map();
+    const m = new Map();
     data.forEach(r => {
       if (r.provinsi && r.pulau) m.set(r.provinsi, r.pulau);
     });
