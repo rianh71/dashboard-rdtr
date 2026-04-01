@@ -97,7 +97,7 @@ export default function SebaranRDTR() {
               </thead>
               <tbody>
                 {provinsiData.filter(p => p.terintegrasi > 0).map(p => (
-                  <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer" onClick={() => handleProvinsiClick(p.provinsi)}>
+                  <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer" onClick={() => handleProvinsiTerintegrasiClick(p.provinsi)}>
                     <td className="py-1.5 px-2 text-primary hover:underline">{p.provinsi}</td>
                     <td className="py-1.5 px-2 text-right font-medium text-accent">{p.terintegrasi}</td>
                   </tr>
