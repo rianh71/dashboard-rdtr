@@ -78,7 +78,7 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
               {columns.map(col => (
                 <th
                   key={col.key}
-                  className="text-left px-3 py-2.5 font-semibold text-foreground cursor-pointer hover:bg-muted/80 transition-colors whitespace-nowrap"
+                  className={`${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'} px-3 py-2.5 font-semibold text-foreground cursor-pointer hover:bg-muted/80 transition-colors whitespace-nowrap`}
                   style={col.width ? { width: col.width } : undefined}
                   onClick={() => handleSort(col.key)}
                 >
