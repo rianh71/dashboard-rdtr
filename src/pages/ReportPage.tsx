@@ -47,6 +47,12 @@ export default function ReportPage() {
     return data.filter(r => r.cluster === 'F');
   }, [data]);
 
+  // Logs: only cluster G
+  const clusterGData = useMemo(() => {
+    if (!data) return [];
+    return data.filter(r => r.cluster === 'G');
+  }, [data]);
+
   const categoryData = useMemo(() => {
     return CLUSTER_F_CATEGORIES.map(cat => {
       const items = clusterFData.filter(r => {
