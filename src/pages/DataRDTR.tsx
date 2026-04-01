@@ -42,6 +42,7 @@ export default function DataRDTR() {
   const [selectedLog, setSelectedLog] = useState<ChangeLogEntry[] | null>(null);
   const [selectedLogName, setSelectedLogName] = useState('');
   const [logDateFilter, setLogDateFilter] = useState('');
+  const [selectedRow, setSelectedRow] = useState<RDTRRecord | null>(null);
 
   // Track if navigated from another page (for back button)
   const hasViewParam = searchParams.has('view') || searchParams.has('provinsi') || searchParams.has('pulau') || searchParams.has('status') || searchParams.has('cluster');
