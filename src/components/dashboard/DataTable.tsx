@@ -7,6 +7,7 @@ interface Column {
   key: string;
   header: string;
   width?: string;
+  align?: 'left' | 'center' | 'right';
   render?: (value: unknown, row: Record<string, unknown>, index: number) => React.ReactNode;
 }
 
@@ -77,7 +78,7 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
               {columns.map(col => (
                 <th
                   key={col.key}
-                  className="text-left px-3 py-2.5 font-semibold text-foreground cursor-pointer hover:bg-muted/80 transition-colors whitespace-nowrap"
+                  className={`${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'} px-3 py-2.5 font-semibold text-foreground cursor-pointer hover:bg-muted/80 transition-colors whitespace-nowrap`}
                   style={col.width ? { width: col.width } : undefined}
                   onClick={() => handleSort(col.key)}
                 >
@@ -108,7 +109,7 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
                     onClick={() => onRowClick?.(row, globalIdx)}
                   >
                     {columns.map(col => (
-                      <td key={col.key} className="px-3 py-2 text-foreground">
+                      <td key={col.key} className={`px-3 py-2 text-foreground ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}>
                         {col.render
                           ? col.render(row[col.key], row, globalIdx)
                           : autoNumber && col.key === 'no'

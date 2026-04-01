@@ -13,17 +13,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 
 const MAIN_COLUMNS = [
-  { key: 'no', header: 'No', width: '50px' },
-  { key: 'wilayah', header: 'Wilayah' },
+  { key: 'no', header: 'No', width: '50px', align: 'center' as const },
+  { key: 'wilayah', header: 'Wilayah', align: 'center' as const },
   { key: 'pulau', header: 'Pulau' },
   { key: 'provinsi', header: 'Provinsi' },
   { key: 'kabKota', header: 'Kab/Kota' },
-  { key: 'namaRDTR', header: 'Nama RDTR' },
-  { key: 'nomorPerda', header: 'Nomor Perda/Perkada' },
-  { key: 'tahun', header: 'Tahun', width: '70px' },
-  { key: 'cluster', header: 'Cluster', width: '70px' },
-  { key: 'tanggalIntegrasi', header: 'Tanggal Integrasi' },
-  { key: 'keterangan', header: 'Keterangan' },
+  { key: 'namaRDTR', header: 'Nama RDTR', width: '280px' },
+  { key: 'nomorPerda', header: 'Nomor Perda/Perkada', align: 'center' as const },
+  { key: 'tahun', header: 'Tahun', width: '70px', align: 'center' as const },
+  { key: 'cluster', header: 'Cluster', width: '70px', align: 'center' as const },
+  { key: 'tanggalIntegrasi', header: 'Tanggal Integrasi', align: 'center' as const },
+  { key: 'keterangan', header: 'Keterangan', align: 'center' as const },
 ];
 
 export default function DataRDTR() {
