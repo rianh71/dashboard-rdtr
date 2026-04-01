@@ -350,6 +350,48 @@ export default function DataRDTR() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Detail Row Dialog */}
+      <Dialog open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base">{selectedRow?.namaRDTR}</DialogTitle>
+          </DialogHeader>
+          {selectedRow && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div><span className="text-muted-foreground">Provinsi:</span> <span className="font-medium">{selectedRow.provinsi}</span></div>
+                <div><span className="text-muted-foreground">Kab/Kota:</span> <span className="font-medium">{selectedRow.kabKota}</span></div>
+                <div><span className="text-muted-foreground">Cluster:</span> <span className="font-medium">{selectedRow.cluster}</span></div>
+                <div><span className="text-muted-foreground">Tahun:</span> <span className="font-medium">{selectedRow.tahun}</span></div>
+              </div>
+              <div className="border-t pt-3 space-y-2">
+                <h4 className="font-semibold text-foreground text-sm">Status Unggah Data</h4>
+                {[
+                  { label: 'Unggah Data I (Batang tubuh, peta, lampiran bertanda tanggal)', value: selectedRow.unggahData1 },
+                  { label: 'Unggah Data II (Peta digital hasil koordinasi dengan Tim Studio Peta)', value: selectedRow.unggahData2 },
+                  { label: 'Unggah Data III (Lampiran ITBX format Excel)', value: selectedRow.unggahData3 },
+                  { label: 'Unggah Data IV (File DBPZ)', value: selectedRow.unggahData4 },
+                  { label: 'Unggah Mandiri Data Spasial', value: selectedRow.unggahMandiriSpasial },
+                  { label: 'Unggah Mandiri DBPZ', value: selectedRow.unggahMandiriDBPZ },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-2 border-l-2 border-primary/30 pl-3 py-1.5">
+                    {item.value ? (
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">{item.label}</p>
+                      <p className="text-sm text-foreground">{item.value || 'Belum diisi'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
