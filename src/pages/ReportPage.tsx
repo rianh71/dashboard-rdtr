@@ -139,7 +139,7 @@ export default function ReportPage() {
         <TabsContent value="logs" className="mt-4">
           <div className="bg-card rounded-xl card-shadow p-5">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <h3 className="font-semibold text-foreground">Tracking Timeline Perubahan Data RDTR</h3>
+              <h3 className="font-semibold text-foreground">Tracking Timeline Perubahan Data RDTR (Cluster G)</h3>
               <div className="flex items-center gap-2">
                 <label className="text-xs text-muted-foreground">Filter Tanggal:</label>
                 <Input
@@ -156,14 +156,41 @@ export default function ReportPage() {
                 </button>
               </div>
             </div>
-            {filteredLogs.length === 0 ? (
+
+            {/* Category filter for logs */}
+            <div className="mb-4 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Filter Kategori:</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={logCategoryFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  className="text-xs h-7"
+                  onClick={() => setLogCategoryFilter('all')}
+                >
+                  Semua
+                </Button>
+                {CLUSTER_F_CATEGORIES.map(cat => (
+                  <Button
+                    key={cat.key}
+                    variant={logCategoryFilter === cat.key ? 'default' : 'outline'}
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => setLogCategoryFilter(cat.key)}
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {categoryFilteredLogs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <History className="h-10 w-10 mx-auto mb-3 opacity-40" />
                 <p className="text-sm">Belum ada perubahan yang terdeteksi.</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredLogs.map((log, idx) => (
+                {categoryFilteredLogs.map((log, idx) => (
                   <div key={idx} className="flex gap-3 border-l-2 border-primary/30 pl-4 py-2">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{log.namaRDTR}</p>
