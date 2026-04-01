@@ -279,6 +279,10 @@ export default function DataRDTR() {
             columns={MAIN_COLUMNS}
             pageSize={20}
             autoNumber
+            onRowClick={(row) => {
+              const record = filtered.find(r => r.namaRDTR === row.namaRDTR && r.kabKota === row.kabKota);
+              if (record) setSelectedRow(record);
+            }}
           />
         </>
       )}
