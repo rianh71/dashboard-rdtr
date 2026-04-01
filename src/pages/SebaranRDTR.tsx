@@ -33,6 +33,10 @@ export default function SebaranRDTR() {
     navigate(`/data-rdtr?provinsi=${encodeURIComponent(provinsi)}`);
   };
 
+  const handleProvinsiTerintegrasiClick = (provinsi: string) => {
+    navigate(`/data-rdtr?provinsi=${encodeURIComponent(provinsi)}&view=terintegrasi`);
+  };
+
   const handlePulauClick = (pulau: string) => {
     navigate(`/data-rdtr?pulau=${encodeURIComponent(pulau)}`);
   };
@@ -93,7 +97,7 @@ export default function SebaranRDTR() {
               </thead>
               <tbody>
                 {provinsiData.filter(p => p.terintegrasi > 0).map(p => (
-                  <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer" onClick={() => handleProvinsiClick(p.provinsi)}>
+                  <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer" onClick={() => handleProvinsiTerintegrasiClick(p.provinsi)}>
                     <td className="py-1.5 px-2 text-primary hover:underline">{p.provinsi}</td>
                     <td className="py-1.5 px-2 text-right font-medium text-accent">{p.terintegrasi}</td>
                   </tr>
@@ -104,7 +108,7 @@ export default function SebaranRDTR() {
         </div>
         <div className="bg-card rounded-xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Peta RDTR Terintegrasi per Provinsi</h3>
-          <IndonesiaMap data={provinsiData} mode="terintegrasi" onProvinceClick={handleProvinsiClick} />
+          <IndonesiaMap data={provinsiData} mode="terintegrasi" onProvinceClick={handleProvinsiTerintegrasiClick} />
         </div>
       </div>
 

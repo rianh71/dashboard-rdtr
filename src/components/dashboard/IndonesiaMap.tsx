@@ -54,7 +54,13 @@ function getColor(value: number, max: number): string {
 
 function getPulauColor(pulau: string): string {
   if (!pulau) return '#e2e8f0';
-  return PULAU_COLORS[pulau] || '#6D4C41';
+  // Normalize: check partial matches for "Bali" or "Nusa Tenggara"
+  for (const [key, color] of Object.entries(PULAU_COLORS)) {
+    if (pulau.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(pulau.toLowerCase())) {
+      return color;
+    }
+  }
+  return '#e2e8f0';
 }
 
 export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau, pulauMode = false, onProvinceClick, onPulauClick }: IndonesiaMapProps) {
@@ -94,7 +100,7 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
       maxZoom: 8,
       zoomControl: true,
       attributionControl: false,
-      scrollWheelZoom: true,
+      scrollWheelZoom: false,
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
@@ -141,40 +147,49 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
               fillOpacity: 0.8,
             };
           },
-          onEachFeature: (feature, layer) => {
+          onEachFeature: (feature, featureLayer) => {
             const name = normalizeProvince(feature?.properties?.PROVINSI || '');
             if (pulauMode && provinceToPulau) {
               const pulau = provinceToPulau.get(name) || 'Tidak diketahui';
               const jumlah = pulauMap.get(pulau) || 0;
-              layer.bindTooltip(
-                `<div class="text-xs font-semibold">${pulau}</div>
-                 <div class="text-xs">${name}</div>
-                 <div class="text-xs">Total RDTR: <b>${jumlah}</b></div>
-                 <div class="text-xs text-blue-600 mt-1">Klik untuk filter</div>`,
-                { sticky: true, className: 'leaflet-tooltip-custom' }
+              featureLayer.bindTooltip(
+                `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
+                  <div class="text-xs font-semibold">${pulau}</div>
+                  <div class="text-xs">${name}</div>
+                  <div class="text-xs">Total RDTR: <b>${jumlah}</b></div>
+                </div>`,
+                { sticky: true, className: 'leaflet-tooltip-custom', direction: 'top', offset: [0, -10] }
               );
-              layer.on('click', () => {
+              featureLayer.on('click', () => {
                 callbacksRef.current.onPulauClick?.(pulau);
               });
             } else {
               const d = dataMap.get(name);
               const total = d?.total ?? 0;
               const terintegrasi = d?.terintegrasi ?? 0;
-              layer.bindTooltip(
-                `<div class="text-xs font-semibold">${name}</div>
-                 <div class="text-xs">Total RDTR: <b>${total}</b></div>
-                 <div class="text-xs">Terintegrasi: <b>${terintegrasi}</b></div>
-                 <div class="text-xs text-blue-600 mt-1">Klik untuk filter</div>`,
-                { sticky: true, className: 'leaflet-tooltip-custom' }
-              );
-              layer.on('click', () => {
+              const tooltipContent = mode === 'total'
+                ? `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
+                    <div class="text-xs font-semibold">${name}</div>
+                    <div class="text-xs">Total RDTR: <b>${total}</b></div>
+                  </div>`
+                : `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
+                    <div class="text-xs font-semibold">${name}</div>
+                    <div class="text-xs">Total Terintegrasi: <b>${terintegrasi}</b></div>
+                  </div>`;
+              featureLayer.bindTooltip(tooltipContent, {
+                sticky: true,
+                className: 'leaflet-tooltip-custom',
+                direction: 'top',
+                offset: [0, -10],
+              });
+              featureLayer.on('click', () => {
                 callbacksRef.current.onProvinceClick?.(name);
               });
             }
-            (layer as L.Path).on('mouseover', function () {
+            (featureLayer as L.Path).on('mouseover', function () {
               (this as L.Path).setStyle({ weight: 3, color: '#2962FF', fillOpacity: 0.9 });
             });
-            (layer as L.Path).on('mouseout', function () {
+            (featureLayer as L.Path).on('mouseout', function () {
               (this as L.Path).setStyle({ weight: 1, color: '#94a3b8', fillOpacity: 0.8 });
             });
           },
@@ -185,8 +200,8 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
   }, [dataMap, maxVal, mode, pulauMode, provinceToPulau, pulauMap]);
 
   return (
-    <div className="relative w-full">
-      <div ref={mapContainerRef} className="w-full rounded-lg overflow-hidden cursor-pointer" style={{ height: 400 }} />
+    <div className="relative w-full" style={{ zIndex: 0 }}>
+      <div ref={mapContainerRef} className="w-full rounded-lg overflow-hidden cursor-pointer" style={{ height: 400, position: 'relative', zIndex: 0 }} />
       {pulauMode ? (
         <div className="flex flex-wrap items-center gap-3 mt-3 justify-center">
           {Object.entries(PULAU_COLORS).map(([pulau, color]) => (

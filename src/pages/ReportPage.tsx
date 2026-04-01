@@ -47,6 +47,12 @@ export default function ReportPage() {
     return data.filter(r => r.cluster === 'F');
   }, [data]);
 
+  // Logs: only cluster G
+  const clusterGData = useMemo(() => {
+    if (!data) return [];
+    return data.filter(r => r.cluster === 'G');
+  }, [data]);
+
   const categoryData = useMemo(() => {
     return CLUSTER_F_CATEGORIES.map(cat => {
       const items = clusterFData.filter(r => {
@@ -60,6 +66,7 @@ export default function ReportPage() {
   const [changeLogs, setChangeLogs] = useState<ChangeLogEntry[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [logDateFilter, setLogDateFilter] = useState('');
+  const [logCategoryFilter, setLogCategoryFilter] = useState('all');
 
   const loadLogs = async () => {
     setLogsLoading(true);
@@ -70,14 +77,32 @@ export default function ReportPage() {
 
   useEffect(() => { loadLogs(); }, []);
 
+  // Filter logs: only cluster G RDTR
+  const clusterGNames = useMemo(() => {
+    return new Set(clusterGData.map(r => r.namaRDTR.toLowerCase().trim()));
+  }, [clusterGData]);
+
   const filteredLogs = useMemo(() => {
-    if (!logDateFilter) return changeLogs;
-    return changeLogs.filter(l => {
-      const d = new Date(l.timestamp);
-      const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      return dateStr === logDateFilter;
+    let logs = changeLogs.filter(l => clusterGNames.has(l.namaRDTR.toLowerCase().trim()));
+    if (logDateFilter) {
+      logs = logs.filter(l => {
+        const d = new Date(l.timestamp);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return dateStr === logDateFilter;
+      });
+    }
+    return logs;
+  }, [changeLogs, logDateFilter, clusterGNames]);
+
+  const categoryFilteredLogs = useMemo(() => {
+    if (logCategoryFilter === 'all') return filteredLogs;
+    const cat = CLUSTER_F_CATEGORIES.find(c => c.key === logCategoryFilter);
+    if (!cat) return filteredLogs;
+    return filteredLogs.filter(l => {
+      const val = (l.newValue || '').toLowerCase();
+      return val.includes(cat.match);
     });
-  }, [changeLogs, logDateFilter]);
+  }, [filteredLogs, logCategoryFilter]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
@@ -133,7 +158,7 @@ export default function ReportPage() {
         <TabsContent value="logs" className="mt-4">
           <div className="bg-card rounded-xl card-shadow p-5">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <h3 className="font-semibold text-foreground">Tracking Timeline Perubahan Data RDTR</h3>
+              <h3 className="font-semibold text-foreground">Tracking Timeline Perubahan Data RDTR (Cluster G)</h3>
               <div className="flex items-center gap-2">
                 <label className="text-xs text-muted-foreground">Filter Tanggal:</label>
                 <Input
@@ -150,14 +175,41 @@ export default function ReportPage() {
                 </button>
               </div>
             </div>
-            {filteredLogs.length === 0 ? (
+
+            {/* Category filter for logs */}
+            <div className="mb-4 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Filter Kategori:</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={logCategoryFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  className="text-xs h-7"
+                  onClick={() => setLogCategoryFilter('all')}
+                >
+                  Semua
+                </Button>
+                {CLUSTER_F_CATEGORIES.map(cat => (
+                  <Button
+                    key={cat.key}
+                    variant={logCategoryFilter === cat.key ? 'default' : 'outline'}
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => setLogCategoryFilter(cat.key)}
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {categoryFilteredLogs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <History className="h-10 w-10 mx-auto mb-3 opacity-40" />
                 <p className="text-sm">Belum ada perubahan yang terdeteksi.</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredLogs.map((log, idx) => (
+                {categoryFilteredLogs.map((log, idx) => (
                   <div key={idx} className="flex gap-3 border-l-2 border-primary/30 pl-4 py-2">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{log.namaRDTR}</p>

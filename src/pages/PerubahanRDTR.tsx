@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { DataTable } from '@/components/dashboard/DataTable';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Papa from 'papaparse';
 
 const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vST7goQce4BhG1s50o2MF_rEvZFiHFPdkoY5Kqql00euIAylRApG9EagCjbbqGNBI_QLD6c0pD8_EV2/pub';
@@ -24,6 +25,9 @@ interface DisintegrasiRecord {
   kabKota: string;
   nomorPerda: string;
   tahun: string;
+  tanggalIntegrasi: string;
+  tanggalDisintegrasi: string;
+  keterangan: string;
 }
 
 async function fetchKBLI(): Promise<KBLIRecord[]> {
@@ -54,6 +58,9 @@ async function fetchDisintegrasi(): Promise<DisintegrasiRecord[]> {
     provinsi: row[3] || '',
     nomorPerda: row[4] || '',
     tahun: row[5] || '',
+    tanggalIntegrasi: row[6] || '',
+    tanggalDisintegrasi: row[7] || '',
+    keterangan: row[8] || '',
   }));
 }
 
@@ -90,6 +97,8 @@ export default function PerubahanRDTR() {
     staleTime: 5 * 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
   });
+
+  const [selectedDis, setSelectedDis] = useState<DisintegrasiRecord | null>(null);
 
   // Deduplicate KBLI by namaRDTR
   const kbliData = useMemo(() => {
@@ -137,9 +146,44 @@ export default function PerubahanRDTR() {
             columns={DISINTEGRASI_COLUMNS}
             pageSize={20}
             autoNumber
+            onRowClick={(row) => {
+              const record = disQuery.data?.find(r => r.namaRDTR === row.namaRDTR && r.kabKota === row.kabKota);
+              if (record) setSelectedDis(record);
+            }}
           />
         </TabsContent>
       </Tabs>
+
+      {/* Disintegrasi Detail Dialog */}
+      <Dialog open={!!selectedDis} onOpenChange={() => setSelectedDis(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base">{selectedDis?.namaRDTR}</DialogTitle>
+          </DialogHeader>
+          {selectedDis && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div><span className="text-muted-foreground">Provinsi:</span> <span className="font-medium">{selectedDis.provinsi}</span></div>
+                <div><span className="text-muted-foreground">Kab/Kota:</span> <span className="font-medium">{selectedDis.kabKota}</span></div>
+              </div>
+              <div className="border-t pt-3 space-y-2">
+                <div className="border-l-2 border-primary/30 pl-3 py-1.5">
+                  <p className="text-xs text-muted-foreground">Tanggal Integrasi OSS-RBA</p>
+                  <p className="text-sm font-medium text-foreground">{selectedDis.tanggalIntegrasi || '-'}</p>
+                </div>
+                <div className="border-l-2 border-destructive/30 pl-3 py-1.5">
+                  <p className="text-xs text-muted-foreground">Tanggal Disintegrasi</p>
+                  <p className="text-sm font-medium text-foreground">{selectedDis.tanggalDisintegrasi || '-'}</p>
+                </div>
+                <div className="border-l-2 border-muted-foreground/30 pl-3 py-1.5">
+                  <p className="text-xs text-muted-foreground">Keterangan</p>
+                  <p className="text-sm text-foreground">{selectedDis.keterangan || '-'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
