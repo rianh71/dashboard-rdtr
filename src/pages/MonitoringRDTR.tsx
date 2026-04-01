@@ -289,7 +289,7 @@ export default function MonitoringRDTR() {
                           <span>{si.icon}</span> {si.label}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-foreground">{row.updateTerakhir || '-'}</td>
+                      <td className="px-3 py-2 text-foreground whitespace-nowrap">{row.updateTerakhir ? new Date(row.updateTerakhir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).replace('Invalid Date', row.updateTerakhir) : '-'}</td>
                       <td className="px-3 py-2 text-foreground max-w-[200px] truncate">{row.keteranganSingkat || '-'}</td>
                     </tr>
                   );
