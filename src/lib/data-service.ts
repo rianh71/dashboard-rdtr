@@ -59,6 +59,12 @@ function parseMainCSV(csv: string): RDTRRecord[] {
     cluster: row[8] || '',
     tanggalIntegrasi: row[9] || '',
     keterangan: row[10] || '',
+    unggahData1: row[11] || '',
+    unggahData2: row[12] || '',
+    unggahData3: row[13] || '',
+    unggahData4: row[14] || '',
+    unggahMandiriSpasial: row[15] || '',
+    unggahMandiriDBPZ: row[16] || '',
   })).filter(r => r.no > 0);
 }
 
