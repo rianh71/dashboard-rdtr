@@ -109,7 +109,7 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
                     onClick={() => onRowClick?.(row, globalIdx)}
                   >
                     {columns.map(col => (
-                      <td key={col.key} className="px-3 py-2 text-foreground">
+                      <td key={col.key} className={`px-3 py-2 text-foreground ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}>
                         {col.render
                           ? col.render(row[col.key], row, globalIdx)
                           : autoNumber && col.key === 'no'
