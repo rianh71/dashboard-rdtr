@@ -33,6 +33,10 @@ export default function SebaranRDTR() {
     navigate(`/data-rdtr?provinsi=${encodeURIComponent(provinsi)}`);
   };
 
+  const handleProvinsiTerintegrasiClick = (provinsi: string) => {
+    navigate(`/data-rdtr?provinsi=${encodeURIComponent(provinsi)}&view=terintegrasi`);
+  };
+
   const handlePulauClick = (pulau: string) => {
     navigate(`/data-rdtr?pulau=${encodeURIComponent(pulau)}`);
   };
