@@ -12,6 +12,12 @@ export interface RDTRRecord {
   cluster: string;
   tanggalIntegrasi: string;
   keterangan: string;
+  unggahData1: string;
+  unggahData2: string;
+  unggahData3: string;
+  unggahData4: string;
+  unggahMandiriSpasial: string;
+  unggahMandiriDBPZ: string;
 }
 
 export interface MonitoringRecord {
