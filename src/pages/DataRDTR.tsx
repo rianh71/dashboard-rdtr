@@ -6,7 +6,7 @@ import { LoadingState } from '@/components/dashboard/LoadingState';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSpreadsheet, FileText, History, Eye, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { FileSpreadsheet, FileText, History, Eye, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getChangeLogs, detectChanges, ChangeLogEntry } from '@/lib/change-tracker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
