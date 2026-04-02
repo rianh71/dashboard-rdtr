@@ -87,7 +87,7 @@ function processClusterData(data: MonitoringRecord[] | undefined, clusterName: s
       provinsi: record.provinsi || '',
       tahun: record.tahun || 0,
       statusTerakhir: lastValue,
-      updateTerakhir: lastDate || lastKey,
+      updateTerakhir: lastDate || '',
       keteranganSingkat: lastValue.length > 80 ? lastValue.substring(0, 80) + '...' : lastValue,
       cluster: clusterName,
       statusCategory: categorizeStatus(lastValue),
