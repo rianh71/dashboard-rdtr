@@ -365,7 +365,7 @@ export default function DataRDTR() {
                 <div><span className="text-muted-foreground">Cluster:</span> <span className="font-medium">{selectedRow.cluster}</span></div>
                 <div><span className="text-muted-foreground">Tahun:</span> <span className="font-medium">{selectedRow.tahun}</span></div>
               </div>
-              <div className="border-t pt-3 space-y-2">
+              <div className="border-t pt-3 space-y-3">
                 <h4 className="font-semibold text-foreground text-sm">Status Unggah Data</h4>
                 {[
                   { label: 'Unggah Data I (Batang tubuh, peta, lampiran bertanda tanggal)', value: selectedRow.unggahData1 },
@@ -374,19 +374,34 @@ export default function DataRDTR() {
                   { label: 'Unggah Data IV (File DBPZ)', value: selectedRow.unggahData4 },
                   { label: 'Unggah Mandiri Data Spasial', value: selectedRow.unggahMandiriSpasial },
                   { label: 'Unggah Mandiri DBPZ', value: selectedRow.unggahMandiriDBPZ },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2 border-l-2 border-primary/30 pl-3 py-1.5">
-                    {item.value ? (
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">{item.label}</p>
-                      <p className="text-sm text-foreground">{item.value || 'Belum diisi'}</p>
+                ].map((item, idx) => {
+                  const raw = (item.value || '').toString().trim().toUpperCase();
+                  const isDone = raw === 'V' || raw === '✓' || raw === 'YES' || raw === 'SUDAH';
+                  const isNotDone = raw === 'X' || raw === 'TIDAK' || raw === 'BELUM' || raw === '';
+                  return (
+                    <div key={idx} className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+                      {isDone ? (
+                        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex-shrink-0">
+                          <svg className="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex-shrink-0">
+                          <svg className="h-5 w-5 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground leading-snug">{item.label}</p>
+                        <span className={`text-xs font-semibold mt-0.5 inline-block ${isDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                          {isDone ? 'Sudah Diunggah' : 'Belum Diunggah'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
