@@ -21,7 +21,7 @@ const CLUSTER_F_CATEGORIES = [
 
 const DETAIL_COLUMNS = [
   { key: 'no', header: 'No', width: '50px', align: 'center' as const },
-  { key: 'namaRDTR', header: 'Nama RDTR', align: 'center' as const },
+  { key: 'namaRDTR', header: 'Nama RDTR', align: 'left' as const },
   { key: 'kabKota', header: 'Kab/Kota', align: 'center' as const },
   { key: 'provinsi', header: 'Provinsi', align: 'center' as const },
   { key: 'nomorPerda', header: 'Nomor Perda/Perkada', align: 'center' as const },
