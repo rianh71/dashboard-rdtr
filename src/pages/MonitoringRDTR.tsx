@@ -45,18 +45,39 @@ function getStatusIndicator(cat: string) {
   }
 }
 
+function extractDateFromKey(key: string): string {
+  // Match date patterns like "1 April 2026", "19 Feb 2026", "4 Maret 2026"
+  const match = key.match(/(\d{1,2}\s+\w+\s+\d{4})/);
+  return match ? match[1] : '';
+}
+
 function processClusterData(data: MonitoringRecord[] | undefined, clusterName: string): ProcessedRow[] {
   if (!data) return [];
   return data.map(record => {
     const dynamicKeys = Object.keys(record).filter(k => !STANDARD_KEYS.includes(k));
     let lastValue = '';
     let lastKey = '';
+    let lastDate = '';
     // Iterate from right (last column) to find last non-empty
     for (let i = dynamicKeys.length - 1; i >= 0; i--) {
       const val = String(record[dynamicKeys[i]] || '').trim();
       if (val) {
         lastValue = val;
         lastKey = dynamicKeys[i];
+        // Find the date: check this key or nearby "Rencana Tindak Lanjut" key
+        const dateFromKey = extractDateFromKey(lastKey);
+        if (dateFromKey) {
+          lastDate = dateFromKey;
+        } else {
+          // If this is a "Kehadiran" column, look at the previous key for the date
+          for (let j = i - 1; j >= 0; j--) {
+            const prevDate = extractDateFromKey(dynamicKeys[j]);
+            if (prevDate) {
+              lastDate = prevDate;
+              break;
+            }
+          }
+        }
         break;
       }
     }
@@ -66,7 +87,7 @@ function processClusterData(data: MonitoringRecord[] | undefined, clusterName: s
       provinsi: record.provinsi || '',
       tahun: record.tahun || 0,
       statusTerakhir: lastValue,
-      updateTerakhir: lastKey,
+      updateTerakhir: lastDate || lastKey,
       keteranganSingkat: lastValue.length > 80 ? lastValue.substring(0, 80) + '...' : lastValue,
       cluster: clusterName,
       statusCategory: categorizeStatus(lastValue),
