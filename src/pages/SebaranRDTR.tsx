@@ -42,18 +42,22 @@ export default function SebaranRDTR() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Sebaran RDTR</h2>
-        <p className="text-sm text-muted-foreground mt-1">Analisis sebaran RDTR per provinsi dan pulau</p>
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Sebaran RDTR</h2>
+          <p className="text-sm text-muted-foreground mt-1">Analisis sebaran RDTR per provinsi dan pulau</p>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <KPICard title="RDTR per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" />
+          <KPICard title="RDTR Terintegrasi per Provinsi" value={provinsiData.filter(p => p.terintegrasi > 0).length} icon={MapIcon} gradient="emerald" subtitle="Provinsi" />
+          <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" />
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard title="RDTR per Provinsi" value={provinsiData.length} icon={Globe} gradient="blue" subtitle="Provinsi unik" />
-        <KPICard title="RDTR Terintegrasi per Provinsi" value={provinsiData.filter(p => p.terintegrasi > 0).length} icon={MapIcon} gradient="emerald" subtitle="Provinsi" />
-        <KPICard title="RDTR per Pulau" value={pulauData.length} icon={Layers} gradient="orange" subtitle="Pulau/Wilayah" />
-      </div>
+      <div className="p-4 md:px-6 space-y-6">
 
       {/* Analytics Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

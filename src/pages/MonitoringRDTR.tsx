@@ -178,21 +178,25 @@ export default function MonitoringRDTR() {
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>
-        <p className="text-sm text-muted-foreground mt-1">Monitoring kondisi terkini RDTR Cluster D, E, dan F</p>
-        <p className="text-xs text-muted-foreground mt-1">Last Update: {lastUpdateDate || '-'}</p>
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+        {/* Header */}
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>
+          <p className="text-sm text-muted-foreground mt-1">Monitoring kondisi terkini RDTR Cluster D, E, dan F</p>
+          <p className="text-xs text-muted-foreground mt-1">Last Update: {lastUpdateDate || '-'}</p>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <KPICard title="Total RDTR" value={kpi.total} icon={Users} gradient="blue" />
+          <KPICard title="Total Hadir" value={kpi.hadir} icon={UserCheck} gradient="emerald" />
+          <KPICard title="Total Tidak Hadir" value={kpi.tidakHadir} icon={UserX} gradient="orange" />
+          <KPICard title="Total Dalam Proses" value={kpi.proses} icon={Clock} gradient="purple" />
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <KPICard title="Total RDTR" value={kpi.total} icon={Users} gradient="blue" />
-        <KPICard title="Total Hadir" value={kpi.hadir} icon={UserCheck} gradient="emerald" />
-        <KPICard title="Total Tidak Hadir" value={kpi.tidakHadir} icon={UserX} gradient="orange" />
-        <KPICard title="Total Dalam Proses" value={kpi.proses} icon={Clock} gradient="purple" />
-      </div>
+      <div className="p-4 md:px-6 space-y-6">
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
