@@ -86,6 +86,7 @@ function processClusterData(data: MonitoringRecord[] | undefined, clusterName: s
       raw: record,
       namaRDTR: record.namaRDTR || '',
       provinsi: record.provinsi || '',
+      nomorPerda: record.nomorPerda || '',
       tahun: record.tahun || 0,
       statusTerakhir: lastValue,
       updateTerakhir: lastDate || '',
