@@ -204,7 +204,7 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
         layer.addTo(map);
         geoLayerRef.current = layer;
       });
-  }, [dataMap, maxVal, mode, pulauMode, provinceToPulau, pulauMap]);
+  }, [dataMap, maxVal, mode, pulauMode, provinceToPulau, pulauMap, terintegrasiData]);
 
   return (
     <div className="relative w-full" style={{ zIndex: 0 }}>
