@@ -299,7 +299,7 @@ export default function MonitoringRDTR() {
               </thead>
               <tbody>
                 {paged.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
+                  <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
                 ) : paged.map((row, idx) => {
                   const si = getStatusIndicator(row.statusCategory);
                   return (
