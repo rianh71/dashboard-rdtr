@@ -17,6 +17,7 @@ interface ProcessedRow {
   raw: MonitoringRecord;
   namaRDTR: string;
   provinsi: string;
+  nomorPerda: string;
   tahun: number;
   statusTerakhir: string;
   updateTerakhir: string;

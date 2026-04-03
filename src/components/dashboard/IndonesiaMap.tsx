@@ -170,7 +170,7 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
               const terintegrasi = d?.terintegrasi ?? 0;
               const clusterGCount = terintegrasiData?.get(name) ?? 0;
               const terintegrasiLine = terintegrasiData
-                ? `<div class="text-xs">Terintegrasi (Cluster G): <b>${clusterGCount}</b></div>`
+                ? `<div class="text-xs">RDTR Terintegrasi: <b>${clusterGCount}</b></div>`
                 : '';
               const tooltipContent = mode === 'total'
                 ? `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
