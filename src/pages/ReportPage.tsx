@@ -119,8 +119,11 @@ export default function ReportPage() {
           <div>
             <h2 className="text-xl font-bold text-foreground">Rekap Report Darat RDTR Cluster F</h2>
             <p className="text-sm text-muted-foreground mt-1">Rekapitulasi Cluster F</p>
+          </div>
         </div>
       </div>
+
+      <div className="p-4 md:px-6 space-y-6">
 
       <Tabs defaultValue="cluster-f" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">

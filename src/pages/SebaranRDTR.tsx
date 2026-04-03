@@ -181,6 +181,7 @@ export default function SebaranRDTR() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }

@@ -422,6 +422,7 @@ export default function MonitoringRDTR() {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
