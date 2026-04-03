@@ -64,7 +64,7 @@ function getPulauColor(pulau: string): string {
   return '#e2e8f0';
 }
 
-export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau, pulauMode = false, onProvinceClick, onPulauClick }: IndonesiaMapProps) {
+export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau, pulauMode = false, terintegrasiData, onProvinceClick, onPulauClick }: IndonesiaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const geoLayerRef = useRef<L.GeoJSON | null>(null);
