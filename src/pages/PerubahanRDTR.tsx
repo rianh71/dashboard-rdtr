@@ -186,6 +186,6 @@ export default function PerubahanRDTR() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </Tabs>
   );
 }
