@@ -328,6 +328,7 @@ export default function DataRDTR() {
           )}
         </div>
       )}
+      </div>
 
       <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
         <DialogContent className="max-w-lg">
