@@ -285,6 +285,7 @@ export default function MonitoringRDTR() {
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground w-12">No</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground">Nama RDTR</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground">Provinsi</th>
+                  <th className="text-left px-3 py-2.5 font-semibold text-foreground">Nomor Perda/Perkada</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground w-16">Tahun</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground">Status Terakhir</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground cursor-pointer" onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}>
