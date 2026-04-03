@@ -19,6 +19,7 @@ interface IndonesiaMapProps {
   pulauData?: PulauData[];
   provinceToPulau?: Map<string, string>;
   pulauMode?: boolean;
+  terintegrasiData?: Map<string, number>;
   onProvinceClick?: (provinsi: string) => void;
   onPulauClick?: (pulau: string) => void;
 }
