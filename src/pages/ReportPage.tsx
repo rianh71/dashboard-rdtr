@@ -236,6 +236,7 @@ export default function ReportPage() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
