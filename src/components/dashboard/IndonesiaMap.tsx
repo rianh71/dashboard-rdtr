@@ -19,6 +19,7 @@ interface IndonesiaMapProps {
   pulauData?: PulauData[];
   provinceToPulau?: Map<string, string>;
   pulauMode?: boolean;
+  terintegrasiData?: Map<string, number>;
   onProvinceClick?: (provinsi: string) => void;
   onPulauClick?: (pulau: string) => void;
 }
@@ -63,7 +64,7 @@ function getPulauColor(pulau: string): string {
   return '#e2e8f0';
 }
 
-export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau, pulauMode = false, onProvinceClick, onPulauClick }: IndonesiaMapProps) {
+export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau, pulauMode = false, terintegrasiData, onProvinceClick, onPulauClick }: IndonesiaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const geoLayerRef = useRef<L.GeoJSON | null>(null);
@@ -167,14 +168,20 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
               const d = dataMap.get(name);
               const total = d?.total ?? 0;
               const terintegrasi = d?.terintegrasi ?? 0;
+              const clusterGCount = terintegrasiData?.get(name) ?? 0;
+              const terintegrasiLine = terintegrasiData
+                ? `<div class="text-xs">Terintegrasi (Cluster G): <b>${clusterGCount}</b></div>`
+                : '';
               const tooltipContent = mode === 'total'
                 ? `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
                     <div class="text-xs font-semibold">${name}</div>
                     <div class="text-xs">Total RDTR: <b>${total}</b></div>
+                    ${terintegrasiLine}
                   </div>`
                 : `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
                     <div class="text-xs font-semibold">${name}</div>
                     <div class="text-xs">Total Terintegrasi: <b>${terintegrasi}</b></div>
+                    ${terintegrasiLine}
                   </div>`;
               featureLayer.bindTooltip(tooltipContent, {
                 sticky: true,
@@ -197,7 +204,7 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
         layer.addTo(map);
         geoLayerRef.current = layer;
       });
-  }, [dataMap, maxVal, mode, pulauMode, provinceToPulau, pulauMap]);
+  }, [dataMap, maxVal, mode, pulauMode, provinceToPulau, pulauMap, terintegrasiData]);
 
   return (
     <div className="relative w-full" style={{ zIndex: 0 }}>

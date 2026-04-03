@@ -29,6 +29,18 @@ export default function ExecutiveSummary() {
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const timelineData = useMemo(() => data ? getTimelineData(data) : [], [data]);
 
+  const terintegrasiPerProvinsi = useMemo(() => {
+    if (!data) return new Map<string, number>();
+    const m = new Map<string, number>();
+    data.forEach(r => {
+      if (!r.provinsi) return;
+      if (r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss')) {
+        m.set(r.provinsi, (m.get(r.provinsi) || 0) + 1);
+      }
+    });
+    return m;
+  }, [data]);
+
   const clusterFReport = useMemo(() => {
     if (!data) return [];
     const clusterF = data.filter(r => r.cluster === 'F');
@@ -116,7 +128,12 @@ export default function ExecutiveSummary() {
       {/* Indonesia Map */}
       <div className="bg-card rounded-xl card-shadow p-5">
         <h3 className="font-semibold text-foreground mb-4">Peta Sebaran RDTR per Provinsi</h3>
-        <IndonesiaMap data={provinsiData} mode="total" />
+        <IndonesiaMap
+          data={provinsiData}
+          mode="total"
+          terintegrasiData={terintegrasiPerProvinsi}
+          onProvinceClick={(provinsi) => navigate(`/data-rdtr?provinsi=${encodeURIComponent(provinsi)}`)}
+        />
       </div>
     </div>
   );
