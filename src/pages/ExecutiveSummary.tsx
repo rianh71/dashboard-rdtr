@@ -116,7 +116,12 @@ export default function ExecutiveSummary() {
       {/* Indonesia Map */}
       <div className="bg-card rounded-xl card-shadow p-5">
         <h3 className="font-semibold text-foreground mb-4">Peta Sebaran RDTR per Provinsi</h3>
-        <IndonesiaMap data={provinsiData} mode="total" />
+        <IndonesiaMap
+          data={provinsiData}
+          mode="total"
+          terintegrasiData={terintegrasiPerProvinsi}
+          onProvinceClick={(provinsi) => navigate(`/data-rdtr?provinsi=${encodeURIComponent(provinsi)}`)}
+        />
       </div>
     </div>
   );
