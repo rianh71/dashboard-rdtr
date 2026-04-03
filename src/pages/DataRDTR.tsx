@@ -167,32 +167,32 @@ export default function DataRDTR() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {hasViewParam && (
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
-              <ArrowLeft className="h-4 w-4" /> Kembali
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {hasViewParam && (
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
+                <ArrowLeft className="h-4 w-4" /> Kembali
+              </Button>
+            )}
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{getViewTitle()}</h2>
+              <p className="text-sm text-muted-foreground mt-1">Database lengkap RDTR Nasional</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant={activeTab === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('table')}>
+              Tabel Data
             </Button>
-          )}
-          <div>
-            <h2 className="text-xl font-bold text-foreground">{getViewTitle()}</h2>
-            <p className="text-sm text-muted-foreground mt-1">Database lengkap RDTR Nasional</p>
+            <Button variant={activeTab === 'logs' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('logs')} className="gap-1.5">
+              <History className="h-3.5 w-3.5" /> Logs
+            </Button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant={activeTab === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('table')}>
-            Tabel Data
-          </Button>
-          <Button variant={activeTab === 'logs' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('logs')} className="gap-1.5">
-            <History className="h-3.5 w-3.5" /> Logs
-          </Button>
-        </div>
-      </div>
 
-      {activeTab === 'table' && (
-        <>
-          {!viewMode && (
+        {activeTab === 'table' && !viewMode && (
+          <>
             <div className="flex flex-wrap gap-3 items-end">
               <div className="w-40">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
@@ -244,9 +244,7 @@ export default function DataRDTR() {
                 </Button>
               </div>
             </div>
-          )}
 
-          {!viewMode && (
             <div className="flex flex-wrap gap-3">
               {clusterDistribution.map(c => (
                 <button
@@ -272,8 +270,11 @@ export default function DataRDTR() {
                 </button>
               ))}
             </div>
-          )}
+          </>
+        )}
+      </div>
 
+      <div className="p-4 md:px-6 space-y-6">
           <DataTable
             data={filtered as unknown as Record<string, unknown>[]}
             columns={MAIN_COLUMNS}
