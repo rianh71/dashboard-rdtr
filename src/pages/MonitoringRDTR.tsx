@@ -17,6 +17,7 @@ interface ProcessedRow {
   raw: MonitoringRecord;
   namaRDTR: string;
   provinsi: string;
+  nomorPerda: string;
   tahun: number;
   statusTerakhir: string;
   updateTerakhir: string;
@@ -85,6 +86,7 @@ function processClusterData(data: MonitoringRecord[] | undefined, clusterName: s
       raw: record,
       namaRDTR: record.namaRDTR || '',
       provinsi: record.provinsi || '',
+      nomorPerda: record.nomorPerda || '',
       tahun: record.tahun || 0,
       statusTerakhir: lastValue,
       updateTerakhir: lastDate || '',
@@ -176,21 +178,25 @@ export default function MonitoringRDTR() {
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>
-        <p className="text-sm text-muted-foreground mt-1">Monitoring kondisi terkini RDTR Cluster D, E, dan F</p>
-        <p className="text-xs text-muted-foreground mt-1">Last Update: {lastUpdateDate || '-'}</p>
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+        {/* Header */}
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>
+          <p className="text-sm text-muted-foreground mt-1">Monitoring kondisi terkini RDTR Cluster D, E, dan F</p>
+          <p className="text-xs text-muted-foreground mt-1">Last Update: {lastUpdateDate || '-'}</p>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <KPICard title="Total RDTR" value={kpi.total} icon={Users} gradient="blue" />
+          <KPICard title="Total Hadir" value={kpi.hadir} icon={UserCheck} gradient="emerald" />
+          <KPICard title="Total Tidak Hadir" value={kpi.tidakHadir} icon={UserX} gradient="orange" />
+          <KPICard title="Total Dalam Proses" value={kpi.proses} icon={Clock} gradient="purple" />
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <KPICard title="Total RDTR" value={kpi.total} icon={Users} gradient="blue" />
-        <KPICard title="Total Hadir" value={kpi.hadir} icon={UserCheck} gradient="emerald" />
-        <KPICard title="Total Tidak Hadir" value={kpi.tidakHadir} icon={UserX} gradient="orange" />
-        <KPICard title="Total Dalam Proses" value={kpi.proses} icon={Clock} gradient="purple" />
-      </div>
+      <div className="p-4 md:px-6 space-y-6">
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -283,6 +289,7 @@ export default function MonitoringRDTR() {
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground w-12">No</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground">Nama RDTR</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground">Provinsi</th>
+                  <th className="text-left px-3 py-2.5 font-semibold text-foreground">Nomor Perda/Perkada</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground w-16">Tahun</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground">Status Terakhir</th>
                   <th className="text-left px-3 py-2.5 font-semibold text-foreground cursor-pointer" onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}>
@@ -296,7 +303,7 @@ export default function MonitoringRDTR() {
               </thead>
               <tbody>
                 {paged.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
+                  <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
                 ) : paged.map((row, idx) => {
                   const si = getStatusIndicator(row.statusCategory);
                   return (
@@ -304,6 +311,7 @@ export default function MonitoringRDTR() {
                       <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
                       <td className="px-3 py-2 text-foreground font-medium">{row.namaRDTR}</td>
                       <td className="px-3 py-2 text-foreground">{row.provinsi}</td>
+                      <td className="px-3 py-2 text-foreground">{row.nomorPerda || '-'}</td>
                       <td className="px-3 py-2 text-foreground">{row.tahun || '-'}</td>
                       <td className="px-3 py-2">
                         <span className={`inline-flex items-center gap-1.5 ${si.color}`}>
@@ -414,6 +422,7 @@ export default function MonitoringRDTR() {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

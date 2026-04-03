@@ -71,7 +71,7 @@ const KBLI_COLUMNS = [
   { key: 'kabKota', header: 'Kab/Kota' },
   { key: 'nomorPerda', header: 'Nomor Perda/Perkada' },
   { key: 'tahun', header: 'Tahun', align: 'center' as const },
-  { key: 'keterangan', header: 'Keterangan' },
+  { key: 'keterangan', header: 'Keterangan', align: 'center' as const },
 ];
 
 const DISINTEGRASI_COLUMNS = [
@@ -119,18 +119,20 @@ export default function PerubahanRDTR() {
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Perubahan RDTR</h2>
-        <p className="text-sm text-muted-foreground mt-1">Data perubahan KBLI dan Disintegrasi RDTR</p>
-      </div>
+    <Tabs defaultValue="update-kbli" className="space-y-0 max-w-[1400px] mx-auto">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Perubahan RDTR</h2>
+          <p className="text-sm text-muted-foreground mt-1">Data perubahan KBLI dan Disintegrasi RDTR</p>
+        </div>
 
-      <Tabs defaultValue="update-kbli" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="update-kbli">RDTR Update KBLI ({kbliData.length})</TabsTrigger>
           <TabsTrigger value="disintegrasi">RDTR Disintegrasi ({disQuery.data?.length || 0})</TabsTrigger>
         </TabsList>
+      </div>
 
+      <div className="p-4 md:px-6 space-y-6">
         <TabsContent value="update-kbli" className="mt-4">
           <DataTable
             data={kbliData as unknown as Record<string, unknown>[]}
@@ -152,7 +154,7 @@ export default function PerubahanRDTR() {
             }}
           />
         </TabsContent>
-      </Tabs>
+      </div>
 
       {/* Disintegrasi Detail Dialog */}
       <Dialog open={!!selectedDis} onOpenChange={() => setSelectedDis(null)}>
@@ -184,6 +186,6 @@ export default function PerubahanRDTR() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </Tabs>
   );
 }
