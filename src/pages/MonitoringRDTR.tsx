@@ -307,6 +307,7 @@ export default function MonitoringRDTR() {
                       <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
                       <td className="px-3 py-2 text-foreground font-medium">{row.namaRDTR}</td>
                       <td className="px-3 py-2 text-foreground">{row.provinsi}</td>
+                      <td className="px-3 py-2 text-foreground">{row.nomorPerda || '-'}</td>
                       <td className="px-3 py-2 text-foreground">{row.tahun || '-'}</td>
                       <td className="px-3 py-2">
                         <span className={`inline-flex items-center gap-1.5 ${si.color}`}>
