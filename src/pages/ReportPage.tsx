@@ -147,6 +147,7 @@ export default function ReportPage() {
                     data={cat.items as unknown as Record<string, unknown>[]}
                     columns={DETAIL_COLUMNS}
                     pageSize={10}
+                    searchable={false}
                     autoNumber
                   />
                 </div>
