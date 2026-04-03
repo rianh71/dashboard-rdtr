@@ -275,6 +275,7 @@ export default function DataRDTR() {
       </div>
 
       <div className="p-4 md:px-6 space-y-6">
+      {activeTab === 'table' && (
           <DataTable
             data={filtered as unknown as Record<string, unknown>[]}
             columns={MAIN_COLUMNS}
@@ -285,7 +286,6 @@ export default function DataRDTR() {
               if (record) setSelectedRow(record);
             }}
           />
-        </>
       )}
 
       {activeTab === 'logs' && (
