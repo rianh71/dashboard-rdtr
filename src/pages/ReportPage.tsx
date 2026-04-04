@@ -109,8 +109,7 @@ export default function ReportPage() {
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto">
-      <Tabs defaultValue="cluster-f" className="w-full">
+    <Tabs defaultValue="cluster-f" className="space-y-0 max-w-[1400px] mx-auto">
       <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
         <div className="flex items-center gap-3">
           {hasFilter && (
@@ -124,10 +123,17 @@ export default function ReportPage() {
           </div>
         </div>
 
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="cluster-f" className="gap-1.5">
+            <ClipboardList className="h-3.5 w-3.5" /> Cluster F
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="gap-1.5">
+            <History className="h-3.5 w-3.5" /> Logs
+          </TabsTrigger>
+        </TabsList>
       </div>
 
       <div className="p-4 md:px-6 space-y-6">
-
         <TabsContent value="cluster-f" className="mt-4 space-y-4">
           {categoryData.map(cat => (
             <div key={cat.key} className={`bg-card rounded-xl border overflow-hidden ${filterParam === cat.key ? 'border-primary ring-1 ring-primary/20' : 'border-border'}`}>
@@ -174,7 +180,6 @@ export default function ReportPage() {
               </div>
             </div>
 
-            {/* Category filter for logs */}
             <div className="mb-4 space-y-2">
               <p className="text-xs font-medium text-muted-foreground">Filter Kategori:</p>
               <div className="flex flex-wrap gap-2">
@@ -228,8 +233,7 @@ export default function ReportPage() {
             )}
           </div>
         </TabsContent>
-      </Tabs>
       </div>
-    </div>
+    </Tabs>
   );
 }
