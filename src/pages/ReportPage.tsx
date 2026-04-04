@@ -124,14 +124,9 @@ export default function ReportPage() {
           </div>
         </div>
 
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="cluster-f" className="gap-1.5">
-            <ClipboardList className="h-3.5 w-3.5" /> Cluster F
-          </TabsTrigger>
-          <TabsTrigger value="logs" className="gap-1.5">
-            <History className="h-3.5 w-3.5" /> Logs
-          </TabsTrigger>
-        </TabsList>
+      </div>
+
+      <div className="p-4 md:px-6 space-y-6">
 
         <TabsContent value="cluster-f" className="mt-4 space-y-4">
           {categoryData.map(cat => (

@@ -139,6 +139,7 @@ export default function ExecutiveSummary() {
           onProvinceClick={(provinsi) => navigate(`/data-rdtr?provinsi=${encodeURIComponent(provinsi)}`)}
         />
       </div>
+      </div>
     </div>
   );
 }
