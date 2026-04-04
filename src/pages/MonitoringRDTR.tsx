@@ -319,7 +319,7 @@ export default function MonitoringRDTR() {
                         </span>
                       </td>
                       <td className="px-3 py-2 text-foreground whitespace-nowrap">{row.updateTerakhir || 'Tidak Ada Update'}</td>
-                      <td className="px-3 py-2 text-foreground max-w-[200px] truncate">{row.keteranganSingkat || '-'}</td>
+                      <td className="px-3 py-2 text-foreground max-w-[200px] truncate text-center">{row.keteranganSingkat || '-'}</td>
                     </tr>
                   );
                 })}
