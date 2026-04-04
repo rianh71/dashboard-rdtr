@@ -25,6 +25,7 @@ const DETAIL_COLUMNS = [
   { key: 'kabKota', header: 'Kab/Kota', align: 'center' as const },
   { key: 'provinsi', header: 'Provinsi', align: 'center' as const },
   { key: 'nomorPerda', header: 'Nomor Perda/Perkada', align: 'center' as const },
+  { key: 'tahun', header: 'Tahun', align: 'center' as const },
   { key: 'keterangan', header: 'Keterangan', align: 'center' as const },
 ];
 
