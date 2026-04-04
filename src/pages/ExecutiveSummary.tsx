@@ -58,18 +58,22 @@ export default function ExecutiveSummary() {
   if (!kpi) return null;
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Executive Summary</h2>
-        <p className="text-sm text-muted-foreground mt-1">Ringkasan data RDTR nasional</p>
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Executive Summary</h2>
+          <p className="text-sm text-muted-foreground mt-1">Ringkasan data RDTR nasional</p>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" linkTo="/data-rdtr?view=total" />
+          <KPICard title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" linkTo="/data-rdtr?view=terintegrasi" />
+          <KPICard title="RDTR Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" linkTo="/data-rdtr?view=belum" />
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" linkTo="/data-rdtr?view=total" />
-        <KPICard title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" linkTo="/data-rdtr?view=terintegrasi" />
-        <KPICard title="RDTR Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" linkTo="/data-rdtr?view=belum" />
-      </div>
+      <div className="p-4 md:px-6 space-y-6">
 
       {/* Report KPI - Cluster F */}
       <div className="bg-card rounded-xl card-shadow p-5">
