@@ -298,7 +298,7 @@ export default function MonitoringRDTR() {
                       {sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                     </span>
                   </th>
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground">Keterangan</th>
+                  <th className="text-center px-3 py-2.5 font-semibold text-foreground">Keterangan</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,7 +319,7 @@ export default function MonitoringRDTR() {
                         </span>
                       </td>
                       <td className="px-3 py-2 text-foreground whitespace-nowrap">{row.updateTerakhir || 'Tidak Ada Update'}</td>
-                      <td className="px-3 py-2 text-foreground max-w-[200px] truncate">{row.keteranganSingkat || '-'}</td>
+                      <td className="px-3 py-2 text-foreground max-w-[200px] truncate text-center">{row.keteranganSingkat || '-'}</td>
                     </tr>
                   );
                 })}

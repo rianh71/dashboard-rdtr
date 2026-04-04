@@ -69,7 +69,7 @@ const KBLI_COLUMNS = [
   { key: 'namaRDTR', header: 'Nama RDTR' },
   { key: 'provinsi', header: 'Provinsi' },
   { key: 'kabKota', header: 'Kab/Kota' },
-  { key: 'nomorPerda', header: 'Nomor Perda/Perkada' },
+  { key: 'nomorPerda', header: 'Nomor Perda/Perkada', align: 'center' as const },
   { key: 'tahun', header: 'Tahun', align: 'center' as const },
   { key: 'keterangan', header: 'Keterangan', align: 'center' as const },
 ];
@@ -79,7 +79,7 @@ const DISINTEGRASI_COLUMNS = [
   { key: 'namaRDTR', header: 'Nama RDTR' },
   { key: 'provinsi', header: 'Provinsi' },
   { key: 'kabKota', header: 'Kab/Kota' },
-  { key: 'nomorPerda', header: 'Nomor Perda/Perkada' },
+  { key: 'nomorPerda', header: 'Nomor Perda/Perkada', align: 'center' as const },
   { key: 'tahun', header: 'Tahun', align: 'center' as const },
 ];
 
