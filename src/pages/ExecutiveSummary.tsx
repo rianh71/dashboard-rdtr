@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMainData } from '@/hooks/useRDTRData';
-import { getKPIData, getSebaranPerProvinsi, getTimelineData } from '@/lib/data-service';
+import { getSebaranPerProvinsi, getTimelineData } from '@/lib/data-service';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
