@@ -5,7 +5,7 @@ import { getKPIData, getSebaranPerProvinsi, getTimelineData } from '@/lib/data-s
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { FileStack, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
+import { FileStack, CheckCircle, XCircle, ClipboardList, BarChart3 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
