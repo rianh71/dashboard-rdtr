@@ -96,7 +96,11 @@ function processClusterData(data: MonitoringRecord[] | undefined, clusterName: s
   });
 }
 
-const PIE_COLORS = ['#16a34a', '#dc2626', '#eab308', '#d1d5db'];
+const CLUSTER_LABELS: Record<string, string> = {
+  'D': 'RDTR YANG BELUM MEMENUHI 4 DOKUMEN WAJIB',
+  'E': 'RDTR PROSES UJI TITIK PASCA PERKADA OLEH PEMERINTAH DAERAH',
+  'F': 'RDTR YANG SIAP TERINTEGRASI OSS',
+};
 
 export default function MonitoringRDTR() {
   const clusterD = useClusterD();
