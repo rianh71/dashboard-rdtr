@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Users, UserCheck, UserX, Clock, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { MonitoringRecord } from '@/lib/data-service';
 
 const STANDARD_KEYS = ['no', 'wilayah', 'provinsi', 'kabKota', 'namaRDTR', 'nomorPerda', 'tahun'];
