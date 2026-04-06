@@ -20,7 +20,13 @@ export default function SebaranRDTR() {
     const m = new globalThis.Map<string, string>();
     if (!data) return m;
     data.forEach(r => {
-      if (r.provinsi && r.pulau) m.set(r.provinsi, r.pulau);
+      if (r.provinsi && r.pulau) {
+        let pulau = r.pulau;
+        if (pulau.toLowerCase().includes('bali') && pulau.toLowerCase().includes('nusa tenggara')) {
+          pulau = r.provinsi === 'Bali' ? 'Bali' : 'Nusa Tenggara';
+        }
+        m.set(r.provinsi, pulau);
+      }
     });
     return m;
   }, [data]);
