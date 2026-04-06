@@ -99,6 +99,43 @@ export default function ExecutiveSummary() {
 
       <div className="p-4 md:px-6 space-y-6">
 
+      {/* Rekapitulasi Status RDTR Perda */}
+      <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="kpi-gradient-blue rounded-lg p-2.5">
+            <BarChart3 className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Rekapitulasi Status RDTR Perda</h3>
+            <p className="text-xs text-muted-foreground">Ringkasan status RDTR berdasarkan cluster</p>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-center px-3 py-2.5 font-semibold text-foreground">CLUSTER</th>
+                <th className="text-center px-3 py-2.5 font-semibold text-foreground">JUMLAH</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-foreground">KETERANGAN</th>
+                <th className="text-center px-3 py-2.5 font-semibold text-foreground">PIC</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-foreground">FASILITATOR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CLUSTER_STATUS_TABLE.map((row) => (
+                <tr key={row.cluster} className="border-b last:border-b-0 hover:bg-muted/30">
+                  <td className="px-3 py-2.5 text-center font-bold text-foreground">{row.cluster}</td>
+                  <td className="px-3 py-2.5 text-center font-bold text-foreground">{clusterCounts.get(row.cluster) || 0}</td>
+                  <td className="px-3 py-2.5 text-foreground">{row.keterangan}</td>
+                  <td className="px-3 py-2.5 text-center text-foreground">{row.pic}</td>
+                  <td className="px-3 py-2.5 text-foreground text-xs whitespace-pre-line">{row.fasilitator}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Report KPI - Cluster F */}
       <div className="bg-card rounded-xl card-shadow p-5">
         <div className="flex items-center gap-3 mb-4">
