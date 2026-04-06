@@ -139,6 +139,7 @@ export default function ReportPage() {
             <span className="text-sm text-muted-foreground">Total RDTR Cluster F:</span>
             <span className="text-2xl font-bold text-foreground">{clusterFData.length}</span>
           </div>
+          {categoryData.map(cat => (
             <div key={cat.key} className={`bg-card rounded-xl border overflow-hidden ${filterParam === cat.key ? 'border-primary ring-1 ring-primary/20' : 'border-border'}`}>
               <button
                 onClick={() => setExpandedCategory(expandedCategory === cat.key ? null : cat.key)}
