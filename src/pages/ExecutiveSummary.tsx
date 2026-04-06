@@ -53,6 +53,30 @@ export default function ExecutiveSummary() {
     });
   }, [data]);
 
+  const CLUSTER_STATUS_TABLE = [
+    { cluster: 'A1', keterangan: 'PERMOHONAN REKOMENDASI REVISI', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'A2', keterangan: 'SUDAH MENDAPATKAN REKOMENDASI REVISI ATAU SEDANG REVISI', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'B', keterangan: 'DI HOLD DAERAH', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'C', keterangan: 'RDTR TIDAK SINKRON', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'D', keterangan: 'RDTR YANG BELUM MEMENUHI 4 DOKUMEN WAJIB', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nPokja Data dan Informasi\nPokja Studio Peta' },
+    { cluster: 'E', keterangan: 'RDTR PROSES UJI TITIK PASCA PERKADA OLEH PEMERINTAH DAERAH', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nPokja Data dan Informasi\nPokja Studio Peta' },
+    { cluster: 'F', keterangan: 'RDTR YANG SIAP TERINTEGRASI OSS', pic: 'Pemerintah Daerah', fasilitator: 'Kementerian Investasi dan Hilirisasi/BKPM\nPokja Data dan Informasi\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'G', keterangan: 'RDTR TERINTEGRASI OSS', pic: 'Pemerintah Daerah', fasilitator: 'Kementerian Investasi dan Hilirisasi/BKPM\nPokja Data dan Informasi\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'H', keterangan: 'RDTR DI MINTA TAKEOUT DARI SISTEM OSS OLEH PEMERINTAH DAERAH', pic: 'Pemerintah Daerah', fasilitator: 'Kementerian Investasi dan Hilirisasi/BKPM\nPokja Data dan Informasi\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+  ];
+
+  const clusterCounts = useMemo(() => {
+    if (!data) return new Map<string, number>();
+    const m = new Map<string, number>();
+    data.forEach(r => {
+      if (!r.cluster) return;
+      // Handle A1/A2 special case
+      const c = r.cluster.trim();
+      m.set(c, (m.get(c) || 0) + 1);
+    });
+    return m;
+  }, [data]);
+
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error loading data: {error.message}</div>;
   if (!kpi) return null;
