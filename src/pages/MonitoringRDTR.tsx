@@ -154,18 +154,12 @@ export default function MonitoringRDTR() {
     return { total, hadir, tidakHadir, proses };
   }, [filtered]);
 
-  const pieData = useMemo(() => [
-    { name: 'Hadir', value: kpi.hadir },
-    { name: 'Tidak Hadir', value: kpi.tidakHadir },
-    { name: 'Proses', value: kpi.proses },
-    { name: 'Belum Update', value: filtered.filter(r => r.statusCategory === 'belum').length },
-  ].filter(d => d.value > 0), [kpi, filtered]);
-
-  const barData = useMemo(() => {
-    const map = new Map<string, number>();
-    filtered.forEach(r => map.set(r.cluster, (map.get(r.cluster) || 0) + 1));
-    return Array.from(map.entries()).map(([cluster, jumlah]) => ({ cluster: `Cluster ${cluster}`, jumlah })).sort((a, b) => a.cluster.localeCompare(b.cluster));
-  }, [filtered]);
+  const clusterTotals = useMemo(() => {
+    const d = processClusterData(clusterD.data, 'D').length;
+    const e = processClusterData(clusterE.data, 'E').length;
+    const f = processClusterData(clusterF.data, 'F').length;
+    return { all: d + e + f, D: d, E: e, F: f };
+  }, [clusterD.data, clusterE.data, clusterF.data]);
 
   const provinsiOptions = useMemo(() => [...new Set(allProcessed.map(r => r.provinsi).filter(Boolean))].sort(), [allProcessed]);
   const tahunOptions = useMemo(() => [...new Set(allProcessed.map(r => String(r.tahun)).filter(t => t !== '0'))].sort(), [allProcessed]);
