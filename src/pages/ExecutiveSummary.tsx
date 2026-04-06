@@ -130,7 +130,7 @@ export default function ExecutiveSummary() {
             </thead>
             <tbody>
               {CLUSTER_STATUS_TABLE.map((row) => (
-                <tr key={row.cluster} className="border-b last:border-b-0 hover:bg-muted/30">
+                <tr key={row.cluster} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/data-rdtr?cluster=${encodeURIComponent(row.cluster)}`)}>
                   <td className="px-3 py-2.5 text-center font-bold text-foreground">{row.cluster}</td>
                   <td className="px-3 py-2.5 text-center font-bold text-foreground">{clusterCounts.get(row.cluster) || 0}</td>
                   <td className="px-3 py-2.5 text-foreground">{row.keterangan}</td>

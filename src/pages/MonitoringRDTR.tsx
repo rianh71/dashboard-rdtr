@@ -199,10 +199,10 @@ export default function MonitoringRDTR() {
       <div className="flex flex-wrap gap-3 items-end">
         <Tabs value={activeCluster} onValueChange={v => { setActiveCluster(v); setPage(0); }} className="w-auto">
           <TabsList>
-            <TabsTrigger value="all">Semua</TabsTrigger>
-            <TabsTrigger value="D">Cluster D</TabsTrigger>
-            <TabsTrigger value="E">Cluster E</TabsTrigger>
-            <TabsTrigger value="F">Cluster F</TabsTrigger>
+            <TabsTrigger value="all">Semua ({clusterTotals.all})</TabsTrigger>
+            <TabsTrigger value="D">Cluster D ({clusterTotals.D})</TabsTrigger>
+            <TabsTrigger value="E">Cluster E ({clusterTotals.E})</TabsTrigger>
+            <TabsTrigger value="F">Cluster F ({clusterTotals.F})</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="w-40">
