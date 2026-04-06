@@ -5,7 +5,7 @@ import { getKPIData, getSebaranPerProvinsi, getTimelineData } from '@/lib/data-s
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { FileStack, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
+import { FileStack, CheckCircle, XCircle, ClipboardList, BarChart3 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -53,6 +53,30 @@ export default function ExecutiveSummary() {
     });
   }, [data]);
 
+  const CLUSTER_STATUS_TABLE = [
+    { cluster: 'A1', keterangan: 'PERMOHONAN REKOMENDASI REVISI', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'A2', keterangan: 'SUDAH MENDAPATKAN REKOMENDASI REVISI ATAU SEDANG REVISI', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'B', keterangan: 'DI HOLD DAERAH', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'C', keterangan: 'RDTR TIDAK SINKRON', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'D', keterangan: 'RDTR YANG BELUM MEMENUHI 4 DOKUMEN WAJIB', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nPokja Data dan Informasi\nPokja Studio Peta' },
+    { cluster: 'E', keterangan: 'RDTR PROSES UJI TITIK PASCA PERKADA OLEH PEMERINTAH DAERAH', pic: 'Pemerintah Daerah', fasilitator: 'Direktorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nPokja Data dan Informasi\nPokja Studio Peta' },
+    { cluster: 'F', keterangan: 'RDTR YANG SIAP TERINTEGRASI OSS', pic: 'Pemerintah Daerah', fasilitator: 'Kementerian Investasi dan Hilirisasi/BKPM\nPokja Data dan Informasi\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'G', keterangan: 'RDTR TERINTEGRASI OSS', pic: 'Pemerintah Daerah', fasilitator: 'Kementerian Investasi dan Hilirisasi/BKPM\nPokja Data dan Informasi\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+    { cluster: 'H', keterangan: 'RDTR DI MINTA TAKEOUT DARI SISTEM OSS OLEH PEMERINTAH DAERAH', pic: 'Pemerintah Daerah', fasilitator: 'Kementerian Investasi dan Hilirisasi/BKPM\nPokja Data dan Informasi\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah I\nDirektorat Bina Perencanaan Tata Ruang Daerah Wilayah II' },
+  ];
+
+  const clusterCounts = useMemo(() => {
+    if (!data) return new Map<string, number>();
+    const m = new Map<string, number>();
+    data.forEach(r => {
+      if (!r.cluster) return;
+      // Handle A1/A2 special case
+      const c = r.cluster.trim();
+      m.set(c, (m.get(c) || 0) + 1);
+    });
+    return m;
+  }, [data]);
+
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error loading data: {error.message}</div>;
   if (!kpi) return null;
@@ -74,6 +98,43 @@ export default function ExecutiveSummary() {
       </div>
 
       <div className="p-4 md:px-6 space-y-6">
+
+      {/* Rekapitulasi Status RDTR Perda */}
+      <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="kpi-gradient-blue rounded-lg p-2.5">
+            <BarChart3 className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Rekapitulasi Status RDTR Perda</h3>
+            <p className="text-xs text-muted-foreground">Ringkasan status RDTR berdasarkan cluster</p>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-center px-3 py-2.5 font-semibold text-foreground">CLUSTER</th>
+                <th className="text-center px-3 py-2.5 font-semibold text-foreground">JUMLAH</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-foreground">KETERANGAN</th>
+                <th className="text-center px-3 py-2.5 font-semibold text-foreground">PIC</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-foreground">FASILITATOR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CLUSTER_STATUS_TABLE.map((row) => (
+                <tr key={row.cluster} className="border-b last:border-b-0 hover:bg-muted/30">
+                  <td className="px-3 py-2.5 text-center font-bold text-foreground">{row.cluster}</td>
+                  <td className="px-3 py-2.5 text-center font-bold text-foreground">{clusterCounts.get(row.cluster) || 0}</td>
+                  <td className="px-3 py-2.5 text-foreground">{row.keterangan}</td>
+                  <td className="px-3 py-2.5 text-center text-foreground">{row.pic}</td>
+                  <td className="px-3 py-2.5 text-foreground text-xs whitespace-pre-line">{row.fasilitator}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Report KPI - Cluster F */}
       <div className="bg-card rounded-xl card-shadow p-5">

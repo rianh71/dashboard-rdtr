@@ -6,7 +6,6 @@ import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { Globe, Map as MapIcon, Layers } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#2962FF', '#00897B', '#F57C00', '#7B1FA2', '#C62828', '#00838F', '#558B2F', '#6D4C41'];
 
@@ -21,7 +20,13 @@ export default function SebaranRDTR() {
     const m = new globalThis.Map<string, string>();
     if (!data) return m;
     data.forEach(r => {
-      if (r.provinsi && r.pulau) m.set(r.provinsi, r.pulau);
+      if (r.provinsi && r.pulau) {
+        let pulau = r.pulau;
+        if (pulau.toLowerCase().includes('bali') && pulau.toLowerCase().includes('nusa tenggara')) {
+          pulau = r.provinsi === 'Bali' ? 'Bali' : 'Nusa Tenggara';
+        }
+        m.set(r.provinsi, pulau);
+      }
     });
     return m;
   }, [data]);
@@ -142,43 +147,28 @@ export default function SebaranRDTR() {
         </div>
       </div>
 
-      {/* Pie Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Sebaran RDTR per Pulau</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={pulauData} dataKey="jumlah" nameKey="pulau" cx="50%" cy="50%" outerRadius={100} label={(entry) => `${entry.pulau}: ${entry.jumlah}`} labelLine={true} fontSize={11}>
-                {pulauData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Top 15 Provinsi - Jumlah RDTR</h3>
-          <div className="overflow-y-auto max-h-[300px]">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-card">
-                <tr className="border-b">
-                  <th className="text-left py-2 px-2 font-semibold text-foreground">Provinsi</th>
-                  <th className="text-right py-2 px-2 font-semibold text-foreground">Total</th>
-                  <th className="text-right py-2 px-2 font-semibold text-foreground">Terintegrasi</th>
+      {/* Top 15 - Full width */}
+      <div className="bg-card rounded-xl card-shadow p-5">
+        <h3 className="font-semibold text-foreground mb-4">Top 15 Provinsi - Jumlah RDTR</h3>
+        <div className="overflow-y-auto max-h-[400px]">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 bg-card">
+              <tr className="border-b">
+                <th className="text-left py-2 px-2 font-semibold text-foreground">Provinsi</th>
+                <th className="text-right py-2 px-2 font-semibold text-foreground">Total</th>
+                <th className="text-right py-2 px-2 font-semibold text-foreground">Terintegrasi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {provinsiData.slice(0, 15).map((p) => (
+                <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30">
+                  <td className="py-1.5 px-2 text-foreground">{p.provinsi}</td>
+                  <td className="py-1.5 px-2 text-right font-medium text-foreground">{p.total}</td>
+                  <td className="py-1.5 px-2 text-right font-medium text-accent">{p.terintegrasi}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {provinsiData.slice(0, 15).map((p) => (
-                  <tr key={p.provinsi} className="border-b last:border-b-0 hover:bg-muted/30">
-                    <td className="py-1.5 px-2 text-foreground">{p.provinsi}</td>
-                    <td className="py-1.5 px-2 text-right font-medium text-foreground">{p.total}</td>
-                    <td className="py-1.5 px-2 text-right font-medium text-accent">{p.terintegrasi}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
       </div>

@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Users, UserCheck, UserX, Clock, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { MonitoringRecord } from '@/lib/data-service';
 
 const STANDARD_KEYS = ['no', 'wilayah', 'provinsi', 'kabKota', 'namaRDTR', 'nomorPerda', 'tahun'];
@@ -97,7 +96,11 @@ function processClusterData(data: MonitoringRecord[] | undefined, clusterName: s
   });
 }
 
-const PIE_COLORS = ['#16a34a', '#dc2626', '#eab308', '#d1d5db'];
+const CLUSTER_LABELS: Record<string, string> = {
+  'D': 'RDTR YANG BELUM MEMENUHI 4 DOKUMEN WAJIB',
+  'E': 'RDTR PROSES UJI TITIK PASCA PERKADA OLEH PEMERINTAH DAERAH',
+  'F': 'RDTR YANG SIAP TERINTEGRASI OSS',
+};
 
 export default function MonitoringRDTR() {
   const clusterD = useClusterD();
@@ -155,18 +158,12 @@ export default function MonitoringRDTR() {
     return { total, hadir, tidakHadir, proses };
   }, [filtered]);
 
-  const pieData = useMemo(() => [
-    { name: 'Hadir', value: kpi.hadir },
-    { name: 'Tidak Hadir', value: kpi.tidakHadir },
-    { name: 'Proses', value: kpi.proses },
-    { name: 'Belum Update', value: filtered.filter(r => r.statusCategory === 'belum').length },
-  ].filter(d => d.value > 0), [kpi, filtered]);
-
-  const barData = useMemo(() => {
-    const map = new Map<string, number>();
-    filtered.forEach(r => map.set(r.cluster, (map.get(r.cluster) || 0) + 1));
-    return Array.from(map.entries()).map(([cluster, jumlah]) => ({ cluster: `Cluster ${cluster}`, jumlah })).sort((a, b) => a.cluster.localeCompare(b.cluster));
-  }, [filtered]);
+  const clusterTotals = useMemo(() => {
+    const d = processClusterData(clusterD.data, 'D').length;
+    const e = processClusterData(clusterE.data, 'E').length;
+    const f = processClusterData(clusterF.data, 'F').length;
+    return { all: d + e + f, D: d, E: e, F: f };
+  }, [clusterD.data, clusterE.data, clusterF.data]);
 
   const provinsiOptions = useMemo(() => [...new Set(allProcessed.map(r => r.provinsi).filter(Boolean))].sort(), [allProcessed]);
   const tahunOptions = useMemo(() => [...new Set(allProcessed.map(r => String(r.tahun)).filter(t => t !== '0'))].sort(), [allProcessed]);
@@ -198,30 +195,16 @@ export default function MonitoringRDTR() {
 
       <div className="p-4 md:px-6 space-y-6">
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Distribusi Status</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => `${e.name}: ${e.value}`} fontSize={11}>
-                {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Jumlah RDTR per Cluster</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214,20%,92%)" />
-              <XAxis dataKey="cluster" fontSize={12} />
-              <YAxis fontSize={12} />
-              <Tooltip />
-              <Bar dataKey="jumlah" fill="#2962FF" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Cluster Info Banner */}
+      <div className="bg-card rounded-xl card-shadow p-4">
+        <div className="flex flex-wrap gap-4">
+          {(['all', 'D', 'E', 'F'] as const).map(key => (
+            <div key={key} className={`flex-1 min-w-[150px] rounded-lg border p-3 ${activeCluster === key ? 'border-primary bg-primary/5' : 'border-border'}`}>
+              <p className="text-xs text-muted-foreground">{key === 'all' ? 'Semua Cluster' : `Cluster ${key}`}</p>
+              <p className="text-xl font-bold text-foreground">{clusterTotals[key]}</p>
+              {key !== 'all' && <p className="text-xs text-muted-foreground mt-1">{CLUSTER_LABELS[key]}</p>}
+            </div>
+          ))}
         </div>
       </div>
 
