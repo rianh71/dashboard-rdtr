@@ -39,7 +39,8 @@ const PULAU_COLORS: Record<string, string> = {
   'Jawa': '#00897B',
   'Kalimantan': '#F57C00',
   'Sulawesi': '#7B1FA2',
-  'Bali dan Nusa Tenggara': '#C62828',
+  'Bali': '#C62828',
+  'Nusa Tenggara': '#E91E63',
   'Maluku': '#00838F',
   'Papua': '#558B2F',
 };

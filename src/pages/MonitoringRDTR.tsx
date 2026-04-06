@@ -191,30 +191,16 @@ export default function MonitoringRDTR() {
 
       <div className="p-4 md:px-6 space-y-6">
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Distribusi Status</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => `${e.name}: ${e.value}`} fontSize={11}>
-                {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <h3 className="font-semibold text-foreground mb-4">Jumlah RDTR per Cluster</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214,20%,92%)" />
-              <XAxis dataKey="cluster" fontSize={12} />
-              <YAxis fontSize={12} />
-              <Tooltip />
-              <Bar dataKey="jumlah" fill="#2962FF" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Cluster Info Banner */}
+      <div className="bg-card rounded-xl card-shadow p-4">
+        <div className="flex flex-wrap gap-4">
+          {(['all', 'D', 'E', 'F'] as const).map(key => (
+            <div key={key} className={`flex-1 min-w-[150px] rounded-lg border p-3 ${activeCluster === key ? 'border-primary bg-primary/5' : 'border-border'}`}>
+              <p className="text-xs text-muted-foreground">{key === 'all' ? 'Semua Cluster' : `Cluster ${key}`}</p>
+              <p className="text-xl font-bold text-foreground">{clusterTotals[key]}</p>
+              {key !== 'all' && <p className="text-xs text-muted-foreground mt-1">{CLUSTER_LABELS[key]}</p>}
+            </div>
+          ))}
         </div>
       </div>
 

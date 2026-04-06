@@ -135,7 +135,10 @@ export default function ReportPage() {
 
       <div className="p-4 md:px-6 space-y-6">
         <TabsContent value="cluster-f" className="mt-4 space-y-4">
-          {categoryData.map(cat => (
+          <div className="bg-card rounded-xl card-shadow p-4 flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Total RDTR Cluster F:</span>
+            <span className="text-2xl font-bold text-foreground">{clusterFData.length}</span>
+          </div>
             <div key={cat.key} className={`bg-card rounded-xl border overflow-hidden ${filterParam === cat.key ? 'border-primary ring-1 ring-primary/20' : 'border-border'}`}>
               <button
                 onClick={() => setExpandedCategory(expandedCategory === cat.key ? null : cat.key)}

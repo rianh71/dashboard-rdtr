@@ -144,7 +144,16 @@ export function getSebaranPerPulau(data: RDTRRecord[]) {
   const map = new Map<string, number>();
   data.forEach(r => {
     if (!r.pulau) return;
-    map.set(r.pulau, (map.get(r.pulau) || 0) + 1);
+    let pulau = r.pulau;
+    // Split "Bali dan Nusa Tenggara" into separate entries
+    if (pulau.toLowerCase().includes('bali') && pulau.toLowerCase().includes('nusa tenggara')) {
+      if (r.provinsi === 'Bali') {
+        pulau = 'Bali';
+      } else {
+        pulau = 'Nusa Tenggara';
+      }
+    }
+    map.set(pulau, (map.get(pulau) || 0) + 1);
   });
   return Array.from(map.entries()).map(([pulau, jumlah]) => ({
     pulau,
