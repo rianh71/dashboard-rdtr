@@ -195,27 +195,14 @@ export default function MonitoringRDTR() {
 
       <div className="p-4 md:px-6 space-y-6">
 
-      {/* Cluster Info Banner */}
-      <div className="bg-card rounded-xl card-shadow p-4">
-        <div className="flex flex-wrap gap-4">
-          {(['all', 'D', 'E', 'F'] as const).map(key => (
-            <div key={key} className={`flex-1 min-w-[150px] rounded-lg border p-3 ${activeCluster === key ? 'border-primary bg-primary/5' : 'border-border'}`}>
-              <p className="text-xs text-muted-foreground">{key === 'all' ? 'Semua Cluster' : `Cluster ${key}`}</p>
-              <p className="text-xl font-bold text-foreground">{clusterTotals[key]}</p>
-              {key !== 'all' && <p className="text-xs text-muted-foreground mt-1">{CLUSTER_LABELS[key]}</p>}
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-end">
         <Tabs value={activeCluster} onValueChange={v => { setActiveCluster(v); setPage(0); }} className="w-auto">
           <TabsList>
-            <TabsTrigger value="all">Semua</TabsTrigger>
-            <TabsTrigger value="D">Cluster D</TabsTrigger>
-            <TabsTrigger value="E">Cluster E</TabsTrigger>
-            <TabsTrigger value="F">Cluster F</TabsTrigger>
+            <TabsTrigger value="all">Semua ({clusterTotals.all})</TabsTrigger>
+            <TabsTrigger value="D">Cluster D ({clusterTotals.D})</TabsTrigger>
+            <TabsTrigger value="E">Cluster E ({clusterTotals.E})</TabsTrigger>
+            <TabsTrigger value="F">Cluster F ({clusterTotals.F})</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="w-40">

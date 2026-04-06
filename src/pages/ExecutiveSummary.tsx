@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMainData } from '@/hooks/useRDTRData';
-import { getKPIData, getSebaranPerProvinsi, getTimelineData } from '@/lib/data-service';
+import { getSebaranPerProvinsi, getTimelineData } from '@/lib/data-service';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
@@ -25,7 +25,14 @@ export default function ExecutiveSummary() {
   const { data, isLoading, error } = useMainData();
   const navigate = useNavigate();
 
-  const kpi = useMemo(() => data ? getKPIData(data) : null, [data]);
+  const kpi = useMemo(() => {
+    if (!data) return null;
+    const totalRDTR = data.length;
+    // Terintegrasi = cluster G with "Integrasi OSS"
+    const totalTerintegrasi = data.filter(r => r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss')).length;
+    const totalBelumTerintegrasi = totalRDTR - totalTerintegrasi;
+    return { totalRDTR, totalTerintegrasi, totalBelumTerintegrasi };
+  }, [data]);
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const timelineData = useMemo(() => data ? getTimelineData(data) : [], [data]);
 
@@ -123,7 +130,7 @@ export default function ExecutiveSummary() {
             </thead>
             <tbody>
               {CLUSTER_STATUS_TABLE.map((row) => (
-                <tr key={row.cluster} className="border-b last:border-b-0 hover:bg-muted/30">
+                <tr key={row.cluster} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/data-rdtr?cluster=${encodeURIComponent(row.cluster)}`)}>
                   <td className="px-3 py-2.5 text-center font-bold text-foreground">{row.cluster}</td>
                   <td className="px-3 py-2.5 text-center font-bold text-foreground">{clusterCounts.get(row.cluster) || 0}</td>
                   <td className="px-3 py-2.5 text-foreground">{row.keterangan}</td>
