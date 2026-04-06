@@ -25,7 +25,14 @@ export default function ExecutiveSummary() {
   const { data, isLoading, error } = useMainData();
   const navigate = useNavigate();
 
-  const kpi = useMemo(() => data ? getKPIData(data) : null, [data]);
+  const kpi = useMemo(() => {
+    if (!data) return null;
+    const totalRDTR = data.length;
+    // Terintegrasi = cluster G with "Integrasi OSS"
+    const totalTerintegrasi = data.filter(r => r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss')).length;
+    const totalBelumTerintegrasi = totalRDTR - totalTerintegrasi;
+    return { totalRDTR, totalTerintegrasi, totalBelumTerintegrasi };
+  }, [data]);
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const timelineData = useMemo(() => data ? getTimelineData(data) : [], [data]);
 
