@@ -245,9 +245,29 @@ export default function MonitoringRDTR() {
 
       <div className="p-4 md:px-6 space-y-4">
 
-      {/* Filters: Provinsi, Tahun, Status */}
+      {/* Filters row */}
       <div className="flex flex-wrap gap-3 items-end">
         <div className="w-40">
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
+          <Select value={filterWilayah} onValueChange={v => { setFilterWilayah(v); setPage(0); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua</SelectItem>
+              {wilayahOptions.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-40">
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Pulau</label>
+          <Select value={filterPulau} onValueChange={v => { setFilterPulau(v); setPage(0); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua</SelectItem>
+              {pulauOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44">
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
           <Select value={filterProvinsi} onValueChange={v => { setFilterProvinsi(v); setPage(0); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -279,6 +299,14 @@ export default function MonitoringRDTR() {
               <SelectItem value="belum">⚪ Belum Update</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" /> PDF
+          </Button>
         </div>
       </div>
 
