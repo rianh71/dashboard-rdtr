@@ -139,6 +139,11 @@ export default function MonitoringRDTR() {
   const filtered = useMemo(() => {
     let result = allProcessed;
     if (activeCluster !== 'all') result = result.filter(r => r.cluster === activeCluster);
+    if (filterWilayah !== 'all') result = result.filter(r => r.raw.wilayah === filterWilayah);
+    if (filterPulau !== 'all') result = result.filter(r => {
+      // MonitoringRecord may not have pulau, derive from provinsi mapping
+      return r.provinsi === filterPulau || (r.raw as any).pulau === filterPulau;
+    });
     if (filterProvinsi !== 'all') result = result.filter(r => r.provinsi === filterProvinsi);
     if (filterTahun !== 'all') result = result.filter(r => String(r.tahun) === filterTahun);
     if (filterStatus !== 'all') result = result.filter(r => r.statusCategory === filterStatus);
@@ -151,7 +156,7 @@ export default function MonitoringRDTR() {
       return sortDir === 'desc' ? -cmp : cmp;
     });
     return result;
-  }, [allProcessed, activeCluster, filterProvinsi, filterTahun, filterStatus, searchQuery, sortDir]);
+  }, [allProcessed, activeCluster, filterWilayah, filterPulau, filterProvinsi, filterTahun, filterStatus, searchQuery, sortDir]);
 
   const kpi = useMemo(() => {
     const total = filtered.length;
