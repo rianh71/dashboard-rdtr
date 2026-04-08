@@ -112,7 +112,7 @@ export default function MonitoringRDTR() {
   const [filterTahun, setFilterTahun] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const viewMode = 'ringkas' as const;
+  const _ = 'ringkas'; // viewMode fixed
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [selectedRow, setSelectedRow] = useState<ProcessedRow | null>(null);
   const [page, setPage] = useState(0);
