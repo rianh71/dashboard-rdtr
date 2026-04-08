@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Users, UserCheck, UserX, Clock, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, UserCheck, UserX, Clock, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FileSpreadsheet, FileText } from 'lucide-react';
+import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import type { MonitoringRecord } from '@/lib/data-service';
 
 const STANDARD_KEYS = ['no', 'wilayah', 'provinsi', 'kabKota', 'namaRDTR', 'nomorPerda', 'tahun'];
@@ -108,6 +109,8 @@ export default function MonitoringRDTR() {
   const clusterF = useClusterF();
 
   const [activeCluster, setActiveCluster] = useState('all');
+  const [filterWilayah, setFilterWilayah] = useState('all');
+  const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
   const [filterTahun, setFilterTahun] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -136,6 +139,11 @@ export default function MonitoringRDTR() {
   const filtered = useMemo(() => {
     let result = allProcessed;
     if (activeCluster !== 'all') result = result.filter(r => r.cluster === activeCluster);
+    if (filterWilayah !== 'all') result = result.filter(r => r.raw.wilayah === filterWilayah);
+    if (filterPulau !== 'all') result = result.filter(r => {
+      // MonitoringRecord may not have pulau, derive from provinsi mapping
+      return r.provinsi === filterPulau || (r.raw as any).pulau === filterPulau;
+    });
     if (filterProvinsi !== 'all') result = result.filter(r => r.provinsi === filterProvinsi);
     if (filterTahun !== 'all') result = result.filter(r => String(r.tahun) === filterTahun);
     if (filterStatus !== 'all') result = result.filter(r => r.statusCategory === filterStatus);
@@ -148,7 +156,7 @@ export default function MonitoringRDTR() {
       return sortDir === 'desc' ? -cmp : cmp;
     });
     return result;
-  }, [allProcessed, activeCluster, filterProvinsi, filterTahun, filterStatus, searchQuery, sortDir]);
+  }, [allProcessed, activeCluster, filterWilayah, filterPulau, filterProvinsi, filterTahun, filterStatus, searchQuery, sortDir]);
 
   const kpi = useMemo(() => {
     const total = filtered.length;
@@ -165,11 +173,53 @@ export default function MonitoringRDTR() {
     return { all: d + e + f, D: d, E: e, F: f };
   }, [clusterD.data, clusterE.data, clusterF.data]);
 
+  const wilayahOptions = useMemo(() => [...new Set(allProcessed.map(r => r.raw.wilayah).filter(Boolean))].sort(), [allProcessed]);
+  const pulauOptions = useMemo(() => [...new Set(allProcessed.map(r => (r.raw as any).pulau).filter(Boolean))].sort(), [allProcessed]);
   const provinsiOptions = useMemo(() => [...new Set(allProcessed.map(r => r.provinsi).filter(Boolean))].sort(), [allProcessed]);
   const tahunOptions = useMemo(() => [...new Set(allProcessed.map(r => String(r.tahun)).filter(t => t !== '0'))].sort(), [allProcessed]);
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
+  const MONITORING_COLUMNS = [
+    { header: 'No', dataKey: 'no' },
+    { header: 'Nama RDTR', dataKey: 'namaRDTR' },
+    { header: 'Provinsi', dataKey: 'provinsi' },
+    { header: 'Nomor Perda', dataKey: 'nomorPerda' },
+    { header: 'Tahun', dataKey: 'tahun' },
+    { header: 'Status Terakhir', dataKey: 'statusTerakhir' },
+    { header: 'Update Terakhir', dataKey: 'updateTerakhir' },
+    { header: 'Keterangan', dataKey: 'keteranganSingkat' },
+  ];
+
+  const handleExportExcel = () => {
+    const exportData = filtered.map((r, i) => ({
+      No: i + 1,
+      'Nama RDTR': r.namaRDTR,
+      Provinsi: r.provinsi,
+      'Nomor Perda': r.nomorPerda,
+      Tahun: r.tahun,
+      'Status Terakhir': r.statusTerakhir,
+      'Update Terakhir': r.updateTerakhir,
+      Keterangan: r.keteranganSingkat,
+      Cluster: r.cluster,
+    }));
+    exportToExcel(exportData as unknown as Record<string, unknown>[], 'Monitoring_RDTR');
+  };
+
+  const handleExportPDF = () => {
+    const exportData = filtered.map((r, i) => ({
+      no: i + 1,
+      namaRDTR: r.namaRDTR,
+      provinsi: r.provinsi,
+      nomorPerda: r.nomorPerda,
+      tahun: r.tahun,
+      statusTerakhir: r.statusTerakhir,
+      updateTerakhir: r.updateTerakhir,
+      keteranganSingkat: r.keteranganSingkat,
+    }));
+    exportToPDF(exportData as unknown as Record<string, unknown>[], MONITORING_COLUMNS, 'Monitoring_RDTR', 'Monitoring RDTR');
+  };
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
@@ -195,9 +245,29 @@ export default function MonitoringRDTR() {
 
       <div className="p-4 md:px-6 space-y-4">
 
-      {/* Filters: Provinsi, Tahun, Status */}
+      {/* Filters row */}
       <div className="flex flex-wrap gap-3 items-end">
         <div className="w-40">
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
+          <Select value={filterWilayah} onValueChange={v => { setFilterWilayah(v); setPage(0); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua</SelectItem>
+              {wilayahOptions.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-40">
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Pulau</label>
+          <Select value={filterPulau} onValueChange={v => { setFilterPulau(v); setPage(0); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua</SelectItem>
+              {pulauOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44">
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
           <Select value={filterProvinsi} onValueChange={v => { setFilterProvinsi(v); setPage(0); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -229,6 +299,14 @@ export default function MonitoringRDTR() {
               <SelectItem value="belum">⚪ Belum Update</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" /> PDF
+          </Button>
         </div>
       </div>
 
