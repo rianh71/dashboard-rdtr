@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useClusterD, useClusterE, useClusterF } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { KPICard } from '@/components/dashboard/KPICard';
