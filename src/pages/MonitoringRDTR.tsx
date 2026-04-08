@@ -308,50 +308,6 @@ export default function MonitoringRDTR() {
             </div>
           )}
         </div>
-      ) : (
-        /* Detail mode: show all raw columns */
-        <div className="space-y-3">
-          <div className="rounded-lg border bg-card overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground w-12">No</th>
-                  {allProcessed.length > 0 && Object.keys(allProcessed[0].raw).filter(k => k !== 'no').map(key => (
-                    <th key={key} className="text-left px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">
-                      {key === 'wilayah' ? 'Wilayah' : key === 'provinsi' ? 'Provinsi' : key === 'kabKota' ? 'Kab/Kota' :
-                        key === 'namaRDTR' ? 'Nama RDTR' : key === 'nomorPerda' ? 'Nomor Perda' : key === 'tahun' ? 'Tahun' : key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paged.length === 0 ? (
-                  <tr><td colSpan={20} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
-                ) : paged.map((row, idx) => (
-                  <tr key={idx} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedRow(row)}>
-                    <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
-                    {Object.keys(row.raw).filter(k => k !== 'no').map(key => (
-                      <td key={key} className="px-3 py-2 text-foreground whitespace-nowrap">{String(row.raw[key] || '-')}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                Menampilkan {page * pageSize + 1}-{Math.min((page + 1) * pageSize, filtered.length)} dari {filtered.length}
-              </p>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-                <span className="text-xs text-muted-foreground px-2">{page + 1} / {totalPages}</span>
-                <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}><ChevronRight className="h-3.5 w-3.5" /></Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>
