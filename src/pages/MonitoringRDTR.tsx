@@ -173,11 +173,53 @@ export default function MonitoringRDTR() {
     return { all: d + e + f, D: d, E: e, F: f };
   }, [clusterD.data, clusterE.data, clusterF.data]);
 
+  const wilayahOptions = useMemo(() => [...new Set(allProcessed.map(r => r.raw.wilayah).filter(Boolean))].sort(), [allProcessed]);
+  const pulauOptions = useMemo(() => [...new Set(allProcessed.map(r => (r.raw as any).pulau).filter(Boolean))].sort(), [allProcessed]);
   const provinsiOptions = useMemo(() => [...new Set(allProcessed.map(r => r.provinsi).filter(Boolean))].sort(), [allProcessed]);
   const tahunOptions = useMemo(() => [...new Set(allProcessed.map(r => String(r.tahun)).filter(t => t !== '0'))].sort(), [allProcessed]);
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
+  const MONITORING_COLUMNS = [
+    { header: 'No', dataKey: 'no' },
+    { header: 'Nama RDTR', dataKey: 'namaRDTR' },
+    { header: 'Provinsi', dataKey: 'provinsi' },
+    { header: 'Nomor Perda', dataKey: 'nomorPerda' },
+    { header: 'Tahun', dataKey: 'tahun' },
+    { header: 'Status Terakhir', dataKey: 'statusTerakhir' },
+    { header: 'Update Terakhir', dataKey: 'updateTerakhir' },
+    { header: 'Keterangan', dataKey: 'keteranganSingkat' },
+  ];
+
+  const handleExportExcel = () => {
+    const exportData = filtered.map((r, i) => ({
+      No: i + 1,
+      'Nama RDTR': r.namaRDTR,
+      Provinsi: r.provinsi,
+      'Nomor Perda': r.nomorPerda,
+      Tahun: r.tahun,
+      'Status Terakhir': r.statusTerakhir,
+      'Update Terakhir': r.updateTerakhir,
+      Keterangan: r.keteranganSingkat,
+      Cluster: r.cluster,
+    }));
+    exportToExcel(exportData as unknown as Record<string, unknown>[], 'Monitoring_RDTR');
+  };
+
+  const handleExportPDF = () => {
+    const exportData = filtered.map((r, i) => ({
+      no: i + 1,
+      namaRDTR: r.namaRDTR,
+      provinsi: r.provinsi,
+      nomorPerda: r.nomorPerda,
+      tahun: r.tahun,
+      statusTerakhir: r.statusTerakhir,
+      updateTerakhir: r.updateTerakhir,
+      keteranganSingkat: r.keteranganSingkat,
+    }));
+    exportToPDF(exportData as unknown as Record<string, unknown>[], MONITORING_COLUMNS, 'Monitoring_RDTR', 'Monitoring RDTR');
+  };
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
