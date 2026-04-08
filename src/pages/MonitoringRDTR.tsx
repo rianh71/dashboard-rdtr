@@ -109,6 +109,8 @@ export default function MonitoringRDTR() {
   const clusterF = useClusterF();
 
   const [activeCluster, setActiveCluster] = useState('all');
+  const [filterWilayah, setFilterWilayah] = useState('all');
+  const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
   const [filterTahun, setFilterTahun] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
