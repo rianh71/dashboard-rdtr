@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useClusterD, useClusterE, useClusterF } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { KPICard } from '@/components/dashboard/KPICard';
@@ -112,7 +112,7 @@ export default function MonitoringRDTR() {
   const [filterTahun, setFilterTahun] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'ringkas' | 'detail'>('ringkas');
+  
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [selectedRow, setSelectedRow] = useState<ProcessedRow | null>(null);
   const [page, setPage] = useState(0);
@@ -193,18 +193,10 @@ export default function MonitoringRDTR() {
         </div>
       </div>
 
-      <div className="p-4 md:px-6 space-y-6">
+      <div className="p-4 md:px-6 space-y-4">
 
-      {/* Filters */}
+      {/* Filters: Provinsi, Tahun, Status */}
       <div className="flex flex-wrap gap-3 items-end">
-        <Tabs value={activeCluster} onValueChange={v => { setActiveCluster(v); setPage(0); }} className="w-auto">
-          <TabsList>
-            <TabsTrigger value="all">Semua ({clusterTotals.all})</TabsTrigger>
-            <TabsTrigger value="D">Cluster D ({clusterTotals.D})</TabsTrigger>
-            <TabsTrigger value="E">Cluster E ({clusterTotals.E})</TabsTrigger>
-            <TabsTrigger value="F">Cluster F ({clusterTotals.F})</TabsTrigger>
-          </TabsList>
-        </Tabs>
         <div className="w-40">
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
           <Select value={filterProvinsi} onValueChange={v => { setFilterProvinsi(v); setPage(0); }}>
@@ -238,20 +230,27 @@ export default function MonitoringRDTR() {
             </SelectContent>
           </Select>
         </div>
-        <div className="relative w-56">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Cari RDTR</label>
-          <Search className="absolute left-3 bottom-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Nama RDTR..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
-        </div>
-        <div className="ml-auto flex gap-2">
-          <Button variant={viewMode === 'ringkas' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('ringkas')}>Ringkas</Button>
-          <Button variant={viewMode === 'detail' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('detail')}>Detail</Button>
-        </div>
+      </div>
+
+      {/* Cluster Tabs */}
+      <Tabs value={activeCluster} onValueChange={v => { setActiveCluster(v); setPage(0); }} className="w-auto">
+        <TabsList>
+          <TabsTrigger value="all">Semua ({clusterTotals.all})</TabsTrigger>
+          <TabsTrigger value="D">Cluster D ({clusterTotals.D})</TabsTrigger>
+          <TabsTrigger value="E">Cluster E ({clusterTotals.E})</TabsTrigger>
+          <TabsTrigger value="F">Cluster F ({clusterTotals.F})</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Search above table */}
+      <div className="relative w-64">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Cari nama RDTR..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
       </div>
 
       {/* Table */}
-      {viewMode === 'ringkas' ? (
-        <div className="space-y-3">
+      {/* Table */}
+      <div className="space-y-3">
           <div className="rounded-lg border bg-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -309,50 +308,6 @@ export default function MonitoringRDTR() {
             </div>
           )}
         </div>
-      ) : (
-        /* Detail mode: show all raw columns */
-        <div className="space-y-3">
-          <div className="rounded-lg border bg-card overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground w-12">No</th>
-                  {allProcessed.length > 0 && Object.keys(allProcessed[0].raw).filter(k => k !== 'no').map(key => (
-                    <th key={key} className="text-left px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">
-                      {key === 'wilayah' ? 'Wilayah' : key === 'provinsi' ? 'Provinsi' : key === 'kabKota' ? 'Kab/Kota' :
-                        key === 'namaRDTR' ? 'Nama RDTR' : key === 'nomorPerda' ? 'Nomor Perda' : key === 'tahun' ? 'Tahun' : key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paged.length === 0 ? (
-                  <tr><td colSpan={20} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
-                ) : paged.map((row, idx) => (
-                  <tr key={idx} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedRow(row)}>
-                    <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
-                    {Object.keys(row.raw).filter(k => k !== 'no').map(key => (
-                      <td key={key} className="px-3 py-2 text-foreground whitespace-nowrap">{String(row.raw[key] || '-')}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                Menampilkan {page * pageSize + 1}-{Math.min((page + 1) * pageSize, filtered.length)} dari {filtered.length}
-              </p>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-                <span className="text-xs text-muted-foreground px-2">{page + 1} / {totalPages}</span>
-                <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}><ChevronRight className="h-3.5 w-3.5" /></Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>
