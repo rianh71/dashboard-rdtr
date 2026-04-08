@@ -193,18 +193,10 @@ export default function MonitoringRDTR() {
         </div>
       </div>
 
-      <div className="p-4 md:px-6 space-y-6">
+      <div className="p-4 md:px-6 space-y-4">
 
-      {/* Filters */}
+      {/* Filters: Provinsi, Tahun, Status */}
       <div className="flex flex-wrap gap-3 items-end">
-        <Tabs value={activeCluster} onValueChange={v => { setActiveCluster(v); setPage(0); }} className="w-auto">
-          <TabsList>
-            <TabsTrigger value="all">Semua ({clusterTotals.all})</TabsTrigger>
-            <TabsTrigger value="D">Cluster D ({clusterTotals.D})</TabsTrigger>
-            <TabsTrigger value="E">Cluster E ({clusterTotals.E})</TabsTrigger>
-            <TabsTrigger value="F">Cluster F ({clusterTotals.F})</TabsTrigger>
-          </TabsList>
-        </Tabs>
         <div className="w-40">
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
           <Select value={filterProvinsi} onValueChange={v => { setFilterProvinsi(v); setPage(0); }}>
@@ -238,15 +230,22 @@ export default function MonitoringRDTR() {
             </SelectContent>
           </Select>
         </div>
-        <div className="relative w-56">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Cari RDTR</label>
-          <Search className="absolute left-3 bottom-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Nama RDTR..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
-        </div>
-        <div className="ml-auto flex gap-2">
-          <Button variant={viewMode === 'ringkas' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('ringkas')}>Ringkas</Button>
-          <Button variant={viewMode === 'detail' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('detail')}>Detail</Button>
-        </div>
+      </div>
+
+      {/* Cluster Tabs */}
+      <Tabs value={activeCluster} onValueChange={v => { setActiveCluster(v); setPage(0); }} className="w-auto">
+        <TabsList>
+          <TabsTrigger value="all">Semua ({clusterTotals.all})</TabsTrigger>
+          <TabsTrigger value="D">Cluster D ({clusterTotals.D})</TabsTrigger>
+          <TabsTrigger value="E">Cluster E ({clusterTotals.E})</TabsTrigger>
+          <TabsTrigger value="F">Cluster F ({clusterTotals.F})</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Search above table */}
+      <div className="relative w-64">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Cari nama RDTR..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
       </div>
 
       {/* Table */}
