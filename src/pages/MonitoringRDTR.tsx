@@ -249,8 +249,8 @@ export default function MonitoringRDTR() {
       </div>
 
       {/* Table */}
-      {viewMode === 'ringkas' ? (
-        <div className="space-y-3">
+      {/* Table */}
+      <div className="space-y-3">
           <div className="rounded-lg border bg-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
