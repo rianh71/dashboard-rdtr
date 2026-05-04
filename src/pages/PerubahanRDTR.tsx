@@ -13,7 +13,7 @@ import Papa from 'papaparse';
 const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vST7goQce4BhG1s50o2MF_rEvZFiHFPdkoY5Kqql00euIAylRApG9EagCjbbqGNBI_QLD6c0pD8_EV2/pub';
 const KBLI_CSV_URL = `${BASE_URL}?gid=0&single=true&output=csv`;
 const DISINTEGRASI_CSV_URL = `${BASE_URL}?gid=1838633116&single=true&output=csv`;
-const LOGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRzIZ_QFz70eFoWUSuykYace85X7HWYh806x7q1KtTsxBYDQiiQCcW8QVVhqGgOTVWekPBBHprFVbpo/pub?output=csv';
+const LOGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1TzSRQ_XFu3CzYlzaPPjPRnC6bC5mPxkCQmB5tM0KIEI/gviz/tq?tqx=out:csv&gid=1220668751';
 
 interface KBLIRecord {
   namaRDTR: string;
