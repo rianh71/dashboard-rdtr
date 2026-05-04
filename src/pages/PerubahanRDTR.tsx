@@ -100,17 +100,8 @@ export default function PerubahanRDTR() {
 
   const [selectedDis, setSelectedDis] = useState<DisintegrasiRecord | null>(null);
 
-  // Deduplicate KBLI by namaRDTR
-  const kbliData = useMemo(() => {
-    if (!kbliQuery.data) return [];
-    const seen = new Set<string>();
-    return kbliQuery.data.filter(r => {
-      const key = r.namaRDTR.toLowerCase().trim();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [kbliQuery.data]);
+  // Show all KBLI entries (including repeated updates)
+  const kbliData = useMemo(() => kbliQuery.data || [], [kbliQuery.data]);
 
   const isLoading = kbliQuery.isLoading || disQuery.isLoading;
   const error = kbliQuery.error || disQuery.error;
