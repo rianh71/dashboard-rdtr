@@ -4,11 +4,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Search, TrendingUp, TrendingDown, Minus, FileText } from 'lucide-react';
 import Papa from 'papaparse';
 
 const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vST7goQce4BhG1s50o2MF_rEvZFiHFPdkoY5Kqql00euIAylRApG9EagCjbbqGNBI_QLD6c0pD8_EV2/pub';
 const KBLI_CSV_URL = `${BASE_URL}?gid=0&single=true&output=csv`;
 const DISINTEGRASI_CSV_URL = `${BASE_URL}?gid=1838633116&single=true&output=csv`;
+const LOGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRzIZ_QFz70eFoWUSuykYace85X7HWYh806x7q1KtTsxBYDQiiQCcW8QVVhqGgOTVWekPBBHprFVbpo/pub?output=csv';
 
 interface KBLIRecord {
   namaRDTR: string;
@@ -28,6 +33,52 @@ interface DisintegrasiRecord {
   tanggalIntegrasi: string;
   tanggalDisintegrasi: string;
   keterangan: string;
+}
+
+interface LogRecord {
+  tanggal: string;
+  provinsi: string;
+  kabKota: string;
+  namaRDTR: string;
+  cluster: string;
+  keterangan: string;
+  nilaiLama: string;
+  nilaiBaru: string;
+  dampak: 'Membaik' | 'Memburuk' | 'Stagnan';
+  clusterLama?: number;
+  clusterBaru?: number;
+}
+
+const CLUSTER_RANK: Record<string, number> = {
+  'A1': 1, 'A2': 2, 'B': 3, 'C': 4, 'D': 5, 'E': 6, 'F': 7, 'G': 8,
+};
+
+function extractClusterRank(value: string): number | null {
+  if (!value) return null;
+  const match = value.match(/Cluster\s+(A1|A2|[B-G])/i);
+  if (match) {
+    const key = match[1].toUpperCase();
+    return CLUSTER_RANK[key] ?? null;
+  }
+  return null;
+}
+
+function parseTanggal(t: string): number {
+  // "12 Februari 2026" → timestamp
+  const months: Record<string, number> = {
+    januari: 0, februari: 1, maret: 2, april: 3, mei: 4, juni: 5,
+    juli: 6, agustus: 7, september: 8, oktober: 9, november: 10, desember: 11,
+  };
+  const parts = t.trim().split(/\s+/);
+  if (parts.length >= 3) {
+    const d = parseInt(parts[0], 10);
+    const m = months[parts[1].toLowerCase()];
+    const y = parseInt(parts[2], 10);
+    if (!isNaN(d) && m !== undefined && !isNaN(y)) {
+      return new Date(y, m, d).getTime();
+    }
+  }
+  return 0;
 }
 
 async function fetchKBLI(): Promise<KBLIRecord[]> {
@@ -64,6 +115,65 @@ async function fetchDisintegrasi(): Promise<DisintegrasiRecord[]> {
   }));
 }
 
+async function fetchLogs(): Promise<LogRecord[]> {
+  const res = await fetch(LOGS_CSV_URL);
+  if (!res.ok) throw new Error('Failed to fetch Logs data');
+  const csv = await res.text();
+  const result = Papa.parse(csv, { header: true, skipEmptyLines: true });
+  const rows = result.data as Record<string, string>[];
+  return rows.filter(r => (r['Tanggal'] || r['tanggal'])?.trim()).map(row => {
+    const nilaiLama = (row['Nilai Lama'] || '').trim();
+    const nilaiBaru = (row['Nilai Baru'] || '').trim();
+    const cluster = (row['Cluster'] || '').trim();
+
+    // Determine impact: prefer cluster rank comparison if both sides reference clusters
+    const lamaRank = extractClusterRank(nilaiLama);
+    const baruRank = extractClusterRank(nilaiBaru);
+
+    let dampak: LogRecord['dampak'] = 'Stagnan';
+    if (lamaRank !== null && baruRank !== null) {
+      if (baruRank < lamaRank) dampak = 'Membaik';
+      else if (baruRank > lamaRank) dampak = 'Memburuk';
+      else dampak = 'Stagnan';
+    } else {
+      // Fallback: text-based heuristic for known progress events
+      const baruLower = nilaiBaru.toLowerCase();
+      const lamaLower = nilaiLama.toLowerCase();
+      if (baruLower === lamaLower) {
+        dampak = 'Stagnan';
+      } else if (
+        baruLower.includes('integrasi oss') ||
+        baruLower.includes('proses uji petik') ||
+        baruLower.includes('selesai') ||
+        baruLower.includes('update kbli')
+      ) {
+        dampak = 'Membaik';
+      } else if (
+        baruLower.includes('hold') ||
+        baruLower.includes('rekomendasi revisi') ||
+        baruLower.includes('disintegrasi') ||
+        baruLower.includes('belum')
+      ) {
+        dampak = 'Memburuk';
+      }
+    }
+
+    return {
+      tanggal: (row['Tanggal'] || '').trim(),
+      provinsi: (row['Provinsi'] || '').trim(),
+      kabKota: (row['Kab/Kota'] || '').trim(),
+      namaRDTR: (row['Nama RDTR'] || '').trim(),
+      cluster,
+      keterangan: (row['Keterangan'] || '').trim(),
+      nilaiLama,
+      nilaiBaru,
+      dampak,
+      clusterLama: lamaRank ?? undefined,
+      clusterBaru: baruRank ?? undefined,
+    };
+  });
+}
+
 const KBLI_COLUMNS = [
   { key: 'no', header: 'No', width: '50px', align: 'center' as const },
   { key: 'namaRDTR', header: 'Nama RDTR' },
@@ -83,6 +193,220 @@ const DISINTEGRASI_COLUMNS = [
   { key: 'tahun', header: 'Tahun', align: 'center' as const },
 ];
 
+function DampakBadge({ dampak }: { dampak: LogRecord['dampak'] }) {
+  if (dampak === 'Membaik') {
+    return (
+      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 gap-1">
+        <TrendingUp className="h-3 w-3" /> Membaik
+      </Badge>
+    );
+  }
+  if (dampak === 'Memburuk') {
+    return (
+      <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200 gap-1">
+        <TrendingDown className="h-3 w-3" /> Memburuk
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200 gap-1">
+      <Minus className="h-3 w-3" /> Stagnan
+    </Badge>
+  );
+}
+
+function LogsTab() {
+  const logsQuery = useQuery({
+    queryKey: ['perubahan-logs'],
+    queryFn: fetchLogs,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+  });
+
+  const [search, setSearch] = useState('');
+  const [filterCluster, setFilterCluster] = useState('all');
+  const [filterDampak, setFilterDampak] = useState('all');
+  const [selectedRDTR, setSelectedRDTR] = useState<string | null>(null);
+
+  const all = logsQuery.data || [];
+
+  const clusterOptions = useMemo(() => {
+    const set = new Set<string>();
+    all.forEach(l => l.cluster && set.add(l.cluster));
+    return Array.from(set).sort();
+  }, [all]);
+
+  const filtered = useMemo(() => {
+    let result = all.filter(l => {
+      if (filterCluster !== 'all' && l.cluster !== filterCluster) return false;
+      if (filterDampak !== 'all' && l.dampak !== filterDampak) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!l.namaRDTR.toLowerCase().includes(q) && !l.provinsi.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+    // sort by latest date first
+    result = [...result].sort((a, b) => parseTanggal(b.tanggal) - parseTanggal(a.tanggal));
+    return result;
+  }, [all, search, filterCluster, filterDampak]);
+
+  const stats = useMemo(() => ({
+    total: all.length,
+    membaik: all.filter(l => l.dampak === 'Membaik').length,
+    memburuk: all.filter(l => l.dampak === 'Memburuk').length,
+    stagnan: all.filter(l => l.dampak === 'Stagnan').length,
+  }), [all]);
+
+  const rdtrHistory = useMemo(() => {
+    if (!selectedRDTR) return [];
+    return all
+      .filter(l => l.namaRDTR === selectedRDTR)
+      .sort((a, b) => parseTanggal(b.tanggal) - parseTanggal(a.tanggal));
+  }, [all, selectedRDTR]);
+
+  if (logsQuery.isLoading) return <LoadingState />;
+  if (logsQuery.error) return <div className="text-destructive">Error memuat logs</div>;
+
+  const LOG_COLUMNS = [
+    { key: 'no', header: 'No', width: '50px', align: 'center' as const },
+    { key: 'tanggal', header: 'Tanggal', width: '130px', align: 'center' as const },
+    { key: 'provinsi', header: 'Provinsi', width: '140px' },
+    { key: 'kabKota', header: 'Kab/Kota', width: '160px' },
+    {
+      key: 'namaRDTR',
+      header: 'Nama RDTR',
+      width: '280px',
+      render: (v: unknown, row: Record<string, unknown>) => (
+        <button
+          className="text-left text-primary hover:underline font-medium"
+          onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
+        >
+          {String(v)}
+        </button>
+      ),
+    },
+    { key: 'cluster', header: 'Cluster', width: '100px', align: 'center' as const },
+    { key: 'keterangan', header: 'Keterangan' },
+    { key: 'nilaiLama', header: 'Nilai Lama' },
+    { key: 'nilaiBaru', header: 'Nilai Baru' },
+    {
+      key: 'dampak',
+      header: 'Dampak Perubahan',
+      width: '160px',
+      align: 'center' as const,
+      render: (v: unknown) => <DampakBadge dampak={v as LogRecord['dampak']} />,
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* KPI Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <FileText className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Total Logs</p>
+            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+            <TrendingUp className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Membaik</p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.membaik}</p>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
+            <TrendingDown className="h-5 w-5 text-red-600" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Memburuk</p>
+            <p className="text-2xl font-bold text-red-600">{stats.memburuk}</p>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
+            <Minus className="h-5 w-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Stagnan</p>
+            <p className="text-2xl font-bold text-amber-600">{stats.stagnan}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[240px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Cari Nama RDTR / Provinsi..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={filterCluster} onValueChange={setFilterCluster}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Cluster" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Cluster</SelectItem>
+            {clusterOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterDampak} onValueChange={setFilterDampak}>
+          <SelectTrigger className="w-[200px]"><SelectValue placeholder="Dampak Perubahan" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Dampak</SelectItem>
+            <SelectItem value="Membaik">🟢 Membaik</SelectItem>
+            <SelectItem value="Memburuk">🔴 Memburuk</SelectItem>
+            <SelectItem value="Stagnan">🟡 Stagnan</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <DataTable
+        data={filtered as unknown as Record<string, unknown>[]}
+        columns={LOG_COLUMNS}
+        pageSize={15}
+        searchable={false}
+        autoNumber
+      />
+
+      {/* History Modal */}
+      <Dialog open={!!selectedRDTR} onOpenChange={() => setSelectedRDTR(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">Histori Perubahan: {selectedRDTR}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {rdtrHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Tidak ada histori.</p>
+            ) : rdtrHistory.map((h, i) => (
+              <div key={i} className="border-l-2 border-primary/30 pl-3 py-2 space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-foreground">{h.tanggal} • {h.cluster}</p>
+                  <DampakBadge dampak={h.dampak} />
+                </div>
+                <p className="text-sm text-foreground">{h.keterangan}</p>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div><span className="font-medium">Lama:</span> {h.nilaiLama || '-'}</div>
+                  <div><span className="font-medium">Baru:</span> {h.nilaiBaru || '-'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 export default function PerubahanRDTR() {
   const kbliQuery = useQuery({
     queryKey: ['perubahan-kbli'],
@@ -98,9 +422,15 @@ export default function PerubahanRDTR() {
     refetchInterval: 5 * 60 * 1000,
   });
 
+  const logsCountQuery = useQuery({
+    queryKey: ['perubahan-logs'],
+    queryFn: fetchLogs,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+  });
+
   const [selectedDis, setSelectedDis] = useState<DisintegrasiRecord | null>(null);
 
-  // Show all KBLI entries (including repeated updates)
   const kbliData = useMemo(() => kbliQuery.data || [], [kbliQuery.data]);
 
   const isLoading = kbliQuery.isLoading || disQuery.isLoading;
@@ -114,12 +444,13 @@ export default function PerubahanRDTR() {
       <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
         <div>
           <h2 className="text-xl font-bold text-foreground">Perubahan RDTR</h2>
-          <p className="text-sm text-muted-foreground mt-1">Data perubahan KBLI dan Disintegrasi RDTR</p>
+          <p className="text-sm text-muted-foreground mt-1">Data perubahan KBLI, Disintegrasi, dan Logs Perubahan RDTR</p>
         </div>
 
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
           <TabsTrigger value="update-kbli">RDTR Update KBLI ({kbliData.length})</TabsTrigger>
           <TabsTrigger value="disintegrasi">RDTR Disintegrasi ({disQuery.data?.length || 0})</TabsTrigger>
+          <TabsTrigger value="logs">Logs Perubahan RDTR ({logsCountQuery.data?.length || 0})</TabsTrigger>
         </TabsList>
       </div>
 
@@ -144,6 +475,10 @@ export default function PerubahanRDTR() {
               if (record) setSelectedDis(record);
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="logs" className="mt-4">
+          <LogsTab />
         </TabsContent>
       </div>
 
