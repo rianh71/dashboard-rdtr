@@ -277,9 +277,9 @@ function LogsTab() {
       key: 'namaRDTR',
       header: 'Nama RDTR',
       width: '280px',
-      render: (v: unknown, row: Record<string, unknown>) => (
+      render: (v: unknown) => (
         <button
-          className="text-left text-primary hover:underline font-medium"
+          className="text-left text-foreground hover:underline font-medium"
           onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
         >
           {String(v)}
