@@ -34,6 +34,53 @@ export interface MonitoringRecord {
 const MAIN_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeIrj4GVySc_qb7AZn0zSOrAANiUfznnqETodldfUVPDkLE4nGNEMTwuC2HMKLk3Zha35g307Xabhr/pub?output=csv';
 
 const CLUSTER_D_URL = 'https://docs.google.com/spreadsheets/d/1gqcEuNNxfG2bJMz-3D3xzUJmRpwRkZeoJCnOhKVo7xo/gviz/tq?tqx=out:csv&gid=1664512706';
+const MONITORING_LOGS_URL = 'https://docs.google.com/spreadsheets/d/1gqcEuNNxfG2bJMz-3D3xzUJmRpwRkZeoJCnOhKVo7xo/gviz/tq?tqx=out:csv&gid=1116932125';
+
+export interface MonitoringLog {
+  tanggal: string;
+  mingguKe: number;
+  statusRDTR: string;
+  sumberUpdate: string;
+  provinsi: string;
+  kabKota: string;
+  namaRDTR: string;
+  cluster: string;
+  statusKehadiran: string;
+  statusProgress: string;
+  lastUpdateSebelumnya: string;
+  updateTerbaru: string;
+  detailUpdate: string;
+  isuKendala: string;
+  perluTindakLanjut: string;
+  statusRingkas: string;
+  nilaiClusterSekarang: string;
+  nilaiClusterSebelumnya: string;
+}
+
+export async function fetchMonitoringLogs(): Promise<MonitoringLog[]> {
+  const csv = await fetchCSV(MONITORING_LOGS_URL);
+  const result = Papa.parse(csv, { header: true, skipEmptyLines: true });
+  return (result.data as Record<string, string>[]).map(r => ({
+    tanggal: r['Tanggal'] || '',
+    mingguKe: parseInt(r['Minggu Ke-'] || '') || 0,
+    statusRDTR: r['Status RDTR'] || '',
+    sumberUpdate: r['Sumber Update'] || '',
+    provinsi: r['Provinsi'] || '',
+    kabKota: r['Kab/Kota'] || '',
+    namaRDTR: r['Nama RDTR'] || '',
+    cluster: r['Cluster'] || '',
+    statusKehadiran: r['Status Kehadiran'] || '',
+    statusProgress: r['Status Progress'] || '',
+    lastUpdateSebelumnya: r['Last Update Sebelumnya'] || '',
+    updateTerbaru: r['Update Terbaru'] || '',
+    detailUpdate: r['Detail Update'] || '',
+    isuKendala: r['Isu/Kendala'] || '',
+    perluTindakLanjut: r['Perlu Tindak Lanjut'] || '',
+    statusRingkas: r['Status Ringkas'] || '',
+    nilaiClusterSekarang: r['Nilai Cluster Sekarang'] || '',
+    nilaiClusterSebelumnya: r['Nilai Cluster Sebelumnya'] || '',
+  })).filter(r => r.namaRDTR);
+}
 const CLUSTER_E_URL = 'https://docs.google.com/spreadsheets/d/1gqcEuNNxfG2bJMz-3D3xzUJmRpwRkZeoJCnOhKVo7xo/gviz/tq?tqx=out:csv&gid=120567424';
 const CLUSTER_F_URL = 'https://docs.google.com/spreadsheets/d/1gqcEuNNxfG2bJMz-3D3xzUJmRpwRkZeoJCnOhKVo7xo/gviz/tq?tqx=out:csv&gid=2069785756';
 
