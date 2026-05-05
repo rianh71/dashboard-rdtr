@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMonitoringLogs } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
-import { KPICard } from '@/components/dashboard/KPICard';
+
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
