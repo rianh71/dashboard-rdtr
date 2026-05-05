@@ -157,47 +157,63 @@ export default function MonitoringRDTR() {
 
         {/* KPI Row 1 */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <KPICard title="Total Pertemuan" value={kpi.totalPertemuan} icon={CalendarDays} gradient="blue" />
-          <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={Users} gradient="purple" />
           <div className="rounded-lg border bg-card p-4">
             <div className="flex items-center justify-between">
-              <UserCheck className="h-4 w-4 text-green-600" />
-              <Trend now={kpi.hadir.now} prev={kpi.hadir.prev} />
+              <CalendarDays className="h-4 w-4 text-blue-600" />
             </div>
-            <p className="text-2xl font-bold mt-2 text-foreground">{kpi.hadir.now}</p>
-            <p className="text-xs text-muted-foreground">Total Hadir</p>
+            <p className="text-2xl font-bold mt-2 text-foreground">{kpi.totalPertemuan}</p>
+            <p className="text-xs text-muted-foreground">Total Pertemuan</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Dari total {mingguList.length} minggu periode monitoring</p>
           </div>
           <div className="rounded-lg border bg-card p-4">
             <div className="flex items-center justify-between">
-              <UserX className="h-4 w-4 text-red-600" />
-              <Trend now={kpi.tidakHadir.now} prev={kpi.tidakHadir.prev} />
+              <Users className="h-4 w-4 text-purple-600" />
             </div>
-            <p className="text-2xl font-bold mt-2 text-foreground">{kpi.tidakHadir.now}</p>
-            <p className="text-xs text-muted-foreground">Total Tidak Hadir</p>
+            <p className="text-2xl font-bold mt-2 text-foreground">{kpi.totalRDTR}</p>
+            <p className="text-xs text-muted-foreground">Total RDTR</p>
           </div>
+          {([
+            { key: 'hadir', label: 'Total Hadir', value: kpi.hadir, icon: UserCheck, color: 'text-green-600' },
+            { key: 'tidakHadir', label: 'Total Tidak Hadir', value: kpi.tidakHadir, icon: UserX, color: 'text-red-600' },
+          ] as const).map(c => {
+            const active = kpiFilter === c.key;
+            return (
+              <button key={c.key} onClick={() => toggleKpi(c.key)} className={`text-left rounded-lg border bg-card p-4 transition-all hover:bg-muted/30 ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <c.icon className={`h-4 w-4 ${c.color}`} />
+                  <Trend now={c.value.now} prev={c.value.prev} />
+                </div>
+                <p className="text-2xl font-bold mt-2 text-foreground">{c.value.now}</p>
+                <p className="text-xs text-muted-foreground">{c.label}</p>
+              </button>
+            );
+          })}
         </div>
 
         {/* KPI Row 2 - Status Ringkas */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: 'Aktif', value: kpi.aktif, dot: 'bg-green-500', icon: Activity },
-            { label: 'Stagnan', value: kpi.stagnan, dot: 'bg-yellow-500', icon: MinusCircle },
-            { label: 'Tidak Aktif', value: kpi.tidakAktif, dot: 'bg-gray-400', icon: XCircle },
-            { label: 'Bermasalah', value: kpi.bermasalah, dot: 'bg-red-500', icon: AlertCircle },
-            { label: 'Selesai', value: kpi.selesai, dot: 'bg-blue-500', icon: CheckCircle2 },
-          ].map(s => (
-            <div key={s.label} className="rounded-lg border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
-                  <s.icon className="h-4 w-4 text-muted-foreground" />
-                </span>
-                <Trend now={s.value.now} prev={s.value.prev} />
-              </div>
-              <p className="text-2xl font-bold mt-2 text-foreground">{s.value.now}</p>
-              <p className="text-xs text-muted-foreground">{s.label}</p>
-            </div>
-          ))}
+            { key: 'aktif', label: 'Aktif', value: kpi.aktif, dot: 'bg-green-500', icon: Activity },
+            { key: 'stagnan', label: 'Stagnan', value: kpi.stagnan, dot: 'bg-yellow-500', icon: MinusCircle },
+            { key: 'tidakAktif', label: 'Tidak Aktif', value: kpi.tidakAktif, dot: 'bg-gray-400', icon: XCircle },
+            { key: 'bermasalah', label: 'Bermasalah', value: kpi.bermasalah, dot: 'bg-red-500', icon: AlertCircle },
+            { key: 'selesai', label: 'Selesai', value: kpi.selesai, dot: 'bg-blue-500', icon: CheckCircle2 },
+          ].map(s => {
+            const active = kpiFilter === s.key;
+            return (
+              <button key={s.key} onClick={() => toggleKpi(s.key)} className={`text-left rounded-lg border bg-card p-4 transition-all hover:bg-muted/30 ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
+                    <s.icon className="h-4 w-4 text-muted-foreground" />
+                  </span>
+                  <Trend now={s.value.now} prev={s.value.prev} />
+                </div>
+                <p className="text-2xl font-bold mt-2 text-foreground">{s.value.now}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </button>
+            );
+          })}
         </div>
       </div>
 
