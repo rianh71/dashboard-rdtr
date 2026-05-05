@@ -255,6 +255,11 @@ export default function MonitoringRDTR() {
             <Search className="absolute left-3 top-[34px] h-4 w-4 text-muted-foreground" />
             <Input placeholder="Nama RDTR / Provinsi..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
           </div>
+          {hasActiveFilter && (
+            <Button variant="outline" size="sm" onClick={resetAllFilters} className="gap-1.5 self-end">
+              <XCircle className="h-3.5 w-3.5" /> Reset Filter
+            </Button>
+          )}
           <div className="flex gap-2 ml-auto">
             <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
               <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
