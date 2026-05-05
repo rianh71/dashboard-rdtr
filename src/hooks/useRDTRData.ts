@@ -1,5 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchMainData, fetchClusterD, fetchClusterE, fetchClusterF } from '@/lib/data-service';
+import { fetchMainData, fetchClusterD, fetchClusterE, fetchClusterF, fetchMonitoringLogs } from '@/lib/data-service';
+
+export function useMonitoringLogs() {
+  return useQuery({
+    queryKey: ['monitoring-logs'],
+    queryFn: fetchMonitoringLogs,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+  });
+}
 
 export function useMainData() {
   return useQuery({

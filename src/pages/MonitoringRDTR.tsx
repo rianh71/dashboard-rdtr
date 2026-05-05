@@ -1,421 +1,355 @@
 import { useMemo, useState } from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useClusterD, useClusterE, useClusterF } from '@/hooks/useRDTRData';
+import { useMonitoringLogs } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Users, UserCheck, UserX, Clock, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FileSpreadsheet, FileText } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Users, UserCheck, UserX, CalendarDays, Activity, AlertCircle, CheckCircle2, MinusCircle, XCircle, Search, ChevronLeft, ChevronRight, FileSpreadsheet, FileText, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
-import type { MonitoringRecord } from '@/lib/data-service';
+import type { MonitoringLog } from '@/lib/data-service';
 
-const STANDARD_KEYS = ['no', 'wilayah', 'provinsi', 'kabKota', 'namaRDTR', 'nomorPerda', 'tahun'];
+const STATUS_RINGKAS = {
+  'Aktif (Monitoring)': { color: 'bg-green-500', label: 'Aktif (Monitoring)', text: 'text-green-700' },
+  'Aktif (Non Monitoring)': { color: 'bg-green-500', label: 'Aktif (Non Monitoring)', text: 'text-green-700' },
+  'Stagnan': { color: 'bg-yellow-500', label: 'Stagnan', text: 'text-yellow-700' },
+  'Tidak Aktif': { color: 'bg-gray-400', label: 'Tidak Aktif', text: 'text-gray-700' },
+  'Bermasalah (Keluar Cluster)': { color: 'bg-red-500', label: 'Bermasalah', text: 'text-red-700' },
+  'Selesai (Keluar Cluster)': { color: 'bg-blue-500', label: 'Selesai', text: 'text-blue-700' },
+} as const;
 
-interface ProcessedRow {
-  raw: MonitoringRecord;
-  namaRDTR: string;
-  provinsi: string;
-  nomorPerda: string;
-  tahun: number;
-  statusTerakhir: string;
-  updateTerakhir: string;
-  keteranganSingkat: string;
-  cluster: string;
-  statusCategory: 'hadir' | 'tidak_hadir' | 'proses' | 'belum';
+function getStatusMeta(s: string) {
+  return STATUS_RINGKAS[s as keyof typeof STATUS_RINGKAS] || { color: 'bg-muted', label: s || '-', text: 'text-muted-foreground' };
 }
 
-function categorizeStatus(val: string): 'hadir' | 'tidak_hadir' | 'proses' | 'belum' {
-  if (!val) return 'belum';
-  const lower = val.toLowerCase().trim();
-  if (lower.includes('hadir') && !lower.includes('tidak')) return 'hadir';
-  if (lower.includes('tidak hadir') || lower.includes('tidak') || lower.includes('absen')) return 'tidak_hadir';
-  if (lower.includes('proses') || lower.includes('sedang') || lower.includes('progress')) return 'proses';
-  // Default: if has a value, it's "hadir"
-  if (lower.length > 0) return 'hadir';
-  return 'belum';
-}
-
-function getStatusIndicator(cat: string) {
-  switch (cat) {
-    case 'hadir': return { icon: '🟢', label: 'Hadir', color: 'text-green-600' };
-    case 'tidak_hadir': return { icon: '🔴', label: 'Tidak Hadir', color: 'text-red-600' };
-    case 'proses': return { icon: '🟡', label: 'Proses', color: 'text-yellow-600' };
-    default: return { icon: '⚪', label: 'Belum ada update', color: 'text-muted-foreground' };
-  }
-}
-
-function extractDateFromKey(key: string): string {
-  // Match date patterns like "1 April 2026", "19 Feb 2026", "4 Maret 2026"
-  const match = key.match(/(\d{1,2}\s+\w+\s+\d{4})/);
-  return match ? match[1] : '';
-}
-
-function processClusterData(data: MonitoringRecord[] | undefined, clusterName: string): ProcessedRow[] {
-  if (!data) return [];
-  return data.map(record => {
-    const dynamicKeys = Object.keys(record).filter(k => !STANDARD_KEYS.includes(k));
-    let lastValue = '';
-    let lastKey = '';
-    let lastDate = '';
-    // Iterate from right (last column) to find last non-empty
-    for (let i = dynamicKeys.length - 1; i >= 0; i--) {
-      const val = String(record[dynamicKeys[i]] || '').trim();
-      if (val) {
-        lastValue = val;
-        lastKey = dynamicKeys[i];
-        // Find the date: check this key or nearby "Rencana Tindak Lanjut" key
-        const dateFromKey = extractDateFromKey(lastKey);
-        if (dateFromKey) {
-          lastDate = dateFromKey;
-        } else {
-          // If this is a "Kehadiran" column, look at the previous key for the date
-          for (let j = i - 1; j >= 0; j--) {
-            const prevDate = extractDateFromKey(dynamicKeys[j]);
-            if (prevDate) {
-              lastDate = prevDate;
-              break;
-            }
-          }
-        }
-        break;
-      }
-    }
-    return {
-      raw: record,
-      namaRDTR: record.namaRDTR || '',
-      provinsi: record.provinsi || '',
-      nomorPerda: record.nomorPerda || '',
-      tahun: record.tahun || 0,
-      statusTerakhir: lastValue,
-      updateTerakhir: lastDate || '',
-      keteranganSingkat: lastValue.length > 80 ? lastValue.substring(0, 80) + '...' : lastValue,
-      cluster: clusterName,
-      statusCategory: categorizeStatus(lastValue),
-    };
-  });
-}
-
-const CLUSTER_LABELS: Record<string, string> = {
-  'D': 'RDTR YANG BELUM MEMENUHI 4 DOKUMEN WAJIB',
-  'E': 'RDTR PROSES UJI TITIK PASCA PERKADA OLEH PEMERINTAH DAERAH',
-  'F': 'RDTR YANG SIAP TERINTEGRASI OSS',
-};
+function isAktif(s: string) { return s === 'Aktif (Monitoring)' || s === 'Aktif (Non Monitoring)'; }
 
 export default function MonitoringRDTR() {
-  const clusterD = useClusterD();
-  const clusterE = useClusterE();
-  const clusterF = useClusterF();
-
-  const [activeCluster, setActiveCluster] = useState('all');
-  const [filterWilayah, setFilterWilayah] = useState('all');
-  const [filterPulau, setFilterPulau] = useState('all');
+  const { data, isLoading, error } = useMonitoringLogs();
+  const [selectedMinggu, setSelectedMinggu] = useState<number | null>(null);
+  const [filterCluster, setFilterCluster] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
-  const [filterTahun, setFilterTahun] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [selectedRow, setSelectedRow] = useState<ProcessedRow | null>(null);
   const [page, setPage] = useState(0);
+  const [selectedRow, setSelectedRow] = useState<MonitoringLog | null>(null);
   const pageSize = 20;
 
-  const isLoading = clusterD.isLoading || clusterE.isLoading || clusterF.isLoading;
-  const error = clusterD.error || clusterE.error || clusterF.error;
+  const logs = data || [];
+  const mingguList = useMemo(() => [...new Set(logs.map(l => l.mingguKe).filter(m => m > 0))].sort((a, b) => a - b), [logs]);
+  const maxMinggu = mingguList[mingguList.length - 1] || 0;
+  const activeMinggu = selectedMinggu ?? maxMinggu;
+  const prevMinggu = mingguList[mingguList.indexOf(activeMinggu) - 1] ?? null;
 
-  const allProcessed = useMemo(() => {
-    const d = processClusterData(clusterD.data, 'D');
-    const e = processClusterData(clusterE.data, 'E');
-    const f = processClusterData(clusterF.data, 'F');
-    return [...d, ...e, ...f];
-  }, [clusterD.data, clusterE.data, clusterF.data]);
+  const currentWeek = useMemo(() => logs.filter(l => l.mingguKe === activeMinggu), [logs, activeMinggu]);
+  const prevWeek = useMemo(() => prevMinggu ? logs.filter(l => l.mingguKe === prevMinggu) : [], [logs, prevMinggu]);
 
-  const lastUpdateDate = useMemo(() => {
-    const dates = allProcessed.map(r => r.updateTerakhir).filter(Boolean);
-    return dates.length > 0 ? dates[dates.length - 1] : '-';
-  }, [allProcessed]);
-
-  const filtered = useMemo(() => {
-    let result = allProcessed;
-    if (activeCluster !== 'all') result = result.filter(r => r.cluster === activeCluster);
-    if (filterWilayah !== 'all') result = result.filter(r => r.raw.wilayah === filterWilayah);
-    if (filterPulau !== 'all') result = result.filter(r => {
-      // MonitoringRecord may not have pulau, derive from provinsi mapping
-      return r.provinsi === filterPulau || (r.raw as any).pulau === filterPulau;
-    });
-    if (filterProvinsi !== 'all') result = result.filter(r => r.provinsi === filterProvinsi);
-    if (filterTahun !== 'all') result = result.filter(r => String(r.tahun) === filterTahun);
-    if (filterStatus !== 'all') result = result.filter(r => r.statusCategory === filterStatus);
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(r => r.namaRDTR.toLowerCase().includes(q));
-    }
-    result = [...result].sort((a, b) => {
-      const cmp = a.updateTerakhir.localeCompare(b.updateTerakhir);
-      return sortDir === 'desc' ? -cmp : cmp;
-    });
-    return result;
-  }, [allProcessed, activeCluster, filterWilayah, filterPulau, filterProvinsi, filterTahun, filterStatus, searchQuery, sortDir]);
+  const countBy = (arr: MonitoringLog[], pred: (l: MonitoringLog) => boolean) => arr.filter(pred).length;
 
   const kpi = useMemo(() => {
-    const total = filtered.length;
-    const hadir = filtered.filter(r => r.statusCategory === 'hadir').length;
-    const tidakHadir = filtered.filter(r => r.statusCategory === 'tidak_hadir').length;
-    const proses = filtered.filter(r => r.statusCategory === 'proses').length;
-    return { total, hadir, tidakHadir, proses };
-  }, [filtered]);
+    const c = currentWeek;
+    const p = prevWeek;
+    return {
+      totalPertemuan: maxMinggu,
+      totalRDTR: new Set(c.map(l => l.namaRDTR)).size,
+      hadir: { now: countBy(c, l => l.statusKehadiran === 'Hadir'), prev: countBy(p, l => l.statusKehadiran === 'Hadir') },
+      tidakHadir: { now: countBy(c, l => l.statusKehadiran === 'Tidak Hadir'), prev: countBy(p, l => l.statusKehadiran === 'Tidak Hadir') },
+      aktif: { now: countBy(c, l => isAktif(l.statusRingkas)), prev: countBy(p, l => isAktif(l.statusRingkas)) },
+      stagnan: { now: countBy(c, l => l.statusRingkas === 'Stagnan'), prev: countBy(p, l => l.statusRingkas === 'Stagnan') },
+      tidakAktif: { now: countBy(c, l => l.statusRingkas === 'Tidak Aktif'), prev: countBy(p, l => l.statusRingkas === 'Tidak Aktif') },
+      bermasalah: { now: countBy(c, l => l.statusRingkas === 'Bermasalah (Keluar Cluster)'), prev: countBy(p, l => l.statusRingkas === 'Bermasalah (Keluar Cluster)') },
+      selesai: { now: countBy(c, l => l.statusRingkas === 'Selesai (Keluar Cluster)'), prev: countBy(p, l => l.statusRingkas === 'Selesai (Keluar Cluster)') },
+    };
+  }, [currentWeek, prevWeek, maxMinggu]);
 
-  const clusterTotals = useMemo(() => {
-    const d = processClusterData(clusterD.data, 'D').length;
-    const e = processClusterData(clusterE.data, 'E').length;
-    const f = processClusterData(clusterF.data, 'F').length;
-    return { all: d + e + f, D: d, E: e, F: f };
-  }, [clusterD.data, clusterE.data, clusterF.data]);
+  const clusterOptions = useMemo(() => [...new Set(logs.map(l => l.cluster).filter(Boolean))].sort(), [logs]);
+  const provinsiOptions = useMemo(() => [...new Set(logs.map(l => l.provinsi).filter(Boolean))].sort(), [logs]);
 
-  const wilayahOptions = useMemo(() => [...new Set(allProcessed.map(r => r.raw.wilayah).filter(Boolean))].sort(), [allProcessed]);
-  const pulauOptions = useMemo(() => [...new Set(allProcessed.map(r => (r.raw as any).pulau).filter(Boolean))].sort(), [allProcessed]);
-  const provinsiOptions = useMemo(() => [...new Set(allProcessed.map(r => r.provinsi).filter(Boolean))].sort(), [allProcessed]);
-  const tahunOptions = useMemo(() => [...new Set(allProcessed.map(r => String(r.tahun)).filter(t => t !== '0'))].sort(), [allProcessed]);
+  const filtered = useMemo(() => {
+    let r = currentWeek;
+    if (filterCluster !== 'all') r = r.filter(l => l.cluster === filterCluster);
+    if (filterProvinsi !== 'all') r = r.filter(l => l.provinsi === filterProvinsi);
+    if (filterStatus !== 'all') r = r.filter(l => l.statusRingkas === filterStatus);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      r = r.filter(l => l.namaRDTR.toLowerCase().includes(q) || l.provinsi.toLowerCase().includes(q));
+    }
+    return r;
+  }, [currentWeek, filterCluster, filterProvinsi, filterStatus, searchQuery]);
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
-  const MONITORING_COLUMNS = [
-    { header: 'No', dataKey: 'no' },
-    { header: 'Nama RDTR', dataKey: 'namaRDTR' },
-    { header: 'Provinsi', dataKey: 'provinsi' },
-    { header: 'Nomor Perda', dataKey: 'nomorPerda' },
-    { header: 'Tahun', dataKey: 'tahun' },
-    { header: 'Status Terakhir', dataKey: 'statusTerakhir' },
-    { header: 'Update Terakhir', dataKey: 'updateTerakhir' },
-    { header: 'Keterangan', dataKey: 'keteranganSingkat' },
-  ];
-
   const handleExportExcel = () => {
-    const exportData = filtered.map((r, i) => ({
-      No: i + 1,
-      'Nama RDTR': r.namaRDTR,
-      Provinsi: r.provinsi,
-      'Nomor Perda': r.nomorPerda,
-      Tahun: r.tahun,
-      'Status Terakhir': r.statusTerakhir,
-      'Update Terakhir': r.updateTerakhir,
-      Keterangan: r.keteranganSingkat,
-      Cluster: r.cluster,
-    }));
-    exportToExcel(exportData as unknown as Record<string, unknown>[], 'Monitoring_RDTR');
+    exportToExcel(filtered.map((l, i) => ({
+      No: i + 1, 'Minggu Ke-': l.mingguKe, Tanggal: l.tanggal, Provinsi: l.provinsi, 'Kab/Kota': l.kabKota,
+      'Nama RDTR': l.namaRDTR, Cluster: l.cluster, 'Status Kehadiran': l.statusKehadiran, 'Status Ringkas': l.statusRingkas,
+      'Update Terbaru': l.updateTerbaru, 'Isu/Kendala': l.isuKendala, 'Perlu Tindak Lanjut': l.perluTindakLanjut,
+    })) as unknown as Record<string, unknown>[], 'Monitoring_RDTR');
+  };
+  const handleExportPDF = () => {
+    exportToPDF(filtered.map((l, i) => ({
+      no: i + 1, namaRDTR: l.namaRDTR, provinsi: l.provinsi, cluster: l.cluster,
+      kehadiran: l.statusKehadiran, status: l.statusRingkas, update: l.updateTerbaru,
+    })) as unknown as Record<string, unknown>[], [
+      { header: 'No', dataKey: 'no' }, { header: 'Nama RDTR', dataKey: 'namaRDTR' },
+      { header: 'Provinsi', dataKey: 'provinsi' }, { header: 'Cluster', dataKey: 'cluster' },
+      { header: 'Kehadiran', dataKey: 'kehadiran' }, { header: 'Status', dataKey: 'status' },
+      { header: 'Update', dataKey: 'update' },
+    ], 'Monitoring_RDTR', `Monitoring RDTR - Minggu ke ${activeMinggu}`);
   };
 
-  const handleExportPDF = () => {
-    const exportData = filtered.map((r, i) => ({
-      no: i + 1,
-      namaRDTR: r.namaRDTR,
-      provinsi: r.provinsi,
-      nomorPerda: r.nomorPerda,
-      tahun: r.tahun,
-      statusTerakhir: r.statusTerakhir,
-      updateTerakhir: r.updateTerakhir,
-      keteranganSingkat: r.keteranganSingkat,
-    }));
-    exportToPDF(exportData as unknown as Record<string, unknown>[], MONITORING_COLUMNS, 'Monitoring_RDTR', 'Monitoring RDTR');
-  };
+  const history = useMemo(() => {
+    if (!selectedRow) return [];
+    return logs.filter(l => l.namaRDTR === selectedRow.namaRDTR).sort((a, b) => a.mingguKe - b.mingguKe);
+  }, [logs, selectedRow]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
 
+  const Trend = ({ now, prev }: { now: number; prev: number }) => {
+    if (prev === 0 && now === 0) return null;
+    const diff = now - prev;
+    if (diff === 0) return <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground"><Minus className="h-3 w-3" />0</span>;
+    const pos = diff > 0;
+    return (
+      <span className={`inline-flex items-center gap-0.5 text-xs ${pos ? 'text-green-600' : 'text-red-600'}`}>
+        {pos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+        {pos ? '+' : ''}{diff}
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
       <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
-        {/* Header */}
-        <div>
-          <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>
-          <p className="text-sm text-muted-foreground mt-1">Monitoring kondisi terkini RDTR Cluster D, E, dan F</p>
-          <p className="text-xs text-muted-foreground mt-1">Last Update: {lastUpdateDate || '-'}</p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>
+            <p className="text-sm text-muted-foreground mt-1">Monitoring berdasarkan logs mingguan — Minggu ke-{activeMinggu}</p>
+          </div>
+          <div className="flex items-end gap-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Pilih Minggu Ke-</label>
+              <Select value={String(activeMinggu)} onValueChange={v => { setSelectedMinggu(parseInt(v)); setPage(0); }}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {mingguList.map(m => <SelectItem key={m} value={String(m)}>Minggu ke-{m}{m === maxMinggu ? ' (Terbaru)' : ''}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <KPICard title="Total RDTR" value={kpi.total} icon={Users} gradient="blue" />
-          <KPICard title="Total Hadir" value={kpi.hadir} icon={UserCheck} gradient="emerald" />
-          <KPICard title="Total Tidak Hadir" value={kpi.tidakHadir} icon={UserX} gradient="orange" />
-          <KPICard title="Total Dalam Proses" value={kpi.proses} icon={Clock} gradient="purple" />
+        {/* KPI Row 1 */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <KPICard title="Total Pertemuan" value={kpi.totalPertemuan} icon={CalendarDays} gradient="blue" />
+          <KPICard title="Total RDTR" value={kpi.totalRDTR} icon={Users} gradient="purple" />
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <UserCheck className="h-4 w-4 text-green-600" />
+              <Trend now={kpi.hadir.now} prev={kpi.hadir.prev} />
+            </div>
+            <p className="text-2xl font-bold mt-2 text-foreground">{kpi.hadir.now}</p>
+            <p className="text-xs text-muted-foreground">Total Hadir</p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <UserX className="h-4 w-4 text-red-600" />
+              <Trend now={kpi.tidakHadir.now} prev={kpi.tidakHadir.prev} />
+            </div>
+            <p className="text-2xl font-bold mt-2 text-foreground">{kpi.tidakHadir.now}</p>
+            <p className="text-xs text-muted-foreground">Total Tidak Hadir</p>
+          </div>
+        </div>
+
+        {/* KPI Row 2 - Status Ringkas */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {[
+            { label: 'Aktif', value: kpi.aktif, dot: 'bg-green-500', icon: Activity },
+            { label: 'Stagnan', value: kpi.stagnan, dot: 'bg-yellow-500', icon: MinusCircle },
+            { label: 'Tidak Aktif', value: kpi.tidakAktif, dot: 'bg-gray-400', icon: XCircle },
+            { label: 'Bermasalah', value: kpi.bermasalah, dot: 'bg-red-500', icon: AlertCircle },
+            { label: 'Selesai', value: kpi.selesai, dot: 'bg-blue-500', icon: CheckCircle2 },
+          ].map(s => (
+            <div key={s.label} className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
+                  <s.icon className="h-4 w-4 text-muted-foreground" />
+                </span>
+                <Trend now={s.value.now} prev={s.value.prev} />
+              </div>
+              <p className="text-2xl font-bold mt-2 text-foreground">{s.value.now}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="p-4 md:px-6 space-y-4">
-
-      {/* Filters row */}
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="w-40">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
-          <Select value={filterWilayah} onValueChange={v => { setFilterWilayah(v); setPage(0); }}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
-              {wilayahOptions.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-40">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Pulau</label>
-          <Select value={filterPulau} onValueChange={v => { setFilterPulau(v); setPage(0); }}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
-              {pulauOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-44">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
-          <Select value={filterProvinsi} onValueChange={v => { setFilterProvinsi(v); setPage(0); }}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
-              {provinsiOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-28">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Tahun</label>
-          <Select value={filterTahun} onValueChange={v => { setFilterTahun(v); setPage(0); }}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
-              {tahunOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-36">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
-          <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setPage(0); }}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
-              <SelectItem value="hadir">🟢 Hadir</SelectItem>
-              <SelectItem value="tidak_hadir">🔴 Tidak Hadir</SelectItem>
-              <SelectItem value="proses">🟡 Proses</SelectItem>
-              <SelectItem value="belum">⚪ Belum Update</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2 ml-auto">
-          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
-            <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
-            <FileText className="h-3.5 w-3.5" /> PDF
-          </Button>
-        </div>
-      </div>
-
-      {/* Cluster Tabs */}
-      <Tabs value={activeCluster} onValueChange={v => { setActiveCluster(v); setPage(0); }} className="w-auto">
-        <TabsList>
-          <TabsTrigger value="all">Semua ({clusterTotals.all})</TabsTrigger>
-          <TabsTrigger value="D">Cluster D ({clusterTotals.D})</TabsTrigger>
-          <TabsTrigger value="E">Cluster E ({clusterTotals.E})</TabsTrigger>
-          <TabsTrigger value="F">Cluster F ({clusterTotals.F})</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {/* Search above table */}
-      <div className="relative w-64">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Cari nama RDTR..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
-      </div>
-
-      {/* Table */}
-      {/* Table */}
-      <div className="space-y-3">
-          <div className="rounded-lg border bg-card overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground w-12">No</th>
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground">Nama RDTR</th>
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground">Provinsi</th>
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground">Nomor Perda/Perkada</th>
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground w-16">Tahun</th>
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground">Status Terakhir</th>
-                  <th className="text-left px-3 py-2.5 font-semibold text-foreground cursor-pointer" onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}>
-                    <span className="inline-flex items-center gap-1">
-                      Update Terakhir
-                      {sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                    </span>
-                  </th>
-                  <th className="text-center px-3 py-2.5 font-semibold text-foreground">Keterangan</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paged.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
-                ) : paged.map((row, idx) => {
-                  const si = getStatusIndicator(row.statusCategory);
-                  return (
-                    <tr key={idx} className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedRow(row)}>
-                      <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
-                      <td className="px-3 py-2 text-foreground font-medium">{row.namaRDTR}</td>
-                      <td className="px-3 py-2 text-foreground">{row.provinsi}</td>
-                      <td className="px-3 py-2 text-foreground">{row.nomorPerda || '-'}</td>
-                      <td className="px-3 py-2 text-foreground">{row.tahun || '-'}</td>
-                      <td className="px-3 py-2">
-                        <span className={`inline-flex items-center gap-1.5 ${si.color}`}>
-                          <span>{si.icon}</span> {si.label}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-foreground whitespace-nowrap">{row.updateTerakhir || 'Tidak Ada Update'}</td>
-                      <td className="px-3 py-2 text-foreground max-w-[200px] truncate text-center">{row.keteranganSingkat || '-'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="w-36">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Cluster</label>
+            <Select value={filterCluster} onValueChange={v => { setFilterCluster(v); setPage(0); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                {clusterOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                Menampilkan {page * pageSize + 1}-{Math.min((page + 1) * pageSize, filtered.length)} dari {filtered.length}
-              </p>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-                <span className="text-xs text-muted-foreground px-2">{page + 1} / {totalPages}</span>
-                <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}><ChevronRight className="h-3.5 w-3.5" /></Button>
-              </div>
-            </div>
-          )}
+          <div className="w-44">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
+            <Select value={filterProvinsi} onValueChange={v => { setFilterProvinsi(v); setPage(0); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                {provinsiOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-52">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Status Ringkas</label>
+            <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setPage(0); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                {Object.keys(STATUS_RINGKAS).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="relative w-64">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Cari</label>
+            <Search className="absolute left-3 top-[34px] h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Nama RDTR / Provinsi..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
+          </div>
+          <div className="flex gap-2 ml-auto">
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+              <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+              <FileText className="h-3.5 w-3.5" /> PDF
+            </Button>
+          </div>
         </div>
 
-      {/* Detail Dialog */}
-      <Dialog open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base">{selectedRow?.namaRDTR}</DialogTitle>
-          </DialogHeader>
+        {/* Table */}
+        <div className="rounded-lg border bg-card overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left px-3 py-2.5 font-semibold w-12">No</th>
+                <th className="text-left px-3 py-2.5 font-semibold">Nama RDTR</th>
+                <th className="text-left px-3 py-2.5 font-semibold">Provinsi</th>
+                <th className="text-center px-3 py-2.5 font-semibold w-20">Cluster</th>
+                <th className="text-center px-3 py-2.5 font-semibold">Kehadiran</th>
+                <th className="text-left px-3 py-2.5 font-semibold">Status Ringkas</th>
+                <th className="text-left px-3 py-2.5 font-semibold">Update Terbaru</th>
+                <th className="text-center px-3 py-2.5 font-semibold w-20">Tindak Lanjut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paged.length === 0 ? (
+                <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Tidak ada data</td></tr>
+              ) : paged.map((row, idx) => {
+                const meta = getStatusMeta(row.statusRingkas);
+                const tindak = row.perluTindakLanjut?.toLowerCase() === 'ya';
+                const update = row.statusKehadiran === 'Tidak Hadir' ? 'Tidak ada update (tidak hadir)' : (row.updateTerbaru || '-');
+                return (
+                  <tr key={idx} className={`border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors ${tindak ? 'bg-red-50/40' : ''}`} onClick={() => setSelectedRow(row)}>
+                    <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
+                    <td className="px-3 py-2 text-foreground font-medium">{row.namaRDTR}</td>
+                    <td className="px-3 py-2 text-foreground">{row.provinsi}</td>
+                    <td className="px-3 py-2 text-center text-foreground">{row.cluster || '-'}</td>
+                    <td className="px-3 py-2 text-center">
+                      <span className={row.statusKehadiran === 'Hadir' ? 'text-green-600' : row.statusKehadiran === 'Tidak Hadir' ? 'text-red-600' : 'text-muted-foreground'}>
+                        {row.statusKehadiran || '-'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`inline-flex items-center gap-2 ${meta.text}`}>
+                        <span className={`h-2.5 w-2.5 rounded-full ${meta.color}`} />
+                        {meta.label}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-foreground max-w-[280px] truncate" title={update}>{update}</td>
+                    <td className="px-3 py-2 text-center">
+                      {tindak ? <span className="text-red-600 font-medium">Ya</span> : <span className="text-muted-foreground">Tidak</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Menampilkan {page * pageSize + 1}-{Math.min((page + 1) * pageSize, filtered.length)} dari {filtered.length}
+            </p>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}><ChevronLeft className="h-3.5 w-3.5" /></Button>
+              <span className="text-xs text-muted-foreground px-2">{page + 1} / {totalPages}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}><ChevronRight className="h-3.5 w-3.5" /></Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Side Drawer */}
+      <Sheet open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-base">{selectedRow?.namaRDTR}</SheetTitle>
+          </SheetHeader>
           {selectedRow && (
-            <div className="space-y-4">
+            <div className="mt-4 space-y-5">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">Provinsi:</span> <span className="font-medium text-foreground">{selectedRow.provinsi}</span></div>
-                <div><span className="text-muted-foreground">Tahun:</span> <span className="font-medium text-foreground">{selectedRow.tahun}</span></div>
-                <div><span className="text-muted-foreground">Cluster:</span> <span className="font-medium text-foreground">{selectedRow.cluster}</span></div>
-                <div>
-                  <span className="text-muted-foreground">Status:</span>{' '}
-                  <span className={getStatusIndicator(selectedRow.statusCategory).color}>
-                    {getStatusIndicator(selectedRow.statusCategory).icon} {getStatusIndicator(selectedRow.statusCategory).label}
-                  </span>
-                </div>
+                <div><span className="text-muted-foreground">Provinsi:</span> <span className="font-medium">{selectedRow.provinsi}</span></div>
+                <div><span className="text-muted-foreground">Kab/Kota:</span> <span className="font-medium">{selectedRow.kabKota}</span></div>
+                <div><span className="text-muted-foreground">Cluster:</span> <span className="font-medium">{selectedRow.cluster}</span></div>
+                <div><span className="text-muted-foreground">Minggu Ke-:</span> <span className="font-medium">{selectedRow.mingguKe}</span></div>
+                <div><span className="text-muted-foreground">Kehadiran:</span> <span className="font-medium">{selectedRow.statusKehadiran}</span></div>
+                <div className="flex items-center gap-2"><span className="text-muted-foreground">Status:</span> <span className={`h-2 w-2 rounded-full ${getStatusMeta(selectedRow.statusRingkas).color}`} /><span className="font-medium">{selectedRow.statusRingkas}</span></div>
               </div>
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Histori Update</h4>
+
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Detail Update</h4>
+                <p className="text-sm text-foreground bg-muted/30 p-3 rounded">{selectedRow.detailUpdate || '-'}</p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Last Update Sebelumnya</h4>
+                <p className="text-sm text-foreground bg-muted/30 p-3 rounded">{selectedRow.lastUpdateSebelumnya || '-'}</p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Isu / Kendala</h4>
+                <p className="text-sm text-foreground bg-muted/30 p-3 rounded">{selectedRow.isuKendala || '-'}</p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Riwayat Status (Minggu 1 → {maxMinggu})</h4>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                  {Object.keys(selectedRow.raw).filter(k => !STANDARD_KEYS.includes(k)).map(key => {
-                    const val = String(selectedRow.raw[key] || '');
-                    if (!val) return null;
+                  {history.map((h, i) => {
+                    const m = getStatusMeta(h.statusRingkas);
                     return (
-                      <div key={key} className="border-l-2 border-primary/30 pl-3 py-1.5">
-                        <p className="text-xs font-medium text-muted-foreground">{key}</p>
-                        <p className="text-sm text-foreground">{val}</p>
+                      <div key={i} className="border-l-2 border-primary/30 pl-3 py-1.5">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground">Minggu {h.mingguKe}</span>
+                          <span>•</span>
+                          <span>{h.tanggal}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-sm">
+                          <span className={`h-2 w-2 rounded-full ${m.color}`} />
+                          <span className={m.text}>{m.label}</span>
+                          <span className="text-muted-foreground">— {h.statusKehadiran}</span>
+                        </div>
+                        {h.updateTerbaru && h.statusKehadiran !== 'Tidak Hadir' && (
+                          <p className="text-xs text-muted-foreground mt-1">{h.updateTerbaru}</p>
+                        )}
                       </div>
                     );
                   })}
@@ -423,9 +357,8 @@ export default function MonitoringRDTR() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-      </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
