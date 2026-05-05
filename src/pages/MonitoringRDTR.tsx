@@ -66,11 +66,20 @@ export default function MonitoringRDTR() {
   const clusterOptions = useMemo(() => [...new Set(logs.map(l => l.cluster).filter(Boolean))].sort(), [logs]);
   const provinsiOptions = useMemo(() => [...new Set(logs.map(l => l.provinsi).filter(Boolean))].sort(), [logs]);
 
+  const [kpiFilter, setKpiFilter] = useState<string | null>(null);
+
   const filtered = useMemo(() => {
     let r = currentWeek;
     if (filterCluster !== 'all') r = r.filter(l => l.cluster === filterCluster);
     if (filterProvinsi !== 'all') r = r.filter(l => l.provinsi === filterProvinsi);
     if (filterStatus !== 'all') r = r.filter(l => l.statusRingkas === filterStatus);
+    if (kpiFilter === 'hadir') r = r.filter(l => l.statusKehadiran === 'Hadir');
+    else if (kpiFilter === 'tidakHadir') r = r.filter(l => l.statusKehadiran === 'Tidak Hadir');
+    else if (kpiFilter === 'aktif') r = r.filter(l => isAktif(l.statusRingkas));
+    else if (kpiFilter === 'stagnan') r = r.filter(l => l.statusRingkas === 'Stagnan');
+    else if (kpiFilter === 'tidakAktif') r = r.filter(l => l.statusRingkas === 'Tidak Aktif');
+    else if (kpiFilter === 'bermasalah') r = r.filter(l => l.statusRingkas === 'Bermasalah (Keluar Cluster)');
+    else if (kpiFilter === 'selesai') r = r.filter(l => l.statusRingkas === 'Selesai (Keluar Cluster)');
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       r = r.filter(l => l.namaRDTR.toLowerCase().includes(q) || l.provinsi.toLowerCase().includes(q));
