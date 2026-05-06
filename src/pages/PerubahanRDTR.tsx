@@ -293,8 +293,8 @@ function LogsTab() {
   const LOG_COLUMNS = [
     { key: 'no', header: 'No', width: '50px', align: 'center' as const },
     { key: 'tanggal', header: 'Tanggal', width: '130px', align: 'center' as const },
-    { key: 'provinsi', header: 'Provinsi', width: '140px' },
-    { key: 'kabKota', header: 'Kab/Kota', width: '160px' },
+    { key: 'provinsi', header: 'Provinsi', width: '160px' },
+    { key: 'kabKota', header: 'Kab/Kota', width: '180px' },
     {
       key: 'namaRDTR',
       header: 'Nama RDTR',
@@ -305,12 +305,7 @@ function LogsTab() {
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
-                  className="text-left text-foreground hover:underline font-medium"
-                  onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
-                >
-                  {String(v)}
-                </button>
+                <span className="text-foreground font-medium cursor-pointer">{String(v)}</span>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs space-y-1">
                 <p className="font-semibold text-sm">{r.namaRDTR}</p>
@@ -319,38 +314,13 @@ function LogsTab() {
                 <p className="text-xs"><span className="text-muted-foreground">Tanggal:</span> {r.tanggal}</p>
                 <p className="text-xs"><span className="text-muted-foreground">Cluster:</span> {r.cluster}</p>
                 <p className="text-xs"><span className="text-muted-foreground">Dampak:</span> {r.dampak}</p>
-                {r.keterangan && <p className="text-xs border-t pt-1 mt-1">{r.keterangan}</p>}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         );
       },
     },
-    { key: 'cluster', header: 'Cluster', width: '100px', align: 'center' as const },
-    { key: 'keterangan', header: 'Keterangan' },
-    {
-      key: 'nilaiLama',
-      header: 'Nilai Lama',
-      render: (_v: unknown, row: Record<string, unknown>) => {
-        const r = row as unknown as LogRecord;
-        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).lama}</span>;
-      },
-    },
-    {
-      key: 'nilaiBaru',
-      header: 'Nilai Baru',
-      render: (_v: unknown, row: Record<string, unknown>) => {
-        const r = row as unknown as LogRecord;
-        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).baru}</span>;
-      },
-    },
-    {
-      key: 'dampak',
-      header: 'Dampak Perubahan',
-      width: '160px',
-      align: 'center' as const,
-      render: (v: unknown) => <DampakBadge dampak={v as LogRecord['dampak']} />,
-    },
+    { key: 'cluster', header: 'Cluster', width: '120px', align: 'center' as const },
   ];
 
   return (
