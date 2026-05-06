@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -228,6 +229,7 @@ function LogsTab() {
   const [filterCluster, setFilterCluster] = useState('all');
   const [filterDampak, setFilterDampak] = useState('all');
   const [selectedRDTR, setSelectedRDTR] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<LogRecord | null>(null);
 
   const all = logsQuery.data || [];
 
@@ -291,8 +293,8 @@ function LogsTab() {
   const LOG_COLUMNS = [
     { key: 'no', header: 'No', width: '50px', align: 'center' as const },
     { key: 'tanggal', header: 'Tanggal', width: '130px', align: 'center' as const },
-    { key: 'provinsi', header: 'Provinsi', width: '140px' },
-    { key: 'kabKota', header: 'Kab/Kota', width: '160px' },
+    { key: 'provinsi', header: 'Provinsi', width: '160px' },
+    { key: 'kabKota', header: 'Kab/Kota', width: '180px' },
     {
       key: 'namaRDTR',
       header: 'Nama RDTR',
@@ -303,12 +305,7 @@ function LogsTab() {
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
-                  className="text-left text-foreground hover:underline font-medium"
-                  onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
-                >
-                  {String(v)}
-                </button>
+                <span className="text-foreground font-medium cursor-pointer">{String(v)}</span>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs space-y-1">
                 <p className="font-semibold text-sm">{r.namaRDTR}</p>
@@ -317,38 +314,13 @@ function LogsTab() {
                 <p className="text-xs"><span className="text-muted-foreground">Tanggal:</span> {r.tanggal}</p>
                 <p className="text-xs"><span className="text-muted-foreground">Cluster:</span> {r.cluster}</p>
                 <p className="text-xs"><span className="text-muted-foreground">Dampak:</span> {r.dampak}</p>
-                {r.keterangan && <p className="text-xs border-t pt-1 mt-1">{r.keterangan}</p>}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         );
       },
     },
-    { key: 'cluster', header: 'Cluster', width: '100px', align: 'center' as const },
-    { key: 'keterangan', header: 'Keterangan' },
-    {
-      key: 'nilaiLama',
-      header: 'Nilai Lama',
-      render: (_v: unknown, row: Record<string, unknown>) => {
-        const r = row as unknown as LogRecord;
-        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).lama}</span>;
-      },
-    },
-    {
-      key: 'nilaiBaru',
-      header: 'Nilai Baru',
-      render: (_v: unknown, row: Record<string, unknown>) => {
-        const r = row as unknown as LogRecord;
-        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).baru}</span>;
-      },
-    },
-    {
-      key: 'dampak',
-      header: 'Dampak Perubahan',
-      width: '160px',
-      align: 'center' as const,
-      render: (v: unknown) => <DampakBadge dampak={v as LogRecord['dampak']} />,
-    },
+    { key: 'cluster', header: 'Cluster', width: '120px', align: 'center' as const },
   ];
 
   return (
@@ -361,11 +333,14 @@ function LogsTab() {
           { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
           { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
         ].map(c => {
-          const active = filterDampak === c.key || (c.key === 'all' && filterDampak === 'all');
+          const active = (c.key === 'all' && filterDampak === 'all') || (c.key !== 'all' && filterDampak === c.key);
           return (
             <button
               key={c.key}
-              onClick={() => setFilterDampak(prev => (c.key === 'all' ? 'all' : (prev === c.key ? 'all' : c.key)))}
+              onClick={() => {
+                if (c.key === 'all') setFilterDampak('all');
+                else setFilterDampak(prev => (prev === c.key ? 'all' : c.key));
+              }}
               className={`text-left rounded-lg border bg-card p-4 flex items-center gap-3 transition-all hover:shadow-md ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}
             >
               <div className={`h-10 w-10 rounded-lg ${c.bg} flex items-center justify-center`}>
@@ -415,7 +390,55 @@ function LogsTab() {
         pageSize={15}
         searchable={false}
         autoNumber
+        onRowClick={(row) => setSelectedRow(row as unknown as LogRecord)}
       />
+
+      {/* Detail Drawer */}
+      <Sheet open={!!selectedRow} onOpenChange={(o) => !o && setSelectedRow(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-base">Detail Perubahan</SheetTitle>
+          </SheetHeader>
+          {selectedRow && (
+            <div className="mt-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><p className="text-xs text-muted-foreground">Tanggal</p><p className="font-medium">{selectedRow.tanggal}</p></div>
+                <div><p className="text-xs text-muted-foreground">Cluster</p><p className="font-medium">{selectedRow.cluster}</p></div>
+                <div><p className="text-xs text-muted-foreground">Provinsi</p><p className="font-medium">{selectedRow.provinsi}</p></div>
+                <div><p className="text-xs text-muted-foreground">Kab/Kota</p><p className="font-medium">{selectedRow.kabKota}</p></div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs text-muted-foreground">Nama RDTR</p>
+                <button
+                  className="text-sm font-medium text-foreground hover:underline text-left"
+                  onClick={() => { setSelectedRDTR(selectedRow.namaRDTR); setSelectedRow(null); }}
+                >
+                  {selectedRow.namaRDTR}
+                </button>
+                <p className="text-[10px] text-muted-foreground mt-1">Klik untuk lihat histori lengkap</p>
+              </div>
+              <div className="border-t pt-3 flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Dampak Perubahan</p>
+                <DampakBadge dampak={selectedRow.dampak} />
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs text-muted-foreground mb-1">Keterangan</p>
+                <p className="text-sm text-foreground">{selectedRow.keterangan || '-'}</p>
+              </div>
+              <div className="border-t pt-3 space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Nilai Lama</p>
+                  <p className="text-sm bg-red-50 border border-red-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).lama}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Nilai Baru</p>
+                  <p className="text-sm bg-emerald-50 border border-emerald-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).baru}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* History Modal */}
       <Dialog open={!!selectedRDTR} onOpenChange={() => setSelectedRDTR(null)}>
