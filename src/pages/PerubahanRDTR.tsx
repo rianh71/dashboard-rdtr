@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingState } from '@/components/dashboard/LoadingState';
@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, TrendingUp, TrendingDown, Minus, FileText } from 'lucide-react';
+import { Search, TrendingUp, TrendingDown, Minus, FileText, XCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Papa from 'papaparse';
 
 const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vST7goQce4BhG1s50o2MF_rEvZFiHFPdkoY5Kqql00euIAylRApG9EagCjbbqGNBI_QLD6c0pD8_EV2/pub';
@@ -268,6 +269,25 @@ function LogsTab() {
   if (logsQuery.isLoading) return <LoadingState />;
   if (logsQuery.error) return <div className="text-destructive">Error memuat logs</div>;
 
+  const diffWords = (a: string, b: string): { lama: React.ReactNode; baru: React.ReactNode } => {
+    const tokenize = (s: string) => s.split(/(\s+|[,.;:()/\-])/);
+    const aTok = tokenize(a || '');
+    const bTok = tokenize(b || '');
+    const aSet = new Set(aTok.map(t => t.toLowerCase().trim()).filter(Boolean));
+    const bSet = new Set(bTok.map(t => t.toLowerCase().trim()).filter(Boolean));
+    const renderLama = aTok.map((t, i) => {
+      const k = t.toLowerCase().trim();
+      if (k && !bSet.has(k)) return <mark key={i} className="bg-red-100 text-red-700 px-0.5 rounded">{t}</mark>;
+      return <span key={i}>{t}</span>;
+    });
+    const renderBaru = bTok.map((t, i) => {
+      const k = t.toLowerCase().trim();
+      if (k && !aSet.has(k)) return <mark key={i} className="bg-emerald-100 text-emerald-700 px-0.5 rounded">{t}</mark>;
+      return <span key={i}>{t}</span>;
+    });
+    return { lama: renderLama, baru: renderBaru };
+  };
+
   const LOG_COLUMNS = [
     { key: 'no', header: 'No', width: '50px', align: 'center' as const },
     { key: 'tanggal', header: 'Tanggal', width: '130px', align: 'center' as const },
@@ -277,19 +297,51 @@ function LogsTab() {
       key: 'namaRDTR',
       header: 'Nama RDTR',
       width: '280px',
-      render: (v: unknown) => (
-        <button
-          className="text-left text-foreground hover:underline font-medium"
-          onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
-        >
-          {String(v)}
-        </button>
-      ),
+      render: (v: unknown, row: Record<string, unknown>) => {
+        const r = row as unknown as LogRecord;
+        return (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="text-left text-foreground hover:underline font-medium"
+                  onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
+                >
+                  {String(v)}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs space-y-1">
+                <p className="font-semibold text-sm">{r.namaRDTR}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Provinsi:</span> {r.provinsi}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Kab/Kota:</span> {r.kabKota}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Tanggal:</span> {r.tanggal}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Cluster:</span> {r.cluster}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Dampak:</span> {r.dampak}</p>
+                {r.keterangan && <p className="text-xs border-t pt-1 mt-1">{r.keterangan}</p>}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
     { key: 'cluster', header: 'Cluster', width: '100px', align: 'center' as const },
     { key: 'keterangan', header: 'Keterangan' },
-    { key: 'nilaiLama', header: 'Nilai Lama' },
-    { key: 'nilaiBaru', header: 'Nilai Baru' },
+    {
+      key: 'nilaiLama',
+      header: 'Nilai Lama',
+      render: (_v: unknown, row: Record<string, unknown>) => {
+        const r = row as unknown as LogRecord;
+        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).lama}</span>;
+      },
+    },
+    {
+      key: 'nilaiBaru',
+      header: 'Nilai Baru',
+      render: (_v: unknown, row: Record<string, unknown>) => {
+        const r = row as unknown as LogRecord;
+        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).baru}</span>;
+      },
+    },
     {
       key: 'dampak',
       header: 'Dampak Perubahan',
@@ -301,44 +353,31 @@ function LogsTab() {
 
   return (
     <div className="space-y-4">
-      {/* KPI Summary */}
+      {/* KPI Summary - Interactive Filters */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <FileText className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Total Logs</p>
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Membaik</p>
-            <p className="text-2xl font-bold text-emerald-600">{stats.membaik}</p>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
-            <TrendingDown className="h-5 w-5 text-red-600" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Memburuk</p>
-            <p className="text-2xl font-bold text-red-600">{stats.memburuk}</p>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
-            <Minus className="h-5 w-5 text-amber-600" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Stagnan</p>
-            <p className="text-2xl font-bold text-amber-600">{stats.stagnan}</p>
-          </div>
-        </div>
+        {[
+          { key: 'all', label: 'Total Logs', value: stats.total, Icon: FileText, bg: 'bg-primary/10', iconColor: 'text-primary', valueColor: 'text-foreground' },
+          { key: 'Membaik', label: 'Membaik', value: stats.membaik, Icon: TrendingUp, bg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600' },
+          { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
+          { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
+        ].map(c => {
+          const active = filterDampak === c.key || (c.key === 'all' && filterDampak === 'all');
+          return (
+            <button
+              key={c.key}
+              onClick={() => setFilterDampak(prev => (c.key === 'all' ? 'all' : (prev === c.key ? 'all' : c.key)))}
+              className={`text-left rounded-lg border bg-card p-4 flex items-center gap-3 transition-all hover:shadow-md ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}
+            >
+              <div className={`h-10 w-10 rounded-lg ${c.bg} flex items-center justify-center`}>
+                <c.Icon className={`h-5 w-5 ${c.iconColor}`} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{c.label}</p>
+                <p className={`text-2xl font-bold ${c.valueColor}`}>{c.value}</p>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters */}
