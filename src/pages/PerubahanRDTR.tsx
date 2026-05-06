@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, TrendingUp, TrendingDown, Minus, FileText } from 'lucide-react';
+import { Search, TrendingUp, TrendingDown, Minus, FileText, XCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Papa from 'papaparse';
 
 const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vST7goQce4BhG1s50o2MF_rEvZFiHFPdkoY5Kqql00euIAylRApG9EagCjbbqGNBI_QLD6c0pD8_EV2/pub';
