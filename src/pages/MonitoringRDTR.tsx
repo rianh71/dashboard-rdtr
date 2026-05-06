@@ -87,6 +87,44 @@ export default function MonitoringRDTR() {
     return r;
   }, [currentWeek, filterCluster, filterProvinsi, filterStatus, searchQuery, kpiFilter]);
 
+  // Analytics: Top 5 Tercepat (Ada Progress) & Top 5 Terlambat (consecutive Stagnan / Tidak Ada Progress) — across all weeks, follows Cluster/Provinsi filter
+  const analyticsScope = useMemo(() => {
+    let r = logs;
+    if (filterCluster !== 'all') r = r.filter(l => l.cluster === filterCluster);
+    if (filterProvinsi !== 'all') r = r.filter(l => l.provinsi === filterProvinsi);
+    return r;
+  }, [logs, filterCluster, filterProvinsi]);
+
+  const topProgressive = useMemo(() => {
+    const m = new Map<string, number>();
+    analyticsScope.forEach(l => {
+      if ((l.statusProgress || '').toLowerCase().includes('ada progress') && !(l.statusProgress || '').toLowerCase().includes('tidak')) {
+        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
+      }
+    });
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [analyticsScope]);
+
+  const topStagnant = useMemo(() => {
+    const byRdtr = new Map<string, MonitoringLog[]>();
+    analyticsScope.forEach(l => {
+      if (!byRdtr.has(l.namaRDTR)) byRdtr.set(l.namaRDTR, []);
+      byRdtr.get(l.namaRDTR)!.push(l);
+    });
+    const result: [string, number][] = [];
+    byRdtr.forEach((arr, name) => {
+      const sorted = arr.sort((a, b) => a.mingguKe - b.mingguKe);
+      let cur = 0, max = 0;
+      sorted.forEach(l => {
+        const sp = (l.statusProgress || '').toLowerCase();
+        const isStagnan = l.statusRingkas === 'Stagnan' || (sp.includes('tidak') && sp.includes('progress'));
+        if (isStagnan) { cur++; max = Math.max(max, cur); } else { cur = 0; }
+      });
+      if (max > 0) result.push([name, max]);
+    });
+    return result.sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [analyticsScope]);
+
   const hasActiveFilter = filterCluster !== 'all' || filterProvinsi !== 'all' || filterStatus !== 'all' || !!kpiFilter || !!searchQuery;
   const resetAllFilters = () => { setFilterCluster('all'); setFilterProvinsi('all'); setFilterStatus('all'); setKpiFilter(null); setSearchQuery(''); setPage(0); };
   const toggleKpi = (k: string) => { setKpiFilter(prev => prev === k ? null : k); setPage(0); };
@@ -218,6 +256,47 @@ export default function MonitoringRDTR() {
       </div>
 
       <div className="p-4 md:px-6 space-y-4">
+        {/* Analytics: Top 5 Tercepat & Terlambat */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[
+            { title: 'Top 5 RDTR Tercepat (Progress Terbanyak)', data: topProgressive, bar: 'bg-emerald-500', accent: 'text-emerald-700', suffix: 'x progress' },
+            { title: 'Top 5 RDTR Terlambat (Stagnan Terlama)', data: topStagnant, bar: 'bg-orange-500', accent: 'text-orange-700', suffix: 'minggu berturut' },
+          ].map((sec) => {
+            const max = Math.max(1, ...sec.data.map(d => d[1]));
+            return (
+              <div key={sec.title} className="rounded-lg border bg-card p-4">
+                <h3 className={`text-sm font-semibold mb-3 ${sec.accent}`}>{sec.title}</h3>
+                {sec.data.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-6 text-center">Tidak ada data</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sec.data.map(([name, count], i) => {
+                      const pct = (count / max) * 100;
+                      const active = searchQuery === name;
+                      return (
+                        <button
+                          key={name}
+                          onClick={() => { setSearchQuery(active ? '' : name); setPage(0); }}
+                          className={`w-full text-left group ${active ? 'ring-2 ring-primary rounded-md p-1 -m-1' : ''}`}
+                          title="Klik untuk filter tabel"
+                        >
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="font-medium text-foreground truncate pr-2">{i + 1}. {name}</span>
+                            <span className="text-muted-foreground whitespace-nowrap">{count} {sec.suffix}</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                            <div className={`h-full ${sec.bar} transition-all group-hover:opacity-80`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-end">
           <div className="w-36">
