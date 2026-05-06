@@ -87,6 +87,44 @@ export default function MonitoringRDTR() {
     return r;
   }, [currentWeek, filterCluster, filterProvinsi, filterStatus, searchQuery, kpiFilter]);
 
+  // Analytics: Top 5 Tercepat (Ada Progress) & Top 5 Terlambat (consecutive Stagnan / Tidak Ada Progress) — across all weeks, follows Cluster/Provinsi filter
+  const analyticsScope = useMemo(() => {
+    let r = logs;
+    if (filterCluster !== 'all') r = r.filter(l => l.cluster === filterCluster);
+    if (filterProvinsi !== 'all') r = r.filter(l => l.provinsi === filterProvinsi);
+    return r;
+  }, [logs, filterCluster, filterProvinsi]);
+
+  const topProgressive = useMemo(() => {
+    const m = new Map<string, number>();
+    analyticsScope.forEach(l => {
+      if ((l.statusProgress || '').toLowerCase().includes('ada progress') && !(l.statusProgress || '').toLowerCase().includes('tidak')) {
+        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
+      }
+    });
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [analyticsScope]);
+
+  const topStagnant = useMemo(() => {
+    const byRdtr = new Map<string, MonitoringLog[]>();
+    analyticsScope.forEach(l => {
+      if (!byRdtr.has(l.namaRDTR)) byRdtr.set(l.namaRDTR, []);
+      byRdtr.get(l.namaRDTR)!.push(l);
+    });
+    const result: [string, number][] = [];
+    byRdtr.forEach((arr, name) => {
+      const sorted = arr.sort((a, b) => a.mingguKe - b.mingguKe);
+      let cur = 0, max = 0;
+      sorted.forEach(l => {
+        const sp = (l.statusProgress || '').toLowerCase();
+        const isStagnan = l.statusRingkas === 'Stagnan' || (sp.includes('tidak') && sp.includes('progress'));
+        if (isStagnan) { cur++; max = Math.max(max, cur); } else { cur = 0; }
+      });
+      if (max > 0) result.push([name, max]);
+    });
+    return result.sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [analyticsScope]);
+
   const hasActiveFilter = filterCluster !== 'all' || filterProvinsi !== 'all' || filterStatus !== 'all' || !!kpiFilter || !!searchQuery;
   const resetAllFilters = () => { setFilterCluster('all'); setFilterProvinsi('all'); setFilterStatus('all'); setKpiFilter(null); setSearchQuery(''); setPage(0); };
   const toggleKpi = (k: string) => { setKpiFilter(prev => prev === k ? null : k); setPage(0); };
