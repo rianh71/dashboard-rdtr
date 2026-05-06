@@ -353,44 +353,31 @@ function LogsTab() {
 
   return (
     <div className="space-y-4">
-      {/* KPI Summary */}
+      {/* KPI Summary - Interactive Filters */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <FileText className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Total Logs</p>
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Membaik</p>
-            <p className="text-2xl font-bold text-emerald-600">{stats.membaik}</p>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
-            <TrendingDown className="h-5 w-5 text-red-600" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Memburuk</p>
-            <p className="text-2xl font-bold text-red-600">{stats.memburuk}</p>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
-            <Minus className="h-5 w-5 text-amber-600" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Stagnan</p>
-            <p className="text-2xl font-bold text-amber-600">{stats.stagnan}</p>
-          </div>
-        </div>
+        {[
+          { key: 'all', label: 'Total Logs', value: stats.total, Icon: FileText, bg: 'bg-primary/10', iconColor: 'text-primary', valueColor: 'text-foreground' },
+          { key: 'Membaik', label: 'Membaik', value: stats.membaik, Icon: TrendingUp, bg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600' },
+          { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
+          { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
+        ].map(c => {
+          const active = filterDampak === c.key || (c.key === 'all' && filterDampak === 'all');
+          return (
+            <button
+              key={c.key}
+              onClick={() => setFilterDampak(prev => (c.key === 'all' ? 'all' : (prev === c.key ? 'all' : c.key)))}
+              className={`text-left rounded-lg border bg-card p-4 flex items-center gap-3 transition-all hover:shadow-md ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}
+            >
+              <div className={`h-10 w-10 rounded-lg ${c.bg} flex items-center justify-center`}>
+                <c.Icon className={`h-5 w-5 ${c.iconColor}`} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{c.label}</p>
+                <p className={`text-2xl font-bold ${c.valueColor}`}>{c.value}</p>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters */}
