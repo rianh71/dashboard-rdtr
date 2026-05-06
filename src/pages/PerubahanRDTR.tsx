@@ -229,6 +229,7 @@ function LogsTab() {
   const [filterCluster, setFilterCluster] = useState('all');
   const [filterDampak, setFilterDampak] = useState('all');
   const [selectedRDTR, setSelectedRDTR] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<LogRecord | null>(null);
 
   const all = logsQuery.data || [];
 
