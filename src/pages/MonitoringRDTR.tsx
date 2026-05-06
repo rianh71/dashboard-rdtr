@@ -256,6 +256,47 @@ export default function MonitoringRDTR() {
       </div>
 
       <div className="p-4 md:px-6 space-y-4">
+        {/* Analytics: Top 5 Tercepat & Terlambat */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[
+            { title: 'Top 5 RDTR Tercepat (Progress Terbanyak)', data: topProgressive, bar: 'bg-emerald-500', accent: 'text-emerald-700', suffix: 'x progress' },
+            { title: 'Top 5 RDTR Terlambat (Stagnan Terlama)', data: topStagnant, bar: 'bg-orange-500', accent: 'text-orange-700', suffix: 'minggu berturut' },
+          ].map((sec) => {
+            const max = Math.max(1, ...sec.data.map(d => d[1]));
+            return (
+              <div key={sec.title} className="rounded-lg border bg-card p-4">
+                <h3 className={`text-sm font-semibold mb-3 ${sec.accent}`}>{sec.title}</h3>
+                {sec.data.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-6 text-center">Tidak ada data</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sec.data.map(([name, count], i) => {
+                      const pct = (count / max) * 100;
+                      const active = searchQuery === name;
+                      return (
+                        <button
+                          key={name}
+                          onClick={() => { setSearchQuery(active ? '' : name); setPage(0); }}
+                          className={`w-full text-left group ${active ? 'ring-2 ring-primary rounded-md p-1 -m-1' : ''}`}
+                          title="Klik untuk filter tabel"
+                        >
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="font-medium text-foreground truncate pr-2">{i + 1}. {name}</span>
+                            <span className="text-muted-foreground whitespace-nowrap">{count} {sec.suffix}</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                            <div className={`h-full ${sec.bar} transition-all group-hover:opacity-80`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-end">
           <div className="w-36">
