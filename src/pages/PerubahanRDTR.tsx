@@ -269,6 +269,25 @@ function LogsTab() {
   if (logsQuery.isLoading) return <LoadingState />;
   if (logsQuery.error) return <div className="text-destructive">Error memuat logs</div>;
 
+  const diffWords = (a: string, b: string): { lama: React.ReactNode; baru: React.ReactNode } => {
+    const tokenize = (s: string) => s.split(/(\s+|[,.;:()/\-])/);
+    const aTok = tokenize(a || '');
+    const bTok = tokenize(b || '');
+    const aSet = new Set(aTok.map(t => t.toLowerCase().trim()).filter(Boolean));
+    const bSet = new Set(bTok.map(t => t.toLowerCase().trim()).filter(Boolean));
+    const renderLama = aTok.map((t, i) => {
+      const k = t.toLowerCase().trim();
+      if (k && !bSet.has(k)) return <mark key={i} className="bg-red-100 text-red-700 px-0.5 rounded">{t}</mark>;
+      return <span key={i}>{t}</span>;
+    });
+    const renderBaru = bTok.map((t, i) => {
+      const k = t.toLowerCase().trim();
+      if (k && !aSet.has(k)) return <mark key={i} className="bg-emerald-100 text-emerald-700 px-0.5 rounded">{t}</mark>;
+      return <span key={i}>{t}</span>;
+    });
+    return { lama: renderLama, baru: renderBaru };
+  };
+
   const LOG_COLUMNS = [
     { key: 'no', header: 'No', width: '50px', align: 'center' as const },
     { key: 'tanggal', header: 'Tanggal', width: '130px', align: 'center' as const },
@@ -278,19 +297,51 @@ function LogsTab() {
       key: 'namaRDTR',
       header: 'Nama RDTR',
       width: '280px',
-      render: (v: unknown) => (
-        <button
-          className="text-left text-foreground hover:underline font-medium"
-          onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
-        >
-          {String(v)}
-        </button>
-      ),
+      render: (v: unknown, row: Record<string, unknown>) => {
+        const r = row as unknown as LogRecord;
+        return (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="text-left text-foreground hover:underline font-medium"
+                  onClick={(e) => { e.stopPropagation(); setSelectedRDTR(String(v)); }}
+                >
+                  {String(v)}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs space-y-1">
+                <p className="font-semibold text-sm">{r.namaRDTR}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Provinsi:</span> {r.provinsi}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Kab/Kota:</span> {r.kabKota}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Tanggal:</span> {r.tanggal}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Cluster:</span> {r.cluster}</p>
+                <p className="text-xs"><span className="text-muted-foreground">Dampak:</span> {r.dampak}</p>
+                {r.keterangan && <p className="text-xs border-t pt-1 mt-1">{r.keterangan}</p>}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
     { key: 'cluster', header: 'Cluster', width: '100px', align: 'center' as const },
     { key: 'keterangan', header: 'Keterangan' },
-    { key: 'nilaiLama', header: 'Nilai Lama' },
-    { key: 'nilaiBaru', header: 'Nilai Baru' },
+    {
+      key: 'nilaiLama',
+      header: 'Nilai Lama',
+      render: (_v: unknown, row: Record<string, unknown>) => {
+        const r = row as unknown as LogRecord;
+        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).lama}</span>;
+      },
+    },
+    {
+      key: 'nilaiBaru',
+      header: 'Nilai Baru',
+      render: (_v: unknown, row: Record<string, unknown>) => {
+        const r = row as unknown as LogRecord;
+        return <span className="text-sm">{diffWords(r.nilaiLama, r.nilaiBaru).baru}</span>;
+      },
+    },
     {
       key: 'dampak',
       header: 'Dampak Perubahan',
