@@ -333,11 +333,14 @@ function LogsTab() {
           { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
           { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
         ].map(c => {
-          const active = filterDampak === c.key || (c.key === 'all' && filterDampak === 'all');
+          const active = (c.key === 'all' && filterDampak === 'all') || (c.key !== 'all' && filterDampak === c.key);
           return (
             <button
               key={c.key}
-              onClick={() => setFilterDampak(prev => (c.key === 'all' ? 'all' : (prev === c.key ? 'all' : c.key)))}
+              onClick={() => {
+                if (c.key === 'all') setFilterDampak('all');
+                else setFilterDampak(prev => (prev === c.key ? 'all' : c.key));
+              }}
               className={`text-left rounded-lg border bg-card p-4 flex items-center gap-3 transition-all hover:shadow-md ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}
             >
               <div className={`h-10 w-10 rounded-lg ${c.bg} flex items-center justify-center`}>
