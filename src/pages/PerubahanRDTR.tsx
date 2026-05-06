@@ -390,7 +390,55 @@ function LogsTab() {
         pageSize={15}
         searchable={false}
         autoNumber
+        onRowClick={(row) => setSelectedRow(row as unknown as LogRecord)}
       />
+
+      {/* Detail Drawer */}
+      <Sheet open={!!selectedRow} onOpenChange={(o) => !o && setSelectedRow(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-base">Detail Perubahan</SheetTitle>
+          </SheetHeader>
+          {selectedRow && (
+            <div className="mt-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><p className="text-xs text-muted-foreground">Tanggal</p><p className="font-medium">{selectedRow.tanggal}</p></div>
+                <div><p className="text-xs text-muted-foreground">Cluster</p><p className="font-medium">{selectedRow.cluster}</p></div>
+                <div><p className="text-xs text-muted-foreground">Provinsi</p><p className="font-medium">{selectedRow.provinsi}</p></div>
+                <div><p className="text-xs text-muted-foreground">Kab/Kota</p><p className="font-medium">{selectedRow.kabKota}</p></div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs text-muted-foreground">Nama RDTR</p>
+                <button
+                  className="text-sm font-medium text-foreground hover:underline text-left"
+                  onClick={() => { setSelectedRDTR(selectedRow.namaRDTR); setSelectedRow(null); }}
+                >
+                  {selectedRow.namaRDTR}
+                </button>
+                <p className="text-[10px] text-muted-foreground mt-1">Klik untuk lihat histori lengkap</p>
+              </div>
+              <div className="border-t pt-3 flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Dampak Perubahan</p>
+                <DampakBadge dampak={selectedRow.dampak} />
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs text-muted-foreground mb-1">Keterangan</p>
+                <p className="text-sm text-foreground">{selectedRow.keterangan || '-'}</p>
+              </div>
+              <div className="border-t pt-3 space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Nilai Lama</p>
+                  <p className="text-sm bg-red-50 border border-red-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).lama}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Nilai Baru</p>
+                  <p className="text-sm bg-emerald-50 border border-emerald-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).baru}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* History Modal */}
       <Dialog open={!!selectedRDTR} onOpenChange={() => setSelectedRDTR(null)}>
