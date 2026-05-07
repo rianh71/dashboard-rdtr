@@ -251,8 +251,12 @@ export default function DataRDTR() {
         )}
       </div>
 
-      <div className="p-4 md:px-6 space-y-6">
-      {activeTab === 'table' && (
+      <div className="p-4 md:px-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Menampilkan <span className="font-semibold text-foreground">{filtered.length.toLocaleString('id-ID')}</span> data RDTR
+            </p>
+          </div>
           <DataTable
             data={filtered as unknown as Record<string, unknown>[]}
             columns={MAIN_COLUMNS}
@@ -263,72 +267,7 @@ export default function DataRDTR() {
               if (record) setSelectedRow(record);
             }}
           />
-      )}
-
-      {activeTab === 'logs' && (
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h3 className="font-semibold text-foreground">Log Perubahan Status RDTR</h3>
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground">Filter Tanggal:</label>
-              <Input
-                type="date"
-                value={logDateFilter}
-                onChange={e => setLogDateFilter(e.target.value)}
-                className="w-40 h-8 text-xs"
-              />
-              {logDateFilter && (
-                <Button variant="ghost" size="sm" onClick={() => setLogDateFilter('')} className="text-xs h-8">Reset</Button>
-              )}
-            </div>
-          </div>
-          {groupedLogs.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <History className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Belum ada perubahan yang terdeteksi.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {groupedLogs.map((group, idx) => (
-                <div key={idx} className="flex items-center justify-between gap-3 rounded-lg border border-border px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{group.namaRDTR}</p>
-                    <p className="text-xs text-muted-foreground">{group.kabKota} - {group.provinsi}</p>
-                    <p className="text-xs text-muted-foreground">{group.logs.length} perubahan terdeteksi</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="gap-1.5 flex-shrink-0" onClick={() => { setSelectedLog(group.logs); setSelectedLogName(group.namaRDTR); }}>
-                    <Eye className="h-3.5 w-3.5" /> View
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
       </div>
-
-      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-base">Timeline: {selectedLogName}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {selectedLog?.map((log, idx) => (
-              <div key={idx} className="border-l-2 border-primary/30 pl-4 py-2">
-                <p className="text-xs text-muted-foreground">
-                  {new Date(log.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
-                <p className="text-sm mt-1">
-                  <span className="text-muted-foreground">{log.field === 'cluster' ? 'Cluster' : 'Keterangan'}: </span>
-                  <span className="text-destructive line-through">{log.oldValue}</span>
-                  <span className="text-muted-foreground"> → </span>
-                  <span className="text-primary font-medium">{log.newValue}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Detail Row Dialog */}
       <Dialog open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>
