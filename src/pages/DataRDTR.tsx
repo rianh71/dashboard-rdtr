@@ -6,11 +6,9 @@ import { LoadingState } from '@/components/dashboard/LoadingState';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSpreadsheet, FileText, History, Eye, ArrowLeft } from 'lucide-react';
+import { FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { getChangeLogs, detectChanges, ChangeLogEntry } from '@/lib/change-tracker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import type { RDTRRecord } from '@/lib/data-service';
 
 const MAIN_COLUMNS = [
@@ -39,10 +37,6 @@ export default function DataRDTR() {
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [filterCluster, setFilterCluster] = useState('all');
   const [viewMode, setViewMode] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'table' | 'logs'>('table');
-  const [selectedLog, setSelectedLog] = useState<ChangeLogEntry[] | null>(null);
-  const [selectedLogName, setSelectedLogName] = useState('');
-  const [logDateFilter, setLogDateFilter] = useState('');
   const [selectedRow, setSelectedRow] = useState<RDTRRecord | null>(null);
 
   // Track if navigated from another page (for back button)
@@ -65,13 +59,7 @@ export default function DataRDTR() {
     if (kabKota) setFilterKabKota(kabKota);
     if (pulau) setFilterPulau(pulau);
     if (cluster) setFilterCluster(cluster);
-    if (tab === 'logs') setActiveTab('logs');
-    else if (status || provinsi || pulau || view || cluster) setActiveTab('table');
   }, [searchParams]);
-
-  useEffect(() => {
-    if (data) detectChanges(data);
-  }, [data]);
 
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
@@ -130,29 +118,6 @@ export default function DataRDTR() {
     }));
   }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
 
-  const changeLogs = useMemo(() => getChangeLogs(), [data]);
-  const groupedLogs = useMemo(() => {
-    const map = new Map<string, ChangeLogEntry[]>();
-    let logs = changeLogs;
-    if (logDateFilter) {
-      logs = logs.filter(l => {
-        const d = new Date(l.timestamp);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        return dateStr === logDateFilter;
-      });
-    }
-    logs.forEach(log => {
-      const key = `${log.namaRDTR}__${log.kabKota}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(log);
-    });
-    return Array.from(map.entries()).map(([, logs]) => ({
-      namaRDTR: logs[0].namaRDTR,
-      kabKota: logs[0].kabKota,
-      provinsi: logs[0].provinsi,
-      logs: logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
-    }));
-  }, [changeLogs, logDateFilter]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {error.message}</div>;
@@ -190,17 +155,9 @@ export default function DataRDTR() {
               <p className="text-sm text-muted-foreground mt-1">Database lengkap RDTR Nasional</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant={activeTab === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('table')}>
-              Tabel Data
-            </Button>
-            <Button variant={activeTab === 'logs' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('logs')} className="gap-1.5">
-              <History className="h-3.5 w-3.5" /> Logs
-            </Button>
-          </div>
         </div>
 
-        {activeTab === 'table' && !viewMode && (
+        {!viewMode && (
           <>
             <div className="flex flex-wrap gap-3 items-end">
               <div className="w-40">
@@ -265,7 +222,13 @@ export default function DataRDTR() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {clusterDistribution.map(c => (
+              {clusterDistribution.map(c => {
+                const dotColors: Record<string, string> = {
+                  'A1': 'bg-blue-500', 'A2': 'bg-sky-500', 'B': 'bg-cyan-500', 'C': 'bg-teal-500',
+                  'D': 'bg-amber-500', 'E': 'bg-orange-500', 'F': 'bg-rose-500', 'G': 'bg-emerald-500',
+                };
+                const dot = dotColors[c.cluster] || 'bg-muted-foreground';
+                return (
                 <button
                   key={c.cluster}
                   onClick={() => handleClusterClick(c.cluster)}
@@ -275,6 +238,7 @@ export default function DataRDTR() {
                       : 'bg-card hover:bg-muted/50'
                   }`}
                 >
+                  <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
                   <span className={`text-sm font-semibold ${filterCluster === c.cluster ? 'text-primary-foreground' : 'text-foreground'}`}>
                     Cluster {c.cluster}
                   </span>
@@ -287,14 +251,19 @@ export default function DataRDTR() {
                     </span>
                   )}
                 </button>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
       </div>
 
-      <div className="p-4 md:px-6 space-y-6">
-      {activeTab === 'table' && (
+      <div className="p-4 md:px-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Menampilkan <span className="font-semibold text-foreground">{filtered.length.toLocaleString('id-ID')}</span> data RDTR
+            </p>
+          </div>
           <DataTable
             data={filtered as unknown as Record<string, unknown>[]}
             columns={MAIN_COLUMNS}
@@ -305,72 +274,7 @@ export default function DataRDTR() {
               if (record) setSelectedRow(record);
             }}
           />
-      )}
-
-      {activeTab === 'logs' && (
-        <div className="bg-card rounded-xl card-shadow p-5">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h3 className="font-semibold text-foreground">Log Perubahan Status RDTR</h3>
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground">Filter Tanggal:</label>
-              <Input
-                type="date"
-                value={logDateFilter}
-                onChange={e => setLogDateFilter(e.target.value)}
-                className="w-40 h-8 text-xs"
-              />
-              {logDateFilter && (
-                <Button variant="ghost" size="sm" onClick={() => setLogDateFilter('')} className="text-xs h-8">Reset</Button>
-              )}
-            </div>
-          </div>
-          {groupedLogs.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <History className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Belum ada perubahan yang terdeteksi.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {groupedLogs.map((group, idx) => (
-                <div key={idx} className="flex items-center justify-between gap-3 rounded-lg border border-border px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{group.namaRDTR}</p>
-                    <p className="text-xs text-muted-foreground">{group.kabKota} - {group.provinsi}</p>
-                    <p className="text-xs text-muted-foreground">{group.logs.length} perubahan terdeteksi</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="gap-1.5 flex-shrink-0" onClick={() => { setSelectedLog(group.logs); setSelectedLogName(group.namaRDTR); }}>
-                    <Eye className="h-3.5 w-3.5" /> View
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
       </div>
-
-      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-base">Timeline: {selectedLogName}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {selectedLog?.map((log, idx) => (
-              <div key={idx} className="border-l-2 border-primary/30 pl-4 py-2">
-                <p className="text-xs text-muted-foreground">
-                  {new Date(log.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
-                <p className="text-sm mt-1">
-                  <span className="text-muted-foreground">{log.field === 'cluster' ? 'Cluster' : 'Keterangan'}: </span>
-                  <span className="text-destructive line-through">{log.oldValue}</span>
-                  <span className="text-muted-foreground"> → </span>
-                  <span className="text-primary font-medium">{log.newValue}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Detail Row Dialog */}
       <Dialog open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>

@@ -227,7 +227,9 @@ function LogsTab() {
 
   const [search, setSearch] = useState('');
   const [filterCluster, setFilterCluster] = useState('all');
-  const [filterDampak, setFilterDampak] = useState('all');
+  const [activeKPI, setActiveKPI] = useState<string | null>(null);
+  const filterDampak = activeKPI ?? 'all';
+  const setFilterDampak = (v: string) => setActiveKPI(v === 'all' ? null : v);
   const [selectedRDTR, setSelectedRDTR] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<LogRecord | null>(null);
 
@@ -333,13 +335,13 @@ function LogsTab() {
           { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
           { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
         ].map(c => {
-          const active = (c.key === 'all' && filterDampak === 'all') || (c.key !== 'all' && filterDampak === c.key);
+          const active = (c.key === 'all' && activeKPI === null) || (c.key !== 'all' && activeKPI === c.key);
           return (
             <button
               key={c.key}
               onClick={() => {
-                if (c.key === 'all') setFilterDampak('all');
-                else setFilterDampak(prev => (prev === c.key ? 'all' : c.key));
+                if (c.key === 'all') setActiveKPI(null);
+                else setActiveKPI(prev => (prev === c.key ? null : c.key));
               }}
               className={`text-left rounded-lg border bg-card p-4 flex items-center gap-3 transition-all hover:shadow-md ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}
             >
@@ -428,11 +430,11 @@ function LogsTab() {
               <div className="border-t pt-3 space-y-2">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Nilai Lama</p>
-                  <p className="text-sm bg-red-50 border border-red-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).lama}</p>
+                  <p className="text-sm text-foreground bg-muted/40 border-l-4 border-red-500 rounded p-2.5">{selectedRow.nilaiLama || '-'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Nilai Baru</p>
-                  <p className="text-sm bg-emerald-50 border border-emerald-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).baru}</p>
+                  <p className="text-sm text-foreground bg-muted/40 border-l-4 border-emerald-500 rounded p-2.5">{selectedRow.nilaiBaru || '-'}</p>
                 </div>
               </div>
             </div>
