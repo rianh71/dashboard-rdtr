@@ -76,6 +76,11 @@ export default function DataRDTR() {
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
   const provinsiOptions = useMemo(() => data ? [...new Set(data.map(r => r.provinsi).filter(Boolean))].sort() : [], [data]);
+  const kabKotaOptions = useMemo(() => {
+    if (!data) return [];
+    const src = filterProvinsi !== 'all' ? data.filter(r => r.provinsi === filterProvinsi) : data;
+    return [...new Set(src.map(r => r.kabKota).filter(Boolean))].sort();
+  }, [data, filterProvinsi]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
