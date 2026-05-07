@@ -225,11 +225,21 @@ export default function DataRDTR() {
               </div>
               <div className="w-44">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
-                <Select value={filterProvinsi} onValueChange={setFilterProvinsi}>
+                <Select value={filterProvinsi} onValueChange={(v) => { setFilterProvinsi(v); setFilterKabKota('all'); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
                     {provinsiOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-44">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Kab/Kota</label>
+                <Select value={filterKabKota} onValueChange={setFilterKabKota}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    {kabKotaOptions.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
