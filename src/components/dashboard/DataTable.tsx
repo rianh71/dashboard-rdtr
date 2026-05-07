@@ -109,7 +109,7 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
                     onClick={() => onRowClick?.(row, globalIdx)}
                   >
                     {columns.map(col => (
-                      <td key={col.key} className={`px-3 py-1.5 text-foreground align-middle whitespace-nowrap overflow-hidden text-ellipsis ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}>
+                      <td key={col.key} className={`px-3 py-1.5 text-foreground align-middle ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}>
                         {col.render
                           ? col.render(row[col.key], row, globalIdx)
                           : autoNumber && col.key === 'no'
