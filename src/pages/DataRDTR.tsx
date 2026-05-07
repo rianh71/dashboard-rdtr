@@ -34,6 +34,7 @@ export default function DataRDTR() {
 
   const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
+  const [filterKabKota, setFilterKabKota] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [filterCluster, setFilterCluster] = useState('all');
@@ -51,6 +52,7 @@ export default function DataRDTR() {
     const status = searchParams.get('status');
     const tab = searchParams.get('tab');
     const provinsi = searchParams.get('provinsi');
+    const kabKota = searchParams.get('kabKota');
     const pulau = searchParams.get('pulau');
     const view = searchParams.get('view');
     const cluster = searchParams.get('cluster');
@@ -60,6 +62,7 @@ export default function DataRDTR() {
 
     if (status) setFilterStatus(status);
     if (provinsi) setFilterProvinsi(provinsi);
+    if (kabKota) setFilterKabKota(kabKota);
     if (pulau) setFilterPulau(pulau);
     if (cluster) setFilterCluster(cluster);
     if (tab === 'logs') setActiveTab('logs');
@@ -73,6 +76,11 @@ export default function DataRDTR() {
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
   const provinsiOptions = useMemo(() => data ? [...new Set(data.map(r => r.provinsi).filter(Boolean))].sort() : [], [data]);
+  const kabKotaOptions = useMemo(() => {
+    if (!data) return [];
+    const src = filterProvinsi !== 'all' ? data.filter(r => r.provinsi === filterProvinsi) : data;
+    return [...new Set(src.map(r => r.kabKota).filter(Boolean))].sort();
+  }, [data, filterProvinsi]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -90,12 +98,13 @@ export default function DataRDTR() {
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
+      if (filterKabKota !== 'all' && r.kabKota !== filterKabKota) return false;
       if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
       return true;
     });
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterCluster, filterStatus, viewMode]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterCluster, filterStatus, viewMode]);
 
   const clusterDistribution = useMemo(() => {
     if (!data) return [];
@@ -216,11 +225,21 @@ export default function DataRDTR() {
               </div>
               <div className="w-44">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Provinsi</label>
-                <Select value={filterProvinsi} onValueChange={setFilterProvinsi}>
+                <Select value={filterProvinsi} onValueChange={(v) => { setFilterProvinsi(v); setFilterKabKota('all'); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
                     {provinsiOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-44">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Kab/Kota</label>
+                <Select value={filterKabKota} onValueChange={setFilterKabKota}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    {kabKotaOptions.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
