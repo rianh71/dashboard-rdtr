@@ -1,12 +1,6 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: Record<string, unknown>) => jsPDF;
-  }
-}
+import autoTable from 'jspdf-autotable';
 
 export function exportToExcel(data: Record<string, unknown>[], filename: string) {
   const ws = XLSX.utils.json_to_sheet(data);
@@ -27,10 +21,10 @@ export function exportToPDF(
   doc.setFontSize(10);
   doc.text(`Exported: ${new Date().toLocaleDateString('id-ID')}`, 14, 22);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: 28,
     head: [columns.map(c => c.header)],
-    body: data.map(row => columns.map(c => String(row[c.dataKey] || ''))),
+    body: data.map(row => columns.map(c => String(row[c.dataKey] ?? ''))),
     styles: { fontSize: 7 },
     headStyles: { fillColor: [41, 98, 255] },
   });
