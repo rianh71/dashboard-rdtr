@@ -227,7 +227,9 @@ function LogsTab() {
 
   const [search, setSearch] = useState('');
   const [filterCluster, setFilterCluster] = useState('all');
-  const [filterDampak, setFilterDampak] = useState('all');
+  const [activeKPI, setActiveKPI] = useState<string | null>(null);
+  const filterDampak = activeKPI ?? 'all';
+  const setFilterDampak = (v: string) => setActiveKPI(v === 'all' ? null : v);
   const [selectedRDTR, setSelectedRDTR] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<LogRecord | null>(null);
 
