@@ -119,29 +119,6 @@ export default function DataRDTR() {
     }));
   }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
 
-  const changeLogs = useMemo(() => getChangeLogs(), [data]);
-  const groupedLogs = useMemo(() => {
-    const map = new Map<string, ChangeLogEntry[]>();
-    let logs = changeLogs;
-    if (logDateFilter) {
-      logs = logs.filter(l => {
-        const d = new Date(l.timestamp);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        return dateStr === logDateFilter;
-      });
-    }
-    logs.forEach(log => {
-      const key = `${log.namaRDTR}__${log.kabKota}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(log);
-    });
-    return Array.from(map.entries()).map(([, logs]) => ({
-      namaRDTR: logs[0].namaRDTR,
-      kabKota: logs[0].kabKota,
-      provinsi: logs[0].provinsi,
-      logs: logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
-    }));
-  }, [changeLogs, logDateFilter]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {error.message}</div>;
