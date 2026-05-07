@@ -223,7 +223,13 @@ export default function DataRDTR() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {clusterDistribution.map(c => (
+              {clusterDistribution.map(c => {
+                const dotColors: Record<string, string> = {
+                  'A1': 'bg-blue-500', 'A2': 'bg-sky-500', 'B': 'bg-cyan-500', 'C': 'bg-teal-500',
+                  'D': 'bg-amber-500', 'E': 'bg-orange-500', 'F': 'bg-rose-500', 'G': 'bg-emerald-500',
+                };
+                const dot = dotColors[c.cluster] || 'bg-muted-foreground';
+                return (
                 <button
                   key={c.cluster}
                   onClick={() => handleClusterClick(c.cluster)}
@@ -233,6 +239,7 @@ export default function DataRDTR() {
                       : 'bg-card hover:bg-muted/50'
                   }`}
                 >
+                  <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
                   <span className={`text-sm font-semibold ${filterCluster === c.cluster ? 'text-primary-foreground' : 'text-foreground'}`}>
                     Cluster {c.cluster}
                   </span>
@@ -245,7 +252,8 @@ export default function DataRDTR() {
                     </span>
                   )}
                 </button>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
