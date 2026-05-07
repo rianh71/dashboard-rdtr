@@ -6,10 +6,9 @@ import { LoadingState } from '@/components/dashboard/LoadingState';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSpreadsheet, FileText, Eye, ArrowLeft } from 'lucide-react';
+import { FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import type { RDTRRecord } from '@/lib/data-service';
 
 const MAIN_COLUMNS = [
