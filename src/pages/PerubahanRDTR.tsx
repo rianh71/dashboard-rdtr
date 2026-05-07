@@ -430,11 +430,11 @@ function LogsTab() {
               <div className="border-t pt-3 space-y-2">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Nilai Lama</p>
-                  <p className="text-sm bg-red-50 border border-red-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).lama}</p>
+                  <p className="text-sm text-foreground bg-muted/40 border-l-4 border-red-500 rounded p-2.5">{selectedRow.nilaiLama || '-'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Nilai Baru</p>
-                  <p className="text-sm bg-emerald-50 border border-emerald-100 rounded p-2">{diffWords(selectedRow.nilaiLama, selectedRow.nilaiBaru).baru}</p>
+                  <p className="text-sm text-foreground bg-muted/40 border-l-4 border-emerald-500 rounded p-2.5">{selectedRow.nilaiBaru || '-'}</p>
                 </div>
               </div>
             </div>
