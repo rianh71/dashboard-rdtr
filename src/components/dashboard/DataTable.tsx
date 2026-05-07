@@ -105,11 +105,11 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
                 return (
                   <tr
                     key={idx}
-                    className={`border-b last:border-b-0 hover:bg-muted/30 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                    className={`border-b last:border-b-0 h-11 hover:bg-primary/5 transition-colors duration-150 ${onRowClick ? 'cursor-pointer' : ''}`}
                     onClick={() => onRowClick?.(row, globalIdx)}
                   >
                     {columns.map(col => (
-                      <td key={col.key} className={`px-3 py-2 text-foreground ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}>
+                      <td key={col.key} className={`px-3 py-1.5 text-foreground align-middle whitespace-nowrap overflow-hidden text-ellipsis ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}>
                         {col.render
                           ? col.render(row[col.key], row, globalIdx)
                           : autoNumber && col.key === 'no'
