@@ -60,13 +60,7 @@ export default function DataRDTR() {
     if (kabKota) setFilterKabKota(kabKota);
     if (pulau) setFilterPulau(pulau);
     if (cluster) setFilterCluster(cluster);
-    if (tab === 'logs') setActiveTab('logs');
-    else if (status || provinsi || pulau || view || cluster) setActiveTab('table');
   }, [searchParams]);
-
-  useEffect(() => {
-    if (data) detectChanges(data);
-  }, [data]);
 
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
