@@ -98,12 +98,13 @@ export default function DataRDTR() {
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
+      if (filterKabKota !== 'all' && r.kabKota !== filterKabKota) return false;
       if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
       return true;
     });
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterCluster, filterStatus, viewMode]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterCluster, filterStatus, viewMode]);
 
   const clusterDistribution = useMemo(() => {
     if (!data) return [];
