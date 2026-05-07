@@ -34,6 +34,7 @@ export default function DataRDTR() {
 
   const [filterPulau, setFilterPulau] = useState('all');
   const [filterProvinsi, setFilterProvinsi] = useState('all');
+  const [filterKabKota, setFilterKabKota] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [filterCluster, setFilterCluster] = useState('all');
