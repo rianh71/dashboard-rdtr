@@ -52,6 +52,7 @@ export default function DataRDTR() {
     const status = searchParams.get('status');
     const tab = searchParams.get('tab');
     const provinsi = searchParams.get('provinsi');
+    const kabKota = searchParams.get('kabKota');
     const pulau = searchParams.get('pulau');
     const view = searchParams.get('view');
     const cluster = searchParams.get('cluster');
@@ -61,6 +62,7 @@ export default function DataRDTR() {
 
     if (status) setFilterStatus(status);
     if (provinsi) setFilterProvinsi(provinsi);
+    if (kabKota) setFilterKabKota(kabKota);
     if (pulau) setFilterPulau(pulau);
     if (cluster) setFilterCluster(cluster);
     if (tab === 'logs') setActiveTab('logs');
