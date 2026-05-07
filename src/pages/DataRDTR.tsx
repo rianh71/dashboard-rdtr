@@ -156,17 +156,9 @@ export default function DataRDTR() {
               <p className="text-sm text-muted-foreground mt-1">Database lengkap RDTR Nasional</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant={activeTab === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('table')}>
-              Tabel Data
-            </Button>
-            <Button variant={activeTab === 'logs' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('logs')} className="gap-1.5">
-              <History className="h-3.5 w-3.5" /> Logs
-            </Button>
-          </div>
         </div>
 
-        {activeTab === 'table' && !viewMode && (
+        {!viewMode && (
           <>
             <div className="flex flex-wrap gap-3 items-end">
               <div className="w-40">
