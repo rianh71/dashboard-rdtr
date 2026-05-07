@@ -38,10 +38,6 @@ export default function DataRDTR() {
   const [filterWilayah, setFilterWilayah] = useState('all');
   const [filterCluster, setFilterCluster] = useState('all');
   const [viewMode, setViewMode] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'table' | 'logs'>('table');
-  const [selectedLog, setSelectedLog] = useState<ChangeLogEntry[] | null>(null);
-  const [selectedLogName, setSelectedLogName] = useState('');
-  const [logDateFilter, setLogDateFilter] = useState('');
   const [selectedRow, setSelectedRow] = useState<RDTRRecord | null>(null);
 
   // Track if navigated from another page (for back button)
