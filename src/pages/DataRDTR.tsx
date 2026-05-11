@@ -234,39 +234,45 @@ export default function DataRDTR() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              {clusterDistribution.map(c => {
-                const dotColors: Record<string, string> = {
-                  'A1': 'bg-blue-500', 'A2': 'bg-sky-500', 'B': 'bg-cyan-500', 'C': 'bg-teal-500',
-                  'D': 'bg-amber-500', 'E': 'bg-orange-500', 'F': 'bg-rose-500', 'G': 'bg-emerald-500',
-                };
-                const dot = dotColors[c.cluster] || 'bg-muted-foreground';
-                return (
-                <button
-                  key={c.cluster}
-                  onClick={() => handleClusterClick(c.cluster)}
-                  className={`flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors cursor-pointer ${
-                    filterCluster === c.cluster
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-card hover:bg-muted/50'
-                  }`}
-                >
-                  <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
-                  <span className={`text-sm font-semibold ${filterCluster === c.cluster ? 'text-primary-foreground' : 'text-foreground'}`}>
-                    Cluster {c.cluster}
-                  </span>
-                  <span className={`text-sm ${filterCluster === c.cluster ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-                    ({c.jumlah})
-                  </span>
-                  {c.hasActiveFilter && (
-                    <span className={`text-xs ${filterCluster === c.cluster ? 'text-primary-foreground/60' : 'text-muted-foreground/60'}`}>
-                      / {c.filteredCount} filtered
-                    </span>
-                  )}
-                </button>
-                );
-              })}
-            </div>
+            <TooltipProvider delayDuration={200}>
+              <div className="flex flex-wrap gap-3">
+                {clusterDistribution.map(c => {
+                  const meta = CLUSTER_META[c.cluster] || { dot: 'bg-muted-foreground', activeBg: 'bg-primary', activeBorder: 'border-primary', desc: 'Cluster ' + c.cluster };
+                  const isActive = filterCluster === c.cluster;
+                  return (
+                    <Tooltip key={c.cluster}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => handleClusterClick(c.cluster)}
+                          className={`flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors cursor-pointer ${
+                            isActive
+                              ? `${meta.activeBg} ${meta.activeBorder} text-white`
+                              : 'bg-card hover:bg-muted/50'
+                          }`}
+                        >
+                          <span className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-white/90' : meta.dot}`} />
+                          <span className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-foreground'}`}>
+                            Cluster {c.cluster}
+                          </span>
+                          <span className={`text-sm ${isActive ? 'text-white/80' : 'text-muted-foreground'}`}>
+                            ({c.jumlah})
+                          </span>
+                          {c.hasActiveFilter && (
+                            <span className={`text-xs ${isActive ? 'text-white/70' : 'text-muted-foreground/60'}`}>
+                              / {c.filteredCount} filtered
+                            </span>
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <p className="text-xs font-semibold">Cluster {c.cluster}</p>
+                        <p className="text-xs">{meta.desc}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </>
         )}
       </div>
