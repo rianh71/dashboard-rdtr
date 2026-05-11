@@ -2,12 +2,9 @@ import { useMemo, useState, useEffect } from 'react';
 import { useMainData } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { DataTable } from '@/components/dashboard/DataTable';
-import { fetchLogsFromSheet, ChangeLogEntry } from '@/lib/change-tracker';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, History, RefreshCw, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 const CLUSTER_F_CATEGORIES = [
   { key: 'menunggu-jadwal', label: 'RDTR Menunggu Jadwal Uji Coba Integrasi', match: 'menunggu jadwal uji coba' },
