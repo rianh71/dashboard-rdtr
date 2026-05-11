@@ -44,6 +44,13 @@ export default function MonitoringRDTR() {
 
   const currentWeek = useMemo(() => logs.filter(l => l.mingguKe === activeMinggu), [logs, activeMinggu]);
   const prevWeek = useMemo(() => prevMinggu ? logs.filter(l => l.mingguKe === prevMinggu) : [], [logs, prevMinggu]);
+  const currentWeekDate = useMemo(() => {
+    const counts = new Map<string, number>();
+    currentWeek.forEach(l => { const t = (l.tanggal || '').trim(); if (t) counts.set(t, (counts.get(t) || 0) + 1); });
+    let best = ''; let bestN = 0;
+    counts.forEach((n, t) => { if (n > bestN) { best = t; bestN = n; } });
+    return best;
+  }, [currentWeek]);
 
   const countBy = (arr: MonitoringLog[], pred: (l: MonitoringLog) => boolean) => arr.filter(pred).length;
 
