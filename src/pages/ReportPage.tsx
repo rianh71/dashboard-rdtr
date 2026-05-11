@@ -43,6 +43,7 @@ export default function ReportPage() {
   const clusterFData = useMemo(() => {
     if (!data) return [];
     return data.filter(r => r.cluster === 'F');
+  }, [data]);
 
   const categoryData = useMemo(() => {
     return CLUSTER_F_CATEGORIES.map(cat => {
