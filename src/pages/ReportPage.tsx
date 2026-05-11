@@ -43,10 +43,16 @@ export default function ReportPage() {
   const clusterFData = useMemo(() => {
     if (!data) return [];
     return data.filter(r => r.cluster === 'F');
-  }, [data]);
 
-
-
+  const categoryData = useMemo(() => {
+    return CLUSTER_F_CATEGORIES.map(cat => {
+      const items = clusterFData.filter(r => {
+        const ket = (r.keterangan || '').toLowerCase();
+        return ket.includes(cat.match);
+      });
+      return { ...cat, items, count: items.length };
+    });
+  }, [clusterFData]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
