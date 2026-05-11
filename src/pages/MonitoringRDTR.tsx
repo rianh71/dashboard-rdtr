@@ -178,7 +178,7 @@ export default function MonitoringRDTR() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>
-            <p className="text-sm text-muted-foreground mt-1">Monitoring berdasarkan logs mingguan — Minggu ke-{activeMinggu}</p>
+            <p className="text-sm text-muted-foreground mt-1">Monitoring dan Evaluasi RDTR berdasarkan mingguan — Minggu ke-{activeMinggu}{currentWeekDate ? ` (${currentWeekDate})` : ''}</p>
           </div>
           <div className="flex items-end gap-2">
             <div>
