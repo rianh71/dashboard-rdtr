@@ -335,7 +335,7 @@ function LogsTab() {
           { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
           { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
         ].map(c => {
-          const active = (c.key === 'all' && activeKPI === null) || (c.key !== 'all' && activeKPI === c.key);
+          const active = c.key !== 'all' && activeKPI === c.key;
           return (
             <button
               key={c.key}
