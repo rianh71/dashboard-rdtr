@@ -45,62 +45,8 @@ export default function ReportPage() {
     return data.filter(r => r.cluster === 'F');
   }, [data]);
 
-  // Logs: only cluster G
-  const clusterGData = useMemo(() => {
-    if (!data) return [];
-    return data.filter(r => r.cluster === 'G');
-  }, [data]);
 
-  const categoryData = useMemo(() => {
-    return CLUSTER_F_CATEGORIES.map(cat => {
-      const items = clusterFData.filter(r => {
-        const ket = (r.keterangan || '').toLowerCase();
-        return ket.includes(cat.match);
-      });
-      return { ...cat, items, count: items.length };
-    });
-  }, [clusterFData]);
 
-  const [changeLogs, setChangeLogs] = useState<ChangeLogEntry[]>([]);
-  const [logsLoading, setLogsLoading] = useState(false);
-  const [logDateFilter, setLogDateFilter] = useState('');
-  const [logCategoryFilter, setLogCategoryFilter] = useState('all');
-
-  const loadLogs = async () => {
-    setLogsLoading(true);
-    const logs = await fetchLogsFromSheet();
-    setChangeLogs(logs);
-    setLogsLoading(false);
-  };
-
-  useEffect(() => { loadLogs(); }, []);
-
-  // Filter logs: only cluster G RDTR
-  const clusterGNames = useMemo(() => {
-    return new Set(clusterGData.map(r => r.namaRDTR.toLowerCase().trim()));
-  }, [clusterGData]);
-
-  const filteredLogs = useMemo(() => {
-    let logs = changeLogs.filter(l => clusterGNames.has(l.namaRDTR.toLowerCase().trim()));
-    if (logDateFilter) {
-      logs = logs.filter(l => {
-        const d = new Date(l.timestamp);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        return dateStr === logDateFilter;
-      });
-    }
-    return logs;
-  }, [changeLogs, logDateFilter, clusterGNames]);
-
-  const categoryFilteredLogs = useMemo(() => {
-    if (logCategoryFilter === 'all') return filteredLogs;
-    const cat = CLUSTER_F_CATEGORIES.find(c => c.key === logCategoryFilter);
-    if (!cat) return filteredLogs;
-    return filteredLogs.filter(l => {
-      const val = (l.newValue || '').toLowerCase();
-      return val.includes(cat.match);
-    });
-  }, [filteredLogs, logCategoryFilter]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
