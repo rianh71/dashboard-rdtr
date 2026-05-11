@@ -9,7 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RDTRRecord } from '@/lib/data-service';
+
+const CLUSTER_META: Record<string, { dot: string; activeBg: string; activeBorder: string; desc: string }> = {
+  'A1': { dot: 'bg-sky-400',   activeBg: 'bg-sky-400',   activeBorder: 'border-sky-400',   desc: 'Permohonan Rekomendasi Revisi' },
+  'A2': { dot: 'bg-blue-800',  activeBg: 'bg-blue-800',  activeBorder: 'border-blue-800',  desc: 'Sudah Mendapatkan Rekomendasi Revisi atau Sedang Revisi' },
+  'B':  { dot: 'bg-amber-400', activeBg: 'bg-amber-400', activeBorder: 'border-amber-400', desc: 'Di Hold Daerah' },
+  'C':  { dot: 'bg-red-500',   activeBg: 'bg-red-500',   activeBorder: 'border-red-500',   desc: 'RDTR Tidak Sinkron' },
+  'D':  { dot: 'bg-orange-500',activeBg: 'bg-orange-500',activeBorder: 'border-orange-500',desc: 'RDTR yang Belum Memenuhi 4 Dokumen Wajib' },
+  'E':  { dot: 'bg-purple-500',activeBg: 'bg-purple-500',activeBorder: 'border-purple-500',desc: 'RDTR Proses Uji Titik Pasca Perkada oleh Pemerintah Daerah' },
+  'F':  { dot: 'bg-lime-500',  activeBg: 'bg-lime-500',  activeBorder: 'border-lime-500',  desc: 'RDTR yang Siap Terintegrasi OSS' },
+  'G':  { dot: 'bg-emerald-500',activeBg:'bg-emerald-500',activeBorder:'border-emerald-500',desc: 'RDTR Terintegrasi OSS' },
+  'H':  { dot: 'bg-slate-500', activeBg: 'bg-slate-500', activeBorder: 'border-slate-500', desc: 'RDTR diminta Takeout dari Sistem OSS oleh Pemerintah Daerah' },
+};
 
 const MAIN_COLUMNS = [
   { key: 'no', header: 'No', width: '50px', align: 'center' as const },
