@@ -132,33 +132,7 @@ async function fetchLogs(): Promise<LogRecord[]> {
     const lamaRank = extractClusterRank(nilaiLama);
     const baruRank = extractClusterRank(nilaiBaru);
 
-    let dampak: LogRecord['dampak'] = 'Stagnan';
-    if (lamaRank !== null && baruRank !== null) {
-      if (baruRank < lamaRank) dampak = 'Membaik';
-      else if (baruRank > lamaRank) dampak = 'Memburuk';
-      else dampak = 'Stagnan';
-    } else {
-      // Fallback: text-based heuristic for known progress events
-      const baruLower = nilaiBaru.toLowerCase();
-      const lamaLower = nilaiLama.toLowerCase();
-      if (baruLower === lamaLower) {
-        dampak = 'Stagnan';
-      } else if (
-        baruLower.includes('integrasi oss') ||
-        baruLower.includes('proses uji petik') ||
-        baruLower.includes('selesai') ||
-        baruLower.includes('update kbli')
-      ) {
-        dampak = 'Membaik';
-      } else if (
-        baruLower.includes('hold') ||
-        baruLower.includes('rekomendasi revisi') ||
-        baruLower.includes('disintegrasi') ||
-        baruLower.includes('belum')
-      ) {
-        dampak = 'Memburuk';
-      }
-    }
+    const dampak: LogRecord['dampak'] = computeDampak(nilaiLama, nilaiBaru, lamaRank, baruRank);
 
     return {
       tanggal: (row['Tanggal'] || '').trim(),
