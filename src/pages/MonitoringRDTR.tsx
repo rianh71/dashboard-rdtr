@@ -103,15 +103,6 @@ export default function MonitoringRDTR() {
     return r;
   }, [logs, filterCluster, filterProvinsi]);
 
-  const topProgressive = useMemo(() => {
-    const m = new Map<string, number>();
-    analyticsScope.forEach(l => {
-      if ((l.statusProgress || '').toLowerCase().includes('ada progress') && !(l.statusProgress || '').toLowerCase().includes('tidak')) {
-        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
-      }
-    });
-    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [analyticsScope]);
 
   const topStagnant = useMemo(() => {
     const byRdtr = new Map<string, MonitoringLog[]>();
