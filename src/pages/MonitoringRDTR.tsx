@@ -505,6 +505,60 @@ export default function MonitoringRDTR() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Detail Semua Modal */}
+      <Dialog open={!!detailOpen} onOpenChange={(o) => !o && setDetailOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {(() => {
+            const cfg = detailOpen === 'progressive'
+              ? { title: 'Semua RDTR Tercepat (Progress Terbanyak)', data: topProgressiveAll, accent: 'text-emerald-700', bar: 'bg-emerald-500', suffix: 'x progress' }
+              : detailOpen === 'stagnant'
+              ? { title: 'Semua RDTR Terlambat (Stagnan Terlama)', data: topStagnant, accent: 'text-orange-700', bar: 'bg-orange-500', suffix: 'minggu berturut' }
+              : detailOpen === 'inactive'
+              ? { title: 'Semua RDTR Tidak Aktif', data: topInactiveAll, accent: 'text-red-700', bar: 'bg-red-500', suffix: 'x tidak aktif' }
+              : null;
+            if (!cfg) return null;
+            const max = Math.max(1, ...cfg.data.map(d => d[1]));
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className={`text-base ${cfg.accent}`}>{cfg.title}</DialogTitle>
+                  <p className="text-xs text-muted-foreground">{cfg.data.length} RDTR — diurutkan dari nilai tertinggi</p>
+                </DialogHeader>
+                <div className="rounded-lg border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-semibold w-12">#</th>
+                        <th className="text-left px-3 py-2 font-semibold">Nama RDTR</th>
+                        <th className="text-right px-3 py-2 font-semibold w-32">Nilai</th>
+                        <th className="px-3 py-2 font-semibold w-40">Distribusi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cfg.data.map(([name, count], i) => {
+                        const pct = (count / max) * 100;
+                        return (
+                          <tr key={name} className="border-t hover:bg-muted/30">
+                            <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
+                            <td className="px-3 py-2 text-foreground font-medium">{name}</td>
+                            <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{count} {cfg.suffix}</td>
+                            <td className="px-3 py-2">
+                              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                                <div className={`h-full ${cfg.bar}`} style={{ width: `${pct}%` }} />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
