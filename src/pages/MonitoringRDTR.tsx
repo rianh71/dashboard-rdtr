@@ -130,8 +130,30 @@ export default function MonitoringRDTR() {
       });
       if (max > 0) result.push([name, max]);
     });
-    return result.sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return result.sort((a, b) => b[1] - a[1]);
   }, [analyticsScope]);
+
+  const topProgressiveAll = useMemo(() => {
+    const m = new Map<string, number>();
+    analyticsScope.forEach(l => {
+      if ((l.statusProgress || '').toLowerCase().includes('ada progress') && !(l.statusProgress || '').toLowerCase().includes('tidak')) {
+        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
+      }
+    });
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [analyticsScope]);
+
+  const topInactiveAll = useMemo(() => {
+    const m = new Map<string, number>();
+    analyticsScope.forEach(l => {
+      if (l.statusRingkas === 'Tidak Aktif' || l.statusKehadiran === 'Tidak Hadir') {
+        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
+      }
+    });
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [analyticsScope]);
+
+  const [detailOpen, setDetailOpen] = useState<null | 'progressive' | 'stagnant' | 'inactive'>(null);
 
   const hasActiveFilter = filterCluster !== 'all' || filterProvinsi !== 'all' || filterStatus !== 'all' || !!kpiFilter || !!searchQuery;
   const resetAllFilters = () => { setFilterCluster('all'); setFilterProvinsi('all'); setFilterStatus('all'); setKpiFilter(null); setSearchQuery(''); setPage(0); };
