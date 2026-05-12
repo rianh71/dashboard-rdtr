@@ -65,7 +65,57 @@ function extractClusterRank(value: string): number | null {
   return null;
 }
 
-function parseTanggal(t: string): number {
+// Stage hierarchy for "Dampak Perubahan" — higher rank = more advanced/better
+const STAGE_PATTERNS: { rank: number; patterns: RegExp[] }[] = [
+  { rank: 1, patterns: [/belum\s+diterima/i, /belum\s+lengkap/i, /belum\s+mengirim\s+surat/i] },
+  { rank: 2, patterns: [/sudah\s+mengirim\s+surat/i] },
+  { rank: 3, patterns: [/(sedang|proses)\s+uji\s+petik/i] },
+  { rank: 4, patterns: [/menunggu\s+jadwal\s+integrasi/i] },
+  { rank: 5, patterns: [/siap\s+(untuk\s+)?integrasi/i] },
+  { rank: 6, patterns: [/terintegrasi/i, /integrasi\s+oss/i] },
+];
+
+function extractStageRank(value: string): number | null {
+  if (!value) return null;
+  for (let i = STAGE_PATTERNS.length - 1; i >= 0; i--) {
+    if (STAGE_PATTERNS[i].patterns.some(re => re.test(value))) return STAGE_PATTERNS[i].rank;
+  }
+  return null;
+}
+
+function computeDampak(
+  nilaiLama: string,
+  nilaiBaru: string,
+  lamaClusterRank: number | null,
+  baruClusterRank: number | null,
+): 'Membaik' | 'Memburuk' | 'Stagnan' {
+  const lamaNorm = nilaiLama.trim().toLowerCase().replace(/\s+/g, ' ');
+  const baruNorm = nilaiBaru.trim().toLowerCase().replace(/\s+/g, ' ');
+
+  // Stagnan only if values are truly identical
+  if (lamaNorm === baruNorm) return 'Stagnan';
+
+  // 1. Stage hierarchy comparison
+  const lamaStage = extractStageRank(nilaiLama);
+  const baruStage = extractStageRank(nilaiBaru);
+  if (lamaStage !== null && baruStage !== null) {
+    if (baruStage > lamaStage) return 'Membaik';
+    if (baruStage < lamaStage) return 'Memburuk';
+  }
+
+  // 2. Cluster rank comparison (lower cluster letter rank = more advanced in source data)
+  if (lamaClusterRank !== null && baruClusterRank !== null) {
+    if (baruClusterRank < lamaClusterRank) return 'Membaik';
+    if (baruClusterRank > lamaClusterRank) return 'Memburuk';
+  }
+
+  // 3. Single-side stage detected → infer direction
+  if (baruStage !== null && lamaStage === null) return 'Membaik';
+  if (lamaStage !== null && baruStage === null) return 'Memburuk';
+
+  // 4. Any other textual difference defaults to Membaik (data was updated)
+  return 'Membaik';
+}
   // "12 Februari 2026" → timestamp
   const months: Record<string, number> = {
     januari: 0, februari: 1, maret: 2, april: 3, mei: 4, juni: 5,
