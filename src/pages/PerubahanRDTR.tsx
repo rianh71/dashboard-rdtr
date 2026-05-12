@@ -180,11 +180,13 @@ async function fetchLogs(): Promise<LogRecord[]> {
   return rows.filter(r => (r['Tanggal'] || r['tanggal'])?.trim()).map(row => {
     const nilaiLama = (row['Nilai Lama'] || '').trim();
     const nilaiBaru = (row['Nilai Baru'] || '').trim();
-    const cluster = (row['Cluster'] || '').trim();
+    const clusterSebelumnya = (row['Cluster Sebelumnya'] || '').trim();
+    const clusterSekarang = (row['Cluster Sekarang'] || row['Cluster'] || '').trim();
+    const cluster = clusterSekarang;
 
-    // Determine impact: prefer cluster rank comparison if both sides reference clusters
-    const lamaRank = extractClusterRank(nilaiLama);
-    const baruRank = extractClusterRank(nilaiBaru);
+    // Determine impact: prefer cluster columns, fallback to value text
+    const lamaRank = extractClusterRank(clusterSebelumnya) ?? extractClusterRank(nilaiLama);
+    const baruRank = extractClusterRank(clusterSekarang) ?? extractClusterRank(nilaiBaru);
 
     const dampak: LogRecord['dampak'] = computeDampak(nilaiLama, nilaiBaru, lamaRank, baruRank);
 
@@ -194,6 +196,8 @@ async function fetchLogs(): Promise<LogRecord[]> {
       kabKota: (row['Kab/Kota'] || '').trim(),
       namaRDTR: (row['Nama RDTR'] || '').trim(),
       cluster,
+      clusterSebelumnya,
+      clusterSekarang,
       keterangan: (row['Keterangan'] || '').trim(),
       nilaiLama,
       nilaiBaru,
