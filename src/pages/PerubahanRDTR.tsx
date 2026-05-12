@@ -43,6 +43,8 @@ interface LogRecord {
   kabKota: string;
   namaRDTR: string;
   cluster: string;
+  clusterSebelumnya: string;
+  clusterSekarang: string;
   keterangan: string;
   nilaiLama: string;
   nilaiBaru: string;
@@ -178,11 +180,13 @@ async function fetchLogs(): Promise<LogRecord[]> {
   return rows.filter(r => (r['Tanggal'] || r['tanggal'])?.trim()).map(row => {
     const nilaiLama = (row['Nilai Lama'] || '').trim();
     const nilaiBaru = (row['Nilai Baru'] || '').trim();
-    const cluster = (row['Cluster'] || '').trim();
+    const clusterSebelumnya = (row['Cluster Sebelumnya'] || '').trim();
+    const clusterSekarang = (row['Cluster Sekarang'] || row['Cluster'] || '').trim();
+    const cluster = clusterSekarang;
 
-    // Determine impact: prefer cluster rank comparison if both sides reference clusters
-    const lamaRank = extractClusterRank(nilaiLama);
-    const baruRank = extractClusterRank(nilaiBaru);
+    // Determine impact: prefer cluster columns, fallback to value text
+    const lamaRank = extractClusterRank(clusterSebelumnya) ?? extractClusterRank(nilaiLama);
+    const baruRank = extractClusterRank(clusterSekarang) ?? extractClusterRank(nilaiBaru);
 
     const dampak: LogRecord['dampak'] = computeDampak(nilaiLama, nilaiBaru, lamaRank, baruRank);
 
@@ -192,6 +196,8 @@ async function fetchLogs(): Promise<LogRecord[]> {
       kabKota: (row['Kab/Kota'] || '').trim(),
       namaRDTR: (row['Nama RDTR'] || '').trim(),
       cluster,
+      clusterSebelumnya,
+      clusterSekarang,
       keterangan: (row['Keterangan'] || '').trim(),
       nilaiLama,
       nilaiBaru,
@@ -429,9 +435,44 @@ function LogsTab() {
           </SheetHeader>
           {selectedRow && (
             <div className="mt-4 space-y-4">
+              {/* Prominent Cluster Transition */}
+              {(selectedRow.clusterSebelumnya || selectedRow.clusterSekarang) && (() => {
+                const lr = extractClusterRank(selectedRow.clusterSebelumnya);
+                const br = extractClusterRank(selectedRow.clusterSekarang);
+                let direction: 'naik' | 'turun' | 'tetap' = 'tetap';
+                if (lr !== null && br !== null) {
+                  if (br < lr) direction = 'naik';
+                  else if (br > lr) direction = 'turun';
+                }
+                const tone = direction === 'naik'
+                  ? { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', label: 'Naik Kelas', Icon: TrendingUp }
+                  : direction === 'turun'
+                  ? { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', label: 'Turun Kelas', Icon: TrendingDown }
+                  : { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', label: 'Tetap', Icon: Minus };
+                return (
+                  <div className={`rounded-lg border ${tone.border} ${tone.bg} p-3`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Perpindahan Cluster</p>
+                      <span className={`inline-flex items-center gap-1 text-xs font-semibold ${tone.text}`}>
+                        <tone.Icon className="h-3.5 w-3.5" /> {tone.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center gap-3">
+                      <Badge variant="outline" className="bg-card text-foreground border-border px-3 py-1 text-sm font-semibold">
+                        {selectedRow.clusterSebelumnya || '—'}
+                      </Badge>
+                      <span className={`text-lg font-bold ${tone.text}`}>→</span>
+                      <Badge className={`px-3 py-1 text-sm font-semibold ${direction === 'naik' ? 'bg-emerald-500 hover:bg-emerald-500' : direction === 'turun' ? 'bg-red-500 hover:bg-red-500' : 'bg-amber-500 hover:bg-amber-500'} text-white`}>
+                        {selectedRow.clusterSekarang || '—'}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><p className="text-xs text-muted-foreground">Tanggal</p><p className="font-medium">{selectedRow.tanggal}</p></div>
-                <div><p className="text-xs text-muted-foreground">Cluster</p><p className="font-medium">{selectedRow.cluster}</p></div>
+                <div><p className="text-xs text-muted-foreground">Cluster Sekarang</p><p className="font-medium">{selectedRow.clusterSekarang || selectedRow.cluster}</p></div>
                 <div><p className="text-xs text-muted-foreground">Provinsi</p><p className="font-medium">{selectedRow.provinsi}</p></div>
                 <div><p className="text-xs text-muted-foreground">Kab/Kota</p><p className="font-medium">{selectedRow.kabKota}</p></div>
               </div>

@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Users, UserCheck, UserX, CalendarDays, Activity, AlertCircle, CheckCircle2, MinusCircle, XCircle, Search, ChevronLeft, ChevronRight, FileSpreadsheet, FileText, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Users, UserCheck, UserX, CalendarDays, Activity, AlertCircle, CheckCircle2, MinusCircle, XCircle, Search, ChevronLeft, ChevronRight, FileSpreadsheet, FileText, TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import type { MonitoringLog } from '@/lib/data-service';
 
@@ -102,15 +103,6 @@ export default function MonitoringRDTR() {
     return r;
   }, [logs, filterCluster, filterProvinsi]);
 
-  const topProgressive = useMemo(() => {
-    const m = new Map<string, number>();
-    analyticsScope.forEach(l => {
-      if ((l.statusProgress || '').toLowerCase().includes('ada progress') && !(l.statusProgress || '').toLowerCase().includes('tidak')) {
-        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
-      }
-    });
-    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [analyticsScope]);
 
   const topStagnant = useMemo(() => {
     const byRdtr = new Map<string, MonitoringLog[]>();
@@ -129,8 +121,30 @@ export default function MonitoringRDTR() {
       });
       if (max > 0) result.push([name, max]);
     });
-    return result.sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return result.sort((a, b) => b[1] - a[1]);
   }, [analyticsScope]);
+
+  const topProgressiveAll = useMemo(() => {
+    const m = new Map<string, number>();
+    analyticsScope.forEach(l => {
+      if ((l.statusProgress || '').toLowerCase().includes('ada progress') && !(l.statusProgress || '').toLowerCase().includes('tidak')) {
+        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
+      }
+    });
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [analyticsScope]);
+
+  const topInactiveAll = useMemo(() => {
+    const m = new Map<string, number>();
+    analyticsScope.forEach(l => {
+      if (l.statusRingkas === 'Tidak Aktif' || l.statusKehadiran === 'Tidak Hadir') {
+        m.set(l.namaRDTR, (m.get(l.namaRDTR) || 0) + 1);
+      }
+    });
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [analyticsScope]);
+
+  const [detailOpen, setDetailOpen] = useState<null | 'progressive' | 'stagnant' | 'inactive'>(null);
 
   const hasActiveFilter = filterCluster !== 'all' || filterProvinsi !== 'all' || filterStatus !== 'all' || !!kpiFilter || !!searchQuery;
   const resetAllFilters = () => { setFilterCluster('all'); setFilterProvinsi('all'); setFilterStatus('all'); setKpiFilter(null); setSearchQuery(''); setPage(0); };
@@ -263,21 +277,26 @@ export default function MonitoringRDTR() {
       </div>
 
       <div className="p-4 md:px-6 space-y-4">
-        {/* Analytics: Top 5 Tercepat & Terlambat */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[
-            { title: 'Top 5 RDTR Tercepat (Progress Terbanyak)', data: topProgressive, bar: 'bg-emerald-500', accent: 'text-emerald-700', suffix: 'x progress' },
-            { title: 'Top 5 RDTR Terlambat (Stagnan Terlama)', data: topStagnant, bar: 'bg-orange-500', accent: 'text-orange-700', suffix: 'minggu berturut' },
-          ].map((sec) => {
-            const max = Math.max(1, ...sec.data.map(d => d[1]));
+        {/* Analytics: Top 5 Tercepat / Terlambat / Tidak Aktif */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {([
+            { key: 'progressive', title: 'Top 5 RDTR Tercepat', subtitle: 'Progress Terbanyak', data: topProgressiveAll, bar: 'bg-emerald-500', accent: 'text-emerald-700', headerBg: 'bg-emerald-50', border: 'border-emerald-200', suffix: 'x progress' },
+            { key: 'stagnant', title: 'Top 5 RDTR Terlambat', subtitle: 'Stagnan Terlama', data: topStagnant, bar: 'bg-orange-500', accent: 'text-orange-700', headerBg: 'bg-orange-50', border: 'border-orange-200', suffix: 'minggu berturut' },
+            { key: 'inactive', title: 'Top 5 RDTR Tidak Aktif', subtitle: 'Paling Jarang Aktif', data: topInactiveAll, bar: 'bg-red-500', accent: 'text-red-700', headerBg: 'bg-red-50', border: 'border-red-200', suffix: 'x tidak aktif' },
+          ] as const).map((sec) => {
+            const top5 = sec.data.slice(0, 5);
+            const max = Math.max(1, ...top5.map(d => d[1]));
             return (
-              <div key={sec.title} className="rounded-lg border bg-card p-4">
-                <h3 className={`text-sm font-semibold mb-3 ${sec.accent}`}>{sec.title}</h3>
-                {sec.data.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-6 text-center">Tidak ada data</p>
+              <div key={sec.key} className={`rounded-lg border ${sec.border} bg-card p-4 flex flex-col`}>
+                <div className={`-m-4 mb-3 p-3 rounded-t-lg ${sec.headerBg} border-b ${sec.border}`}>
+                  <h3 className={`text-sm font-semibold ${sec.accent}`}>{sec.title}</h3>
+                  <p className={`text-[11px] ${sec.accent} opacity-80`}>{sec.subtitle}</p>
+                </div>
+                {top5.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-6 text-center flex-1">Tidak ada data</p>
                 ) : (
-                  <div className="space-y-2">
-                    {sec.data.map(([name, count], i) => {
+                  <div className="space-y-2 flex-1">
+                    {top5.map(([name, count], i) => {
                       const pct = (count / max) * 100;
                       const active = searchQuery === name;
                       return (
@@ -299,6 +318,13 @@ export default function MonitoringRDTR() {
                     })}
                   </div>
                 )}
+                <button
+                  onClick={() => setDetailOpen(sec.key)}
+                  disabled={sec.data.length === 0}
+                  className={`mt-3 inline-flex items-center justify-center gap-1 text-xs font-medium ${sec.accent} hover:underline disabled:opacity-40 disabled:no-underline`}
+                >
+                  Lihat Detail Semua <ArrowRight className="h-3 w-3" />
+                </button>
               </div>
             );
           })}
@@ -479,6 +505,60 @@ export default function MonitoringRDTR() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Detail Semua Modal */}
+      <Dialog open={!!detailOpen} onOpenChange={(o) => !o && setDetailOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {(() => {
+            const cfg = detailOpen === 'progressive'
+              ? { title: 'Semua RDTR Tercepat (Progress Terbanyak)', data: topProgressiveAll, accent: 'text-emerald-700', bar: 'bg-emerald-500', suffix: 'x progress' }
+              : detailOpen === 'stagnant'
+              ? { title: 'Semua RDTR Terlambat (Stagnan Terlama)', data: topStagnant, accent: 'text-orange-700', bar: 'bg-orange-500', suffix: 'minggu berturut' }
+              : detailOpen === 'inactive'
+              ? { title: 'Semua RDTR Tidak Aktif', data: topInactiveAll, accent: 'text-red-700', bar: 'bg-red-500', suffix: 'x tidak aktif' }
+              : null;
+            if (!cfg) return null;
+            const max = Math.max(1, ...cfg.data.map(d => d[1]));
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className={`text-base ${cfg.accent}`}>{cfg.title}</DialogTitle>
+                  <p className="text-xs text-muted-foreground">{cfg.data.length} RDTR — diurutkan dari nilai tertinggi</p>
+                </DialogHeader>
+                <div className="rounded-lg border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-semibold w-12">#</th>
+                        <th className="text-left px-3 py-2 font-semibold">Nama RDTR</th>
+                        <th className="text-right px-3 py-2 font-semibold w-32">Nilai</th>
+                        <th className="px-3 py-2 font-semibold w-40">Distribusi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cfg.data.map(([name, count], i) => {
+                        const pct = (count / max) * 100;
+                        return (
+                          <tr key={name} className="border-t hover:bg-muted/30">
+                            <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
+                            <td className="px-3 py-2 text-foreground font-medium">{name}</td>
+                            <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{count} {cfg.suffix}</td>
+                            <td className="px-3 py-2">
+                              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                                <div className={`h-full ${cfg.bar}`} style={{ width: `${pct}%` }} />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
