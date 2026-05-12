@@ -43,6 +43,8 @@ interface LogRecord {
   kabKota: string;
   namaRDTR: string;
   cluster: string;
+  clusterSebelumnya: string;
+  clusterSekarang: string;
   keterangan: string;
   nilaiLama: string;
   nilaiBaru: string;
