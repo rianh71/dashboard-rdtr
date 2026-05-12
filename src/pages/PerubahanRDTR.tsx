@@ -116,6 +116,8 @@ function computeDampak(
   // 4. Any other textual difference defaults to Membaik (data was updated)
   return 'Membaik';
 }
+
+function parseTanggal(t: string): number {
   // "12 Februari 2026" → timestamp
   const months: Record<string, number> = {
     januari: 0, februari: 1, maret: 2, april: 3, mei: 4, juni: 5,
