@@ -472,10 +472,10 @@ function LogsTab() {
                   : selectedRow.dampak === 'Memburuk' ? 'turun'
                   : 'tetap';
                 const tone = direction === 'naik'
-                  ? { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', label: 'Naik Kelas', Icon: TrendingUp }
+                  ? { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', label: 'Membaik', Icon: TrendingUp }
                   : direction === 'turun'
-                  ? { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', label: 'Turun Kelas', Icon: TrendingDown }
-                  : { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', label: 'Tetap', Icon: Minus };
+                  ? { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', label: 'Memburuk', Icon: TrendingDown }
+                  : { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', label: 'Stagnan', Icon: Minus };
                 return (
                   <div className={`rounded-lg border ${tone.border} ${tone.bg} p-3`}>
                     <div className="flex items-center justify-between mb-2">
