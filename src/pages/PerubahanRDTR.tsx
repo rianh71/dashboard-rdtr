@@ -217,7 +217,8 @@ async function fetchLogs(): Promise<LogRecord[]> {
     const lamaRank = extractClusterRank(clusterSebelumnya) ?? extractClusterRank(nilaiLama);
     const baruRank = extractClusterRank(clusterSekarang) ?? extractClusterRank(nilaiBaru);
 
-    const dampak: LogRecord['dampak'] = computeDampak(nilaiLama, nilaiBaru, lamaRank, baruRank);
+    const keterangan = (row['Keterangan'] || '').trim();
+    const dampak: LogRecord['dampak'] = computeDampak(nilaiLama, nilaiBaru, clusterSebelumnya, clusterSekarang, keterangan);
 
     return {
       tanggal: (row['Tanggal'] || '').trim(),
