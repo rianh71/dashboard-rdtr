@@ -53,69 +53,98 @@ interface LogRecord {
   clusterBaru?: number;
 }
 
-const CLUSTER_RANK: Record<string, number> = {
-  'A1': 1, 'A2': 2, 'B': 3, 'C': 4, 'D': 5, 'E': 6, 'F': 7, 'G': 8,
+// New cluster tier hierarchy (low → high):
+// Tier 0: H, A1, A2, B, C  | Tier 1: D | Tier 2: E | Tier 3: F | Tier 4: G
+const CLUSTER_TIER: Record<string, number> = {
+  'H': 0, 'A1': 0, 'A2': 0, 'B': 0, 'C': 0,
+  'D': 1, 'E': 2, 'F': 3, 'G': 4,
 };
 
-function extractClusterRank(value: string): number | null {
+function extractClusterKey(value: string): string | null {
   if (!value) return null;
-  const match = value.match(/Cluster\s+(A1|A2|[B-G])/i);
-  if (match) {
-    const key = match[1].toUpperCase();
-    return CLUSTER_RANK[key] ?? null;
-  }
+  // Try with explicit "Cluster X" prefix first
+  const m1 = value.match(/Cluster\s+(A1|A2|[B-H])/i);
+  if (m1) return m1[1].toUpperCase();
+  // Fallback: standalone token (A1/A2/B/C/D/E/F/G/H)
+  const m2 = value.trim().match(/^(A1|A2|[B-H])$/i);
+  if (m2) return m2[1].toUpperCase();
   return null;
 }
 
-// Stage hierarchy for "Dampak Perubahan" — higher rank = more advanced/better
-const STAGE_PATTERNS: { rank: number; patterns: RegExp[] }[] = [
-  { rank: 1, patterns: [/belum\s+diterima/i, /belum\s+lengkap/i, /belum\s+mengirim\s+surat/i] },
-  { rank: 2, patterns: [/sudah\s+mengirim\s+surat/i] },
-  { rank: 3, patterns: [/(sedang|proses)\s+uji\s+petik/i] },
-  { rank: 4, patterns: [/menunggu\s+jadwal\s+integrasi/i] },
-  { rank: 5, patterns: [/siap\s+(untuk\s+)?integrasi/i] },
-  { rank: 6, patterns: [/terintegrasi/i, /integrasi\s+oss/i] },
+function extractClusterRank(value: string): number | null {
+  const key = extractClusterKey(value);
+  if (!key) return null;
+  return CLUSTER_TIER[key] ?? null;
+}
+
+// Specific F→F document progressions that count as Membaik
+const F_PROGRESS_TRANSITIONS: { from: RegExp; to: RegExp }[] = [
+  { from: /belum\s+mengirim(kan)?\s+surat\s+pernyataan/i, to: /sudah\s+mengirim(kan)?\s+surat\s+pernyataan/i },
+  { from: /menunggu\s+jadwal\s+uji\s+coba\s+integrasi/i, to: /menunggu\s+release\s+note\s*\(\s*belum\s+mengirim(kan)?\s+surat\s+pernyataan/i },
+  { from: /sudah\s+dilakukan\s+uji\s+coba\s+integrasi\s+namun\s+terdapat\s+kendala\s+substansi/i, to: /menunggu\s+release\s+note\s*\(\s*belum\s+mengirim(kan)?\s+surat\s+pernyataan/i },
+  { from: /(rdtr\s+)?sudah\s+dilakukan\s+uji\s+coba\s+namun\s+ada\s+kendala\s+teknis/i, to: /menunggu\s+release\s+note\s*\(\s*belum\s+mengirim(kan)?\s+surat\s+pernyataan/i },
+  { from: /sudah\s+dilakukan\s+uji\s+coba\s+integrasi\s+namun\s+terdapat\s+kendala\s+substansi/i, to: /menunggu\s+release\s+note\s*\(\s*sudah\s+mengirim(kan)?\s+surat\s+pernyataan/i },
+  { from: /(rdtr\s+)?sudah\s+dilakukan\s+uji\s+coba\s+namun\s+ada\s+kendala\s+teknis/i, to: /menunggu\s+release\s+note\s*\(\s*sudah\s+mengirim(kan)?\s+surat\s+pernyataan/i },
 ];
 
-function extractStageRank(value: string): number | null {
-  if (!value) return null;
-  for (let i = STAGE_PATTERNS.length - 1; i >= 0; i--) {
-    if (STAGE_PATTERNS[i].patterns.some(re => re.test(value))) return STAGE_PATTERNS[i].rank;
-  }
-  return null;
+const G_PROGRESS_PATTERNS = [/update\s+kbli/i, /integrasi\s+kembali/i];
+
+// Detect if a string contains a date (dd-mm-yyyy / dd/mm/yyyy / "12 Februari 2026" etc.)
+function extractDates(s: string): string[] {
+  if (!s) return [];
+  const out: string[] = [];
+  const re1 = /\b\d{1,2}[\/\-\.\s]\d{1,2}[\/\-\.\s]\d{2,4}\b/g;
+  const re2 = /\b\d{1,2}\s+(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\s+\d{2,4}\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re1.exec(s)) !== null) out.push(m[0].toLowerCase());
+  while ((m = re2.exec(s)) !== null) out.push(m[0].toLowerCase());
+  return out;
 }
 
 function computeDampak(
   nilaiLama: string,
   nilaiBaru: string,
-  lamaClusterRank: number | null,
-  baruClusterRank: number | null,
+  clusterSebelumnya: string,
+  clusterSekarang: string,
+  keterangan: string,
 ): 'Membaik' | 'Memburuk' | 'Stagnan' {
+  const lamaKey = extractClusterKey(clusterSebelumnya);
+  const baruKey = extractClusterKey(clusterSekarang);
+  const lamaTier = lamaKey ? CLUSTER_TIER[lamaKey] : null;
+  const baruTier = baruKey ? CLUSTER_TIER[baruKey] : null;
+
+  // Special: G → H = Memburuk (Selesai balik ke bermasalah)
+  if (lamaKey === 'G' && baruKey === 'H') return 'Memburuk';
+
+  // Different tiers → naik / turun kasta
+  if (lamaTier !== null && baruTier !== null) {
+    if (baruTier > lamaTier) return 'Membaik';
+    if (baruTier < lamaTier) return 'Memburuk';
+
+    // Same tier — apply special same-cluster rules
+    // G → G
+    if (lamaKey === 'G' && baruKey === 'G') {
+      const haystack = `${nilaiBaru} ${keterangan}`;
+      if (G_PROGRESS_PATTERNS.some(re => re.test(haystack))) return 'Membaik';
+      const lamaDates = extractDates(nilaiLama).join('|');
+      const baruDates = extractDates(nilaiBaru).join('|');
+      if (baruDates && lamaDates !== baruDates) return 'Membaik';
+      return 'Stagnan';
+    }
+    // F → F
+    if (lamaKey === 'F' && baruKey === 'F') {
+      const matched = F_PROGRESS_TRANSITIONS.some(t => t.from.test(nilaiLama) && t.to.test(nilaiBaru));
+      if (matched) return 'Membaik';
+      return 'Stagnan';
+    }
+    // Same tier, no special rule → Stagnan
+    return 'Stagnan';
+  }
+
+  // Cluster info missing on one side — fallback to text comparison
   const lamaNorm = nilaiLama.trim().toLowerCase().replace(/\s+/g, ' ');
   const baruNorm = nilaiBaru.trim().toLowerCase().replace(/\s+/g, ' ');
-
-  // Stagnan only if values are truly identical
   if (lamaNorm === baruNorm) return 'Stagnan';
-
-  // 1. Stage hierarchy comparison
-  const lamaStage = extractStageRank(nilaiLama);
-  const baruStage = extractStageRank(nilaiBaru);
-  if (lamaStage !== null && baruStage !== null) {
-    if (baruStage > lamaStage) return 'Membaik';
-    if (baruStage < lamaStage) return 'Memburuk';
-  }
-
-  // 2. Cluster rank comparison (lower cluster letter rank = more advanced in source data)
-  if (lamaClusterRank !== null && baruClusterRank !== null) {
-    if (baruClusterRank < lamaClusterRank) return 'Membaik';
-    if (baruClusterRank > lamaClusterRank) return 'Memburuk';
-  }
-
-  // 3. Single-side stage detected → infer direction
-  if (baruStage !== null && lamaStage === null) return 'Membaik';
-  if (lamaStage !== null && baruStage === null) return 'Memburuk';
-
-  // 4. Any other textual difference defaults to Membaik (data was updated)
   return 'Membaik';
 }
 
