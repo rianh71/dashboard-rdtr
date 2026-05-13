@@ -467,13 +467,10 @@ function LogsTab() {
             <div className="mt-4 space-y-4">
               {/* Prominent Cluster Transition */}
               {(selectedRow.clusterSebelumnya || selectedRow.clusterSekarang) && (() => {
-                const lr = extractClusterRank(selectedRow.clusterSebelumnya);
-                const br = extractClusterRank(selectedRow.clusterSekarang);
-                let direction: 'naik' | 'turun' | 'tetap' = 'tetap';
-                if (lr !== null && br !== null) {
-                  if (br < lr) direction = 'naik';
-                  else if (br > lr) direction = 'turun';
-                }
+                const direction: 'naik' | 'turun' | 'tetap' =
+                  selectedRow.dampak === 'Membaik' ? 'naik'
+                  : selectedRow.dampak === 'Memburuk' ? 'turun'
+                  : 'tetap';
                 const tone = direction === 'naik'
                   ? { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', label: 'Naik Kelas', Icon: TrendingUp }
                   : direction === 'turun'
