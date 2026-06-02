@@ -264,7 +264,13 @@ export default function DataRDTR() {
               </div>
             </div>
 
+            <TooltipProvider delayDuration={200}>
+              <div className="flex flex-wrap gap-3">
+                {clusterDistribution.map(c => {
+                  const meta = CLUSTER_META[c.cluster] || { dot: 'bg-muted-foreground', activeBg: 'bg-primary', activeBorder: 'border-primary', badge: 'bg-muted text-foreground border-border', desc: 'Cluster ' + c.cluster };
+                  const isActive = filterCluster === c.cluster;
                   return (
+
                     <Tooltip key={c.cluster}>
                       <TooltipTrigger asChild>
                         <button
