@@ -209,20 +209,17 @@ export function getSebaranPerPulau(data: RDTRRecord[]) {
 }
 
 export function getTimelineData(data: RDTRRecord[]) {
-  // Parse integration dates to get year, accumulate
+  // Sinkron dengan KPI Terintegrasi: Cluster G + keterangan "integrasi oss"
   const yearMap = new Map<number, number>();
   data.forEach(r => {
-    if (r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') {
-      // Try to extract year from date string
-      const match = r.tanggalIntegrasi.match(/(\d{4})/);
-      if (match) {
-        const year = parseInt(match[1]);
-        yearMap.set(year, (yearMap.get(year) || 0) + 1);
-      }
-    }
+    const isTerintegrasi = r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss');
+    if (!isTerintegrasi) return;
+    const year = Number(r.tahun);
+    if (!year || year < 1900 || year > 2100) return;
+    yearMap.set(year, (yearMap.get(year) || 0) + 1);
   });
 
-  const years = Array.from(yearMap.keys()).sort();
+  const years = Array.from(yearMap.keys()).sort((a, b) => a - b);
   let cumulative = 0;
   return years.map(year => {
     cumulative += yearMap.get(year) || 0;
@@ -233,6 +230,7 @@ export function getTimelineData(data: RDTRRecord[]) {
     };
   });
 }
+
 
 export function getClusterDistribution(data: RDTRRecord[]) {
   const map = new Map<string, number>();
