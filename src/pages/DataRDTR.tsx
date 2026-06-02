@@ -12,16 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RDTRRecord } from '@/lib/data-service';
 
-const CLUSTER_META: Record<string, { dot: string; activeBg: string; activeBorder: string; desc: string }> = {
-  'A1': { dot: 'bg-sky-400',   activeBg: 'bg-sky-400',   activeBorder: 'border-sky-400',   desc: 'Permohonan Rekomendasi Revisi' },
-  'A2': { dot: 'bg-blue-800',  activeBg: 'bg-blue-800',  activeBorder: 'border-blue-800',  desc: 'Sudah Mendapatkan Rekomendasi Revisi atau Sedang Revisi' },
-  'B':  { dot: 'bg-amber-400', activeBg: 'bg-amber-400', activeBorder: 'border-amber-400', desc: 'Di Hold Daerah' },
-  'C':  { dot: 'bg-red-500',   activeBg: 'bg-red-500',   activeBorder: 'border-red-500',   desc: 'RDTR Tidak Sinkron' },
-  'D':  { dot: 'bg-orange-500',activeBg: 'bg-orange-500',activeBorder: 'border-orange-500',desc: 'RDTR yang Belum Memenuhi 4 Dokumen Wajib' },
-  'E':  { dot: 'bg-purple-500',activeBg: 'bg-purple-500',activeBorder: 'border-purple-500',desc: 'RDTR Proses Uji Titik Pasca Perkada oleh Pemerintah Daerah' },
-  'F':  { dot: 'bg-lime-500',  activeBg: 'bg-lime-500',  activeBorder: 'border-lime-500',  desc: 'RDTR yang Siap Terintegrasi OSS' },
-  'G':  { dot: 'bg-emerald-500',activeBg:'bg-emerald-500',activeBorder:'border-emerald-500',desc: 'RDTR Terintegrasi OSS' },
-  'H':  { dot: 'bg-slate-500', activeBg: 'bg-slate-500', activeBorder: 'border-slate-500', desc: 'RDTR diminta Takeout dari Sistem OSS oleh Pemerintah Daerah' },
+const CLUSTER_META: Record<string, { dot: string; activeBg: string; activeBorder: string; badge: string; desc: string }> = {
+  'A1': { dot: 'bg-sky-400',   activeBg: 'bg-sky-400',   activeBorder: 'border-sky-400',   badge: 'bg-sky-100 text-sky-700 border-sky-200',         desc: 'Permohonan Rekomendasi Revisi' },
+  'A2': { dot: 'bg-blue-800',  activeBg: 'bg-blue-800',  activeBorder: 'border-blue-800',  badge: 'bg-blue-100 text-blue-800 border-blue-200',      desc: 'Sudah Mendapatkan Rekomendasi Revisi atau Sedang Revisi' },
+  'B':  { dot: 'bg-amber-400', activeBg: 'bg-amber-400', activeBorder: 'border-amber-400', badge: 'bg-amber-100 text-amber-700 border-amber-200',   desc: 'Di Hold Daerah' },
+  'C':  { dot: 'bg-red-500',   activeBg: 'bg-red-500',   activeBorder: 'border-red-500',   badge: 'bg-red-100 text-red-700 border-red-200',         desc: 'RDTR Tidak Sinkron' },
+  'D':  { dot: 'bg-orange-500',activeBg: 'bg-orange-500',activeBorder: 'border-orange-500',badge: 'bg-orange-100 text-orange-700 border-orange-200',desc: 'RDTR yang Belum Memenuhi 4 Dokumen Wajib' },
+  'E':  { dot: 'bg-purple-500',activeBg: 'bg-purple-500',activeBorder: 'border-purple-500',badge: 'bg-purple-100 text-purple-700 border-purple-200',desc: 'RDTR Proses Uji Titik Pasca Perkada oleh Pemerintah Daerah' },
+  'F':  { dot: 'bg-lime-500',  activeBg: 'bg-lime-500',  activeBorder: 'border-lime-500',  badge: 'bg-lime-100 text-lime-700 border-lime-200',      desc: 'RDTR yang Siap Terintegrasi OSS' },
+  'G':  { dot: 'bg-emerald-500',activeBg:'bg-emerald-500',activeBorder:'border-emerald-500',badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', desc: 'RDTR Terintegrasi OSS' },
+  'H':  { dot: 'bg-slate-500', activeBg: 'bg-slate-500', activeBorder: 'border-slate-500', badge: 'bg-slate-100 text-slate-700 border-slate-200',   desc: 'RDTR diminta Takeout dari Sistem OSS oleh Pemerintah Daerah' },
 };
 
 const MAIN_COLUMNS = [
@@ -33,10 +33,23 @@ const MAIN_COLUMNS = [
   { key: 'namaRDTR', header: 'Nama RDTR', width: '280px' },
   { key: 'nomorPerda', header: 'Nomor Perda/Perkada', align: 'center' as const },
   { key: 'tahun', header: 'Tahun', width: '70px', align: 'center' as const },
-  { key: 'cluster', header: 'Cluster', width: '70px', align: 'center' as const },
+  {
+    key: 'cluster', header: 'Cluster', width: '90px', align: 'center' as const,
+    render: (value: unknown) => {
+      const c = String(value || '').trim();
+      const meta = CLUSTER_META[c];
+      if (!c) return '-';
+      return (
+        <span className={`inline-flex items-center justify-center min-w-[32px] rounded-md border px-2 py-0.5 text-xs font-semibold ${meta?.badge || 'bg-muted text-foreground border-border'}`}>
+          {c}
+        </span>
+      );
+    },
+  },
   { key: 'tanggalIntegrasi', header: 'Tanggal Integrasi', align: 'center' as const },
   { key: 'keterangan', header: 'Keterangan', align: 'center' as const },
 ];
+
 
 export default function DataRDTR() {
   const { data, isLoading, error } = useMainData();
