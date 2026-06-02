@@ -6,7 +6,7 @@ import { LoadingState } from '@/components/dashboard/LoadingState';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
+import { FileSpreadsheet, FileText, ArrowLeft, FilterX, ArrowUp } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
