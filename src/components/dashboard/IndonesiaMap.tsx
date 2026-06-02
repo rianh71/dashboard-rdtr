@@ -46,13 +46,16 @@ const PULAU_COLORS: Record<string, string> = {
 };
 
 function getColor(value: number, max: number): string {
-  if (value === 0) return '#e2e8f0';
-  const intensity = Math.min(value / Math.max(max, 1), 1);
-  if (intensity < 0.25) return '#93c5fd';
-  if (intensity < 0.5) return '#3b82f6';
-  if (intensity < 0.75) return '#1d4ed8';
-  return '#1e3a8a';
+  if (value === 0) return '#f1f5f9';
+  const intensity = value / Math.max(max, 1);
+  if (intensity < 0.15) return '#dbeafe';
+  if (intensity < 0.3) return '#93c5fd';
+  if (intensity < 0.5) return '#60a5fa';
+  if (intensity < 0.7) return '#2563eb';
+  if (intensity < 0.9) return '#1e40af';
+  return '#172554';
 }
+
 
 function getPulauColor(pulau: string): string {
   if (!pulau) return '#e2e8f0';
