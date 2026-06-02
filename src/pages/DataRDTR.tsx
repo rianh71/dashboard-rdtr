@@ -64,6 +64,25 @@ export default function DataRDTR() {
   const [filterCluster, setFilterCluster] = useState('all');
   const [viewMode, setViewMode] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<RDTRRecord | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const main = document.querySelector('main');
+    const target: HTMLElement | Window = main || window;
+    const onScroll = () => {
+      const y = main ? main.scrollTop : window.scrollY;
+      setShowBackToTop(y > 400);
+    };
+    target.addEventListener('scroll', onScroll as EventListener);
+    return () => target.removeEventListener('scroll', onScroll as EventListener);
+  }, []);
+
+  const scrollToTop = () => {
+    const main = document.querySelector('main');
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
 
   // Track if navigated from another page (for back button)
   const hasViewParam = searchParams.has('view') || searchParams.has('provinsi') || searchParams.has('pulau') || searchParams.has('status') || searchParams.has('cluster');
