@@ -83,8 +83,15 @@ export default function ReportPage() {
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
               >
                 <span className="text-sm font-semibold text-foreground text-left">{cat.label}</span>
-                <span className="text-lg font-bold text-primary flex-shrink-0 ml-4">{cat.count}</span>
+                <span className="flex items-center gap-2 flex-shrink-0 ml-4">
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
+                    <Eye className="h-3.5 w-3.5" /> View Detail
+                  </span>
+                  <span className="text-lg font-bold text-primary">{cat.count}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expandedCategory === cat.key ? 'rotate-180' : ''}`} />
+                </span>
               </button>
+
               {expandedCategory === cat.key && cat.items.length > 0 && (
                 <div className="border-t border-border px-4 py-3">
                   <DataTable
