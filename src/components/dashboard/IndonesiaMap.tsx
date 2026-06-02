@@ -172,27 +172,18 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
               const d = dataMap.get(name);
               const total = d?.total ?? 0;
               const terintegrasi = d?.terintegrasi ?? 0;
-              const clusterGCount = terintegrasiData?.get(name) ?? 0;
-              const terintegrasiLine = terintegrasiData
-                ? `<div class="text-xs">RDTR Terintegrasi: <b>${clusterGCount}</b></div>`
-                : '';
-              const tooltipContent = mode === 'total'
-                ? `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
-                    <div class="text-xs font-semibold">${name}</div>
-                    <div class="text-xs">Total RDTR: <b>${total}</b></div>
-                    ${terintegrasiLine}
-                  </div>`
-                : `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
-                    <div class="text-xs font-semibold">${name}</div>
-                    <div class="text-xs">Total Terintegrasi: <b>${terintegrasi}</b></div>
-                    ${terintegrasiLine}
-                  </div>`;
+              const clusterGCount = terintegrasiData?.get(name) ?? terintegrasi;
+              const tooltipContent = `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
+                  <div class="text-xs font-semibold">${name}</div>
+                  <div class="text-xs">${name}: <b>${total}</b> RDTR (<b>${clusterGCount}</b> Terintegrasi)</div>
+                </div>`;
               featureLayer.bindTooltip(tooltipContent, {
                 sticky: true,
                 className: 'leaflet-tooltip-custom',
                 direction: 'top',
                 offset: [0, -10],
               });
+
               featureLayer.on('click', () => {
                 callbacksRef.current.onProvinceClick?.(name);
               });
