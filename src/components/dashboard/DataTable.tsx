@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Column {
   key: string;
@@ -84,10 +84,13 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
                 >
                   <span className="inline-flex items-center gap-1">
                     {col.header}
-                    {sortKey === col.key && (
+                    {sortKey === col.key ? (
                       sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                    ) : (
+                      <ChevronsUpDown className="h-3 w-3 text-muted-foreground/40" />
                     )}
                   </span>
+
                 </th>
               ))}
             </tr>

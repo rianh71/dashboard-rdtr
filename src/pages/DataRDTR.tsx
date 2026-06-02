@@ -6,22 +6,22 @@ import { LoadingState } from '@/components/dashboard/LoadingState';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
+import { FileSpreadsheet, FileText, ArrowLeft, FilterX, ArrowUp } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RDTRRecord } from '@/lib/data-service';
 
-const CLUSTER_META: Record<string, { dot: string; activeBg: string; activeBorder: string; desc: string }> = {
-  'A1': { dot: 'bg-sky-400',   activeBg: 'bg-sky-400',   activeBorder: 'border-sky-400',   desc: 'Permohonan Rekomendasi Revisi' },
-  'A2': { dot: 'bg-blue-800',  activeBg: 'bg-blue-800',  activeBorder: 'border-blue-800',  desc: 'Sudah Mendapatkan Rekomendasi Revisi atau Sedang Revisi' },
-  'B':  { dot: 'bg-amber-400', activeBg: 'bg-amber-400', activeBorder: 'border-amber-400', desc: 'Di Hold Daerah' },
-  'C':  { dot: 'bg-red-500',   activeBg: 'bg-red-500',   activeBorder: 'border-red-500',   desc: 'RDTR Tidak Sinkron' },
-  'D':  { dot: 'bg-orange-500',activeBg: 'bg-orange-500',activeBorder: 'border-orange-500',desc: 'RDTR yang Belum Memenuhi 4 Dokumen Wajib' },
-  'E':  { dot: 'bg-purple-500',activeBg: 'bg-purple-500',activeBorder: 'border-purple-500',desc: 'RDTR Proses Uji Titik Pasca Perkada oleh Pemerintah Daerah' },
-  'F':  { dot: 'bg-lime-500',  activeBg: 'bg-lime-500',  activeBorder: 'border-lime-500',  desc: 'RDTR yang Siap Terintegrasi OSS' },
-  'G':  { dot: 'bg-emerald-500',activeBg:'bg-emerald-500',activeBorder:'border-emerald-500',desc: 'RDTR Terintegrasi OSS' },
-  'H':  { dot: 'bg-slate-500', activeBg: 'bg-slate-500', activeBorder: 'border-slate-500', desc: 'RDTR diminta Takeout dari Sistem OSS oleh Pemerintah Daerah' },
+const CLUSTER_META: Record<string, { dot: string; activeBg: string; activeBorder: string; badge: string; desc: string }> = {
+  'A1': { dot: 'bg-sky-400',   activeBg: 'bg-sky-400',   activeBorder: 'border-sky-400',   badge: 'bg-sky-100 text-sky-700 border-sky-200',         desc: 'Permohonan Rekomendasi Revisi' },
+  'A2': { dot: 'bg-blue-800',  activeBg: 'bg-blue-800',  activeBorder: 'border-blue-800',  badge: 'bg-blue-100 text-blue-800 border-blue-200',      desc: 'Sudah Mendapatkan Rekomendasi Revisi atau Sedang Revisi' },
+  'B':  { dot: 'bg-amber-400', activeBg: 'bg-amber-400', activeBorder: 'border-amber-400', badge: 'bg-amber-100 text-amber-700 border-amber-200',   desc: 'Di Hold Daerah' },
+  'C':  { dot: 'bg-red-500',   activeBg: 'bg-red-500',   activeBorder: 'border-red-500',   badge: 'bg-red-100 text-red-700 border-red-200',         desc: 'RDTR Tidak Sinkron' },
+  'D':  { dot: 'bg-orange-500',activeBg: 'bg-orange-500',activeBorder: 'border-orange-500',badge: 'bg-orange-100 text-orange-700 border-orange-200',desc: 'RDTR yang Belum Memenuhi 4 Dokumen Wajib' },
+  'E':  { dot: 'bg-purple-500',activeBg: 'bg-purple-500',activeBorder: 'border-purple-500',badge: 'bg-purple-100 text-purple-700 border-purple-200',desc: 'RDTR Proses Uji Titik Pasca Perkada oleh Pemerintah Daerah' },
+  'F':  { dot: 'bg-lime-500',  activeBg: 'bg-lime-500',  activeBorder: 'border-lime-500',  badge: 'bg-lime-100 text-lime-700 border-lime-200',      desc: 'RDTR yang Siap Terintegrasi OSS' },
+  'G':  { dot: 'bg-emerald-500',activeBg:'bg-emerald-500',activeBorder:'border-emerald-500',badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', desc: 'RDTR Terintegrasi OSS' },
+  'H':  { dot: 'bg-slate-500', activeBg: 'bg-slate-500', activeBorder: 'border-slate-500', badge: 'bg-slate-100 text-slate-700 border-slate-200',   desc: 'RDTR diminta Takeout dari Sistem OSS oleh Pemerintah Daerah' },
 };
 
 const MAIN_COLUMNS = [
@@ -33,10 +33,23 @@ const MAIN_COLUMNS = [
   { key: 'namaRDTR', header: 'Nama RDTR', width: '280px' },
   { key: 'nomorPerda', header: 'Nomor Perda/Perkada', align: 'center' as const },
   { key: 'tahun', header: 'Tahun', width: '70px', align: 'center' as const },
-  { key: 'cluster', header: 'Cluster', width: '70px', align: 'center' as const },
+  {
+    key: 'cluster', header: 'Cluster', width: '90px', align: 'center' as const,
+    render: (value: unknown) => {
+      const c = String(value || '').trim();
+      const meta = CLUSTER_META[c];
+      if (!c) return '-';
+      return (
+        <span className={`inline-flex items-center justify-center min-w-[32px] rounded-md border px-2 py-0.5 text-xs font-semibold ${meta?.badge || 'bg-muted text-foreground border-border'}`}>
+          {c}
+        </span>
+      );
+    },
+  },
   { key: 'tanggalIntegrasi', header: 'Tanggal Integrasi', align: 'center' as const },
   { key: 'keterangan', header: 'Keterangan', align: 'center' as const },
 ];
+
 
 export default function DataRDTR() {
   const { data, isLoading, error } = useMainData();
@@ -51,6 +64,25 @@ export default function DataRDTR() {
   const [filterCluster, setFilterCluster] = useState('all');
   const [viewMode, setViewMode] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<RDTRRecord | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const main = document.querySelector('main');
+    const target: HTMLElement | Window = main || window;
+    const onScroll = () => {
+      const y = main ? main.scrollTop : window.scrollY;
+      setShowBackToTop(y > 400);
+    };
+    target.addEventListener('scroll', onScroll as EventListener);
+    return () => target.removeEventListener('scroll', onScroll as EventListener);
+  }, []);
+
+  const scrollToTop = () => {
+    const main = document.querySelector('main');
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
 
   // Track if navigated from another page (for back button)
   const hasViewParam = searchParams.has('view') || searchParams.has('provinsi') || searchParams.has('pulau') || searchParams.has('status') || searchParams.has('cluster');
@@ -224,6 +256,23 @@ export default function DataRDTR() {
                   </SelectContent>
                 </Select>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilterWilayah('all');
+                  setFilterPulau('all');
+                  setFilterProvinsi('all');
+                  setFilterKabKota('all');
+                  setFilterStatus('all');
+                  setFilterCluster('all');
+                  setSearchParams({});
+                }}
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                title="Reset semua filter"
+              >
+                <FilterX className="h-3.5 w-3.5" /> Clear Filter
+              </Button>
               <div className="flex gap-2 ml-auto">
                 <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
                   <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
@@ -237,9 +286,10 @@ export default function DataRDTR() {
             <TooltipProvider delayDuration={200}>
               <div className="flex flex-wrap gap-3">
                 {clusterDistribution.map(c => {
-                  const meta = CLUSTER_META[c.cluster] || { dot: 'bg-muted-foreground', activeBg: 'bg-primary', activeBorder: 'border-primary', desc: 'Cluster ' + c.cluster };
+                  const meta = CLUSTER_META[c.cluster] || { dot: 'bg-muted-foreground', activeBg: 'bg-primary', activeBorder: 'border-primary', badge: 'bg-muted text-foreground border-border', desc: 'Cluster ' + c.cluster };
                   const isActive = filterCluster === c.cluster;
                   return (
+
                     <Tooltip key={c.cluster}>
                       <TooltipTrigger asChild>
                         <button
@@ -351,6 +401,18 @@ export default function DataRDTR() {
           )}
         </DialogContent>
       </Dialog>
+
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
+          title="Kembali ke atas"
+          aria-label="Kembali ke atas"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
     </div>
+
   );
 }

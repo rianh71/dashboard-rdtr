@@ -392,10 +392,10 @@ function LogsTab() {
       {/* KPI Summary - Interactive Filters */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { key: 'all', label: 'Total Logs', value: stats.total, Icon: FileText, bg: 'bg-primary/10', iconColor: 'text-primary', valueColor: 'text-foreground' },
-          { key: 'Membaik', label: 'Membaik', value: stats.membaik, Icon: TrendingUp, bg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600' },
-          { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
-          { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
+          { key: 'all', label: 'Total Logs', value: stats.total, Icon: FileText, bg: 'bg-primary/10', iconColor: 'text-primary', valueColor: 'text-foreground', pill: null as null | { text: string; cls: string } },
+          { key: 'Membaik', label: 'Membaik', value: stats.membaik, Icon: TrendingUp, bg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600', pill: { text: `+${stats.membaik}`, cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' } },
+          { key: 'Memburuk', label: 'Memburuk', value: stats.memburuk, Icon: TrendingDown, bg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600', pill: { text: `+${stats.memburuk}`, cls: 'bg-red-100 text-red-700 border-red-200' } },
+          { key: 'Stagnan', label: 'Stagnan', value: stats.stagnan, Icon: Minus, bg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600', pill: { text: `${stats.stagnan}`, cls: 'bg-amber-100 text-amber-700 border-amber-200' } },
         ].map(c => {
           const active = c.key !== 'all' && activeKPI === c.key;
           return (
@@ -405,19 +405,25 @@ function LogsTab() {
                 if (c.key === 'all') setActiveKPI(null);
                 else setActiveKPI(prev => (prev === c.key ? null : c.key));
               }}
-              className={`text-left rounded-lg border bg-card p-4 flex items-center gap-3 transition-all hover:shadow-md ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}
+              className={`relative text-left rounded-lg border bg-card p-4 flex items-center gap-3 transition-all hover:shadow-md ${active ? 'ring-2 ring-primary border-primary shadow-md' : ''}`}
             >
+              {c.pill && (
+                <span className={`absolute top-2 right-2 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${c.pill.cls}`}>
+                  {c.pill.text}
+                </span>
+              )}
               <div className={`h-10 w-10 rounded-lg ${c.bg} flex items-center justify-center`}>
                 <c.Icon className={`h-5 w-5 ${c.iconColor}`} />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{c.label}</p>
-                <p className={`text-2xl font-bold ${c.valueColor}`}>{c.value}</p>
+                <p className={`text-2xl font-bold ${c.valueColor}`}>{c.value.toLocaleString('id-ID')}</p>
               </div>
             </button>
           );
         })}
       </div>
+
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">

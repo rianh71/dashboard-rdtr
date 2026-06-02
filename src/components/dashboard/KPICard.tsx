@@ -36,9 +36,12 @@ export function KPICard({ title, value, icon: Icon, gradient, subtitle, linkTo }
       </div>
       <div className="min-w-0">
         <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
-        <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+        <p className="text-2xl font-bold text-foreground mt-1">
+          {typeof value === 'number' ? value.toLocaleString('id-ID') : value}
+        </p>
         {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
       </div>
+
     </div>
   );
 }

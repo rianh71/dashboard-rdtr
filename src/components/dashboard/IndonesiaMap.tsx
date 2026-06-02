@@ -46,13 +46,16 @@ const PULAU_COLORS: Record<string, string> = {
 };
 
 function getColor(value: number, max: number): string {
-  if (value === 0) return '#e2e8f0';
-  const intensity = Math.min(value / Math.max(max, 1), 1);
-  if (intensity < 0.25) return '#93c5fd';
-  if (intensity < 0.5) return '#3b82f6';
-  if (intensity < 0.75) return '#1d4ed8';
-  return '#1e3a8a';
+  if (value === 0) return '#f1f5f9';
+  const intensity = value / Math.max(max, 1);
+  if (intensity < 0.15) return '#dbeafe';
+  if (intensity < 0.3) return '#93c5fd';
+  if (intensity < 0.5) return '#60a5fa';
+  if (intensity < 0.7) return '#2563eb';
+  if (intensity < 0.9) return '#1e40af';
+  return '#172554';
 }
+
 
 function getPulauColor(pulau: string): string {
   if (!pulau) return '#e2e8f0';
@@ -169,27 +172,18 @@ export function IndonesiaMap({ data, mode = 'total', pulauData, provinceToPulau,
               const d = dataMap.get(name);
               const total = d?.total ?? 0;
               const terintegrasi = d?.terintegrasi ?? 0;
-              const clusterGCount = terintegrasiData?.get(name) ?? 0;
-              const terintegrasiLine = terintegrasiData
-                ? `<div class="text-xs">RDTR Terintegrasi: <b>${clusterGCount}</b></div>`
-                : '';
-              const tooltipContent = mode === 'total'
-                ? `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
-                    <div class="text-xs font-semibold">${name}</div>
-                    <div class="text-xs">Total RDTR: <b>${total}</b></div>
-                    ${terintegrasiLine}
-                  </div>`
-                : `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
-                    <div class="text-xs font-semibold">${name}</div>
-                    <div class="text-xs">Total Terintegrasi: <b>${terintegrasi}</b></div>
-                    ${terintegrasiLine}
-                  </div>`;
+              const clusterGCount = terintegrasiData?.get(name) ?? terintegrasi;
+              const tooltipContent = `<div style="background:transparent;border:none;box-shadow:none;padding:0;">
+                  <div class="text-xs font-semibold">${name}</div>
+                  <div class="text-xs">${name}: <b>${total}</b> RDTR (<b>${clusterGCount}</b> Terintegrasi)</div>
+                </div>`;
               featureLayer.bindTooltip(tooltipContent, {
                 sticky: true,
                 className: 'leaflet-tooltip-custom',
                 direction: 'top',
                 offset: [0, -10],
               });
+
               featureLayer.on('click', () => {
                 callbacksRef.current.onProvinceClick?.(name);
               });
