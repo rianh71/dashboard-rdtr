@@ -401,6 +401,18 @@ export default function DataRDTR() {
           )}
         </DialogContent>
       </Dialog>
+
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
+          title="Kembali ke atas"
+          aria-label="Kembali ke atas"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
     </div>
+
   );
 }
