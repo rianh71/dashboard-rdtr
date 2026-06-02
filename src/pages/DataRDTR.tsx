@@ -237,6 +237,23 @@ export default function DataRDTR() {
                   </SelectContent>
                 </Select>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilterWilayah('all');
+                  setFilterPulau('all');
+                  setFilterProvinsi('all');
+                  setFilterKabKota('all');
+                  setFilterStatus('all');
+                  setFilterCluster('all');
+                  setSearchParams({});
+                }}
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                title="Reset semua filter"
+              >
+                <FilterX className="h-3.5 w-3.5" /> Clear Filter
+              </Button>
               <div className="flex gap-2 ml-auto">
                 <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
                   <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
@@ -247,11 +264,6 @@ export default function DataRDTR() {
               </div>
             </div>
 
-            <TooltipProvider delayDuration={200}>
-              <div className="flex flex-wrap gap-3">
-                {clusterDistribution.map(c => {
-                  const meta = CLUSTER_META[c.cluster] || { dot: 'bg-muted-foreground', activeBg: 'bg-primary', activeBorder: 'border-primary', desc: 'Cluster ' + c.cluster };
-                  const isActive = filterCluster === c.cluster;
                   return (
                     <Tooltip key={c.cluster}>
                       <TooltipTrigger asChild>
