@@ -176,8 +176,20 @@ export default function MonitoringRDTR() {
   const resetAllFilters = () => { setFilterCluster('all'); setFilterProvinsi('all'); setFilterStatus('all'); setKpiFilter(null); setSearchQuery(''); setPage(0); };
   const toggleKpi = (k: string) => { setKpiFilter(prev => prev === k ? null : k); setPage(0); };
 
-  const totalPages = Math.ceil(filtered.length / pageSize);
-  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(safePage * pageSize, (safePage + 1) * pageSize);
+
+  useEffect(() => { setPageInput(String(safePage + 1)); }, [safePage]);
+  useEffect(() => { setPage(0); }, [pageSize]);
+
+  function commitPageInput() {
+    const n = parseInt(pageInput, 10);
+    if (Number.isNaN(n) || n < 1) { setPage(0); setPageInput('1'); return; }
+    if (n > totalPages) { setPage(totalPages - 1); setPageInput(String(totalPages)); return; }
+    setPage(n - 1);
+  }
+
 
   const handleExportExcel = () => {
     exportToExcel(filtered.map((l, i) => ({
