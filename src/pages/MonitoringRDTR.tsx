@@ -446,7 +446,7 @@ export default function MonitoringRDTR() {
                 const update = row.statusKehadiran === 'Tidak Hadir' ? 'Tidak ada update (tidak hadir)' : (row.updateTerbaru || '-');
                 return (
                   <tr key={idx} className={`border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors ${tindak ? 'bg-red-50/40' : ''}`} onClick={() => setSelectedRow(row)}>
-                    <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
+                    <td className="px-3 py-2 text-foreground">{safePage * pageSize + idx + 1}</td>
                     <td className="px-3 py-2 text-foreground font-medium">{row.namaRDTR}</td>
                     <td className="px-3 py-2 text-foreground">{row.provinsi}</td>
                     <td className="px-3 py-2 text-center text-foreground">{row.cluster || '-'}</td>
