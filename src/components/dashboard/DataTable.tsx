@@ -50,8 +50,12 @@ export function DataTable({ data, columns, pageSize: initialPageSize = 15, searc
     return result;
   }, [data, search, sortKey, sortDir, columns]);
 
-  const totalPages = Math.ceil(filtered.length / pageSize);
-  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(safePage * pageSize, (safePage + 1) * pageSize);
+
+  useEffect(() => { setPageInput(String(safePage + 1)); }, [safePage]);
+  useEffect(() => { setPage(0); }, [pageSize]);
 
   function handleSort(key: string) {
     if (sortKey === key) {
@@ -60,6 +64,13 @@ export function DataTable({ data, columns, pageSize: initialPageSize = 15, searc
       setSortKey(key);
       setSortDir('asc');
     }
+  }
+
+  function commitPageInput() {
+    const n = parseInt(pageInput, 10);
+    if (Number.isNaN(n) || n < 1) { setPage(0); setPageInput('1'); return; }
+    if (n > totalPages) { setPage(totalPages - 1); setPageInput(String(totalPages)); return; }
+    setPage(n - 1);
   }
 
   return (
