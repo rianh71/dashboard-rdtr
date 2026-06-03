@@ -31,14 +31,37 @@ function isAktif(s: string) { return s === 'Aktif (Monitoring)' || s === 'Aktif 
 
 export default function MonitoringRDTR() {
   const { data, isLoading, error } = useMonitoringLogs();
-  const [selectedMinggu, setSelectedMinggu] = useState<number | null>(null);
-  const [filterCluster, setFilterCluster] = useState('all');
-  const [filterProvinsi, setFilterProvinsi] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedMinggu, setSelectedMinggu] = useState<number | null>(() => {
+    const m = searchParams.get('minggu'); return m ? parseInt(m, 10) : null;
+  });
+  const [filterCluster, setFilterCluster] = useState(() => searchParams.get('cluster') || 'all');
+  const [filterProvinsi, setFilterProvinsi] = useState(() => searchParams.get('provinsi') || 'all');
+  const [filterStatus, setFilterStatus] = useState(() => searchParams.get('status') || 'all');
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(() => {
+    const ps = parseInt(searchParams.get('ps') || '20', 10);
+    return [10, 25, 50, 100, 20].includes(ps) ? ps : 20;
+  });
+  const [pageInput, setPageInput] = useState('1');
   const [selectedRow, setSelectedRow] = useState<MonitoringLog | null>(null);
-  const pageSize = 20;
+
+  // Sync filters to URL for Share View
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const setOrDel = (k: string, v: string) => { if (v && v !== 'all') params.set(k, v); else params.delete(k); };
+    setOrDel('cluster', filterCluster);
+    setOrDel('provinsi', filterProvinsi);
+    setOrDel('status', filterStatus);
+    setOrDel('q', searchQuery);
+    if (selectedMinggu) params.set('minggu', String(selectedMinggu)); else params.delete('minggu');
+    if (pageSize !== 20) params.set('ps', String(pageSize)); else params.delete('ps');
+    const next = params.toString();
+    if (next !== searchParams.toString()) setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterCluster, filterProvinsi, filterStatus, searchQuery, selectedMinggu, pageSize]);
+
 
   const logs = data || [];
   const mingguList = useMemo(() => [...new Set(logs.map(l => l.mingguKe).filter(m => m > 0))].sort((a, b) => a - b), [logs]);
