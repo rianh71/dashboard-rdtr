@@ -108,6 +108,25 @@ export default function DataRDTR() {
     if (cluster) setFilterCluster(cluster);
   }, [searchParams]);
 
+  // Sync filter state to URL (for Share View)
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const setOrDel = (k: string, v: string) => {
+      if (v && v !== 'all') params.set(k, v); else params.delete(k);
+    };
+    setOrDel('wilayah', filterWilayah);
+    setOrDel('pulau', filterPulau);
+    setOrDel('provinsi', filterProvinsi);
+    setOrDel('kabKota', filterKabKota);
+    setOrDel('status', filterStatus);
+    setOrDel('cluster', filterCluster);
+    const next = params.toString();
+    const cur = searchParams.toString();
+    if (next !== cur) setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterStatus, filterCluster]);
+
+
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
   const provinsiOptions = useMemo(() => data ? [...new Set(data.map(r => r.provinsi).filter(Boolean))].sort() : [], [data]);
