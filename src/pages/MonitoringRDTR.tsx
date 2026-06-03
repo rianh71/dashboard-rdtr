@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useMonitoringLogs } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
+import { ShareViewButton } from '@/components/dashboard/ShareViewButton';
+import { useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Users, UserCheck, UserX, CalendarDays, Activity, AlertCircle, CheckCircle2, MinusCircle, XCircle, Search, ChevronLeft, ChevronRight, FileSpreadsheet, FileText, TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import type { MonitoringLog } from '@/lib/data-service';
+
 
 const STATUS_RINGKAS = {
   'Aktif (Monitoring)': { color: 'bg-green-500', label: 'Aktif (Monitoring)', text: 'text-green-700' },
@@ -28,14 +31,37 @@ function isAktif(s: string) { return s === 'Aktif (Monitoring)' || s === 'Aktif 
 
 export default function MonitoringRDTR() {
   const { data, isLoading, error } = useMonitoringLogs();
-  const [selectedMinggu, setSelectedMinggu] = useState<number | null>(null);
-  const [filterCluster, setFilterCluster] = useState('all');
-  const [filterProvinsi, setFilterProvinsi] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedMinggu, setSelectedMinggu] = useState<number | null>(() => {
+    const m = searchParams.get('minggu'); return m ? parseInt(m, 10) : null;
+  });
+  const [filterCluster, setFilterCluster] = useState(() => searchParams.get('cluster') || 'all');
+  const [filterProvinsi, setFilterProvinsi] = useState(() => searchParams.get('provinsi') || 'all');
+  const [filterStatus, setFilterStatus] = useState(() => searchParams.get('status') || 'all');
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(() => {
+    const ps = parseInt(searchParams.get('ps') || '20', 10);
+    return [10, 25, 50, 100, 20].includes(ps) ? ps : 20;
+  });
+  const [pageInput, setPageInput] = useState('1');
   const [selectedRow, setSelectedRow] = useState<MonitoringLog | null>(null);
-  const pageSize = 20;
+
+  // Sync filters to URL for Share View
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const setOrDel = (k: string, v: string) => { if (v && v !== 'all') params.set(k, v); else params.delete(k); };
+    setOrDel('cluster', filterCluster);
+    setOrDel('provinsi', filterProvinsi);
+    setOrDel('status', filterStatus);
+    setOrDel('q', searchQuery);
+    if (selectedMinggu) params.set('minggu', String(selectedMinggu)); else params.delete('minggu');
+    if (pageSize !== 20) params.set('ps', String(pageSize)); else params.delete('ps');
+    const next = params.toString();
+    if (next !== searchParams.toString()) setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterCluster, filterProvinsi, filterStatus, searchQuery, selectedMinggu, pageSize]);
+
 
   const logs = data || [];
   const mingguList = useMemo(() => [...new Set(logs.map(l => l.mingguKe).filter(m => m > 0))].sort((a, b) => a - b), [logs]);
@@ -150,8 +176,20 @@ export default function MonitoringRDTR() {
   const resetAllFilters = () => { setFilterCluster('all'); setFilterProvinsi('all'); setFilterStatus('all'); setKpiFilter(null); setSearchQuery(''); setPage(0); };
   const toggleKpi = (k: string) => { setKpiFilter(prev => prev === k ? null : k); setPage(0); };
 
-  const totalPages = Math.ceil(filtered.length / pageSize);
-  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(safePage * pageSize, (safePage + 1) * pageSize);
+
+  useEffect(() => { setPageInput(String(safePage + 1)); }, [safePage]);
+  useEffect(() => { setPage(0); }, [pageSize]);
+
+  function commitPageInput() {
+    const n = parseInt(pageInput, 10);
+    if (Number.isNaN(n) || n < 1) { setPage(0); setPageInput('1'); return; }
+    if (n > totalPages) { setPage(totalPages - 1); setPageInput(String(totalPages)); return; }
+    setPage(n - 1);
+  }
+
 
   const handleExportExcel = () => {
     exportToExcel(filtered.map((l, i) => ({
@@ -368,19 +406,21 @@ export default function MonitoringRDTR() {
             <Input placeholder="Nama RDTR / Provinsi..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
           </div>
           {hasActiveFilter && (
-            <Button variant="outline" size="sm" onClick={resetAllFilters} className="gap-1.5 self-end">
+            <Button variant="outline" size="sm" onClick={resetAllFilters} className="gap-1.5 self-end transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <XCircle className="h-3.5 w-3.5" /> Reset Filter
             </Button>
           )}
           <div className="flex gap-2 ml-auto">
-            <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <FileText className="h-3.5 w-3.5" /> PDF
             </Button>
+            <ShareViewButton />
           </div>
         </div>
+
 
         {/* Table */}
         <div className="rounded-lg border bg-card overflow-x-auto">
@@ -406,7 +446,7 @@ export default function MonitoringRDTR() {
                 const update = row.statusKehadiran === 'Tidak Hadir' ? 'Tidak ada update (tidak hadir)' : (row.updateTerbaru || '-');
                 return (
                   <tr key={idx} className={`border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors ${tindak ? 'bg-red-50/40' : ''}`} onClick={() => setSelectedRow(row)}>
-                    <td className="px-3 py-2 text-foreground">{page * pageSize + idx + 1}</td>
+                    <td className="px-3 py-2 text-foreground">{safePage * pageSize + idx + 1}</td>
                     <td className="px-3 py-2 text-foreground font-medium">{row.namaRDTR}</td>
                     <td className="px-3 py-2 text-foreground">{row.provinsi}</td>
                     <td className="px-3 py-2 text-center text-foreground">{row.cluster || '-'}</td>
@@ -432,19 +472,40 @@ export default function MonitoringRDTR() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              Menampilkan {page * pageSize + 1}-{Math.min((page + 1) * pageSize, filtered.length)} dari {filtered.length}
-            </p>
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-              <span className="text-xs text-muted-foreground px-2">{page + 1} / {totalPages}</span>
-              <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}><ChevronRight className="h-3.5 w-3.5" /></Button>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Tampilkan</span>
+            <Select value={String(pageSize)} onValueChange={(v) => setPageSize(parseInt(v, 10))}>
+              <SelectTrigger className="h-8 w-[72px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[10, 25, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <span>data per halaman</span>
+            <span className="hidden md:inline">·</span>
+            <span className="hidden md:inline">
+              {filtered.length === 0 ? '0' : `${safePage * pageSize + 1}-${Math.min((safePage + 1) * pageSize, filtered.length)}`} dari {filtered.length.toLocaleString('id-ID')}
+            </span>
           </div>
-        )}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-muted-foreground">Halaman</span>
+            <Input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitPageInput(); } }}
+              onBlur={commitPageInput}
+              className="h-8 w-16 text-center text-xs"
+            />
+            <span className="text-muted-foreground">Dari {totalPages}</span>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-all hover:-translate-y-0.5 hover:shadow-sm" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePage === 0}><ChevronLeft className="h-3.5 w-3.5" /></Button>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-all hover:-translate-y-0.5 hover:shadow-sm" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}><ChevronRight className="h-3.5 w-3.5" /></Button>
+          </div>
+        </div>
       </div>
+
 
       {/* Side Drawer */}
       <Sheet open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>

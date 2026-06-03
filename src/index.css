@@ -99,7 +99,9 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background-color 250ms ease, color 250ms ease;
   }
+
 }
 
 @layer utilities {

@@ -3,6 +3,7 @@ import { useMainData } from '@/hooks/useRDTRData';
 import { getClusterDistribution } from '@/lib/data-service';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { LoadingState } from '@/components/dashboard/LoadingState';
+import { ShareViewButton } from '@/components/dashboard/ShareViewButton';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,6 +12,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RDTRRecord } from '@/lib/data-service';
+
 
 const CLUSTER_META: Record<string, { dot: string; activeBg: string; activeBorder: string; badge: string; desc: string }> = {
   'A1': { dot: 'bg-sky-400',   activeBg: 'bg-sky-400',   activeBorder: 'border-sky-400',   badge: 'bg-sky-100 text-sky-700 border-sky-200',         desc: 'Permohonan Rekomendasi Revisi' },
@@ -105,6 +107,25 @@ export default function DataRDTR() {
     if (pulau) setFilterPulau(pulau);
     if (cluster) setFilterCluster(cluster);
   }, [searchParams]);
+
+  // Sync filter state to URL (for Share View)
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const setOrDel = (k: string, v: string) => {
+      if (v && v !== 'all') params.set(k, v); else params.delete(k);
+    };
+    setOrDel('wilayah', filterWilayah);
+    setOrDel('pulau', filterPulau);
+    setOrDel('provinsi', filterProvinsi);
+    setOrDel('kabKota', filterKabKota);
+    setOrDel('status', filterStatus);
+    setOrDel('cluster', filterCluster);
+    const next = params.toString();
+    const cur = searchParams.toString();
+    if (next !== cur) setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterStatus, filterCluster]);
+
 
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
   const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
@@ -268,19 +289,22 @@ export default function DataRDTR() {
                   setFilterCluster('all');
                   setSearchParams({});
                 }}
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                className="gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 hover:-translate-y-0.5"
                 title="Reset semua filter"
               >
                 <FilterX className="h-3.5 w-3.5" /> Clear Filter
               </Button>
+
               <div className="flex gap-2 ml-auto">
-                <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <FileText className="h-3.5 w-3.5" /> PDF
                 </Button>
+                <ShareViewButton />
               </div>
+
             </div>
 
             <TooltipProvider delayDuration={200}>

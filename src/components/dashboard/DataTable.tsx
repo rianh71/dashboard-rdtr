@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronUp, ChevronDown, ChevronsUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+
 
 interface Column {
   key: string;
@@ -20,11 +22,14 @@ interface DataTableProps {
   onRowClick?: (row: Record<string, unknown>, index: number) => void;
 }
 
-export function DataTable({ data, columns, pageSize = 15, searchable = true, autoNumber = false, onRowClick }: DataTableProps) {
+export function DataTable({ data, columns, pageSize: initialPageSize = 15, searchable = true, autoNumber = false, onRowClick }: DataTableProps) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+  const [pageInput, setPageInput] = useState('1');
+
 
   const filtered = useMemo(() => {
     let result = data;
@@ -45,8 +50,12 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
     return result;
   }, [data, search, sortKey, sortDir, columns]);
 
-  const totalPages = Math.ceil(filtered.length / pageSize);
-  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(safePage * pageSize, (safePage + 1) * pageSize);
+
+  useEffect(() => { setPageInput(String(safePage + 1)); }, [safePage]);
+  useEffect(() => { setPage(0); }, [pageSize]);
 
   function handleSort(key: string) {
     if (sortKey === key) {
@@ -55,6 +64,13 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
       setSortKey(key);
       setSortDir('asc');
     }
+  }
+
+  function commitPageInput() {
+    const n = parseInt(pageInput, 10);
+    if (Number.isNaN(n) || n < 1) { setPage(0); setPageInput('1'); return; }
+    if (n > totalPages) { setPage(totalPages - 1); setPageInput(String(totalPages)); return; }
+    setPage(n - 1);
   }
 
   return (
@@ -104,7 +120,7 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
               </tr>
             ) : (
               paged.map((row, idx) => {
-                const globalIdx = page * pageSize + idx;
+                const globalIdx = safePage * pageSize + idx;
                 return (
                   <tr
                     key={idx}
@@ -128,24 +144,43 @@ export function DataTable({ data, columns, pageSize = 15, searchable = true, aut
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            Menampilkan {page * pageSize + 1}-{Math.min((page + 1) * pageSize, filtered.length)} dari {filtered.length} data
-          </p>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}>
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <span className="text-xs text-muted-foreground px-2">
-              {page + 1} / {totalPages}
-            </span>
-            <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Tampilkan</span>
+          <Select value={String(pageSize)} onValueChange={(v) => setPageSize(parseInt(v, 10))}>
+            <SelectTrigger className="h-8 w-[72px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[10, 25, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <span>data per halaman</span>
+          <span className="hidden md:inline">·</span>
+          <span className="hidden md:inline">
+            {filtered.length === 0 ? '0' : `${safePage * pageSize + 1}-${Math.min((safePage + 1) * pageSize, filtered.length)}`} dari {filtered.length.toLocaleString('id-ID')}
+          </span>
         </div>
-      )}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Halaman</span>
+          <Input
+            type="number"
+            min={1}
+            max={totalPages}
+            value={pageInput}
+            onChange={(e) => setPageInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitPageInput(); } }}
+            onBlur={commitPageInput}
+            className="h-8 w-16 text-center text-xs"
+          />
+          <span className="text-muted-foreground">Dari {totalPages}</span>
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-all hover:-translate-y-0.5 hover:shadow-sm" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePage === 0}>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-all hover:-translate-y-0.5 hover:shadow-sm" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
+
