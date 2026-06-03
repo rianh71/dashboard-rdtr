@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useMonitoringLogs } from '@/hooks/useRDTRData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
+import { ShareViewButton } from '@/components/dashboard/ShareViewButton';
+import { useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Users, UserCheck, UserX, CalendarDays, Activity, AlertCircle, CheckCircle2, MinusCircle, XCircle, Search, ChevronLeft, ChevronRight, FileSpreadsheet, FileText, TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import type { MonitoringLog } from '@/lib/data-service';
+
 
 const STATUS_RINGKAS = {
   'Aktif (Monitoring)': { color: 'bg-green-500', label: 'Aktif (Monitoring)', text: 'text-green-700' },
