@@ -208,14 +208,26 @@ export function getSebaranPerPulau(data: RDTRRecord[]) {
   })).sort((a, b) => b.jumlah - a.jumlah);
 }
 
+function extractYearFromTanggal(s: string): number | null {
+  if (!s) return null;
+  const txt = s.trim();
+  if (!txt || /belum terintegrasi/i.test(txt)) return null;
+  // Match a 4-digit year between 1900-2100
+  const matches = txt.match(/\b(19|20)\d{2}\b/g);
+  if (!matches || matches.length === 0) return null;
+  // Use the last 4-digit year (typical date formats end with year)
+  const year = parseInt(matches[matches.length - 1], 10);
+  if (!year || year < 1900 || year > 2100) return null;
+  return year;
+}
+
 export function getTimelineData(data: RDTRRecord[]) {
-  // Sinkron dengan KPI Terintegrasi: Cluster G + keterangan "integrasi oss"
+  // Acuan: Cluster G (Kolom I) + Tahun diekstrak dari Tanggal Integrasi (Kolom J)
   const yearMap = new Map<number, number>();
   data.forEach(r => {
-    const isTerintegrasi = r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss');
-    if (!isTerintegrasi) return;
-    const year = Number(r.tahun);
-    if (!year || year < 1900 || year > 2100) return;
+    if (r.cluster !== 'G') return;
+    const year = extractYearFromTanggal(r.tanggalIntegrasi);
+    if (year === null) return;
     yearMap.set(year, (yearMap.get(year) || 0) + 1);
   });
 
