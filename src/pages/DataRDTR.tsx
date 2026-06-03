@@ -289,11 +289,12 @@ export default function DataRDTR() {
                   setFilterCluster('all');
                   setSearchParams({});
                 }}
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
+                className="gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 hover:-translate-y-0.5"
                 title="Reset semua filter"
               >
                 <FilterX className="h-3.5 w-3.5" /> Clear Filter
               </Button>
+
               <div className="flex gap-2 ml-auto">
                 <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
