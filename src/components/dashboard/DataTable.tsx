@@ -22,11 +22,14 @@ interface DataTableProps {
   onRowClick?: (row: Record<string, unknown>, index: number) => void;
 }
 
-export function DataTable({ data, columns, pageSize = 15, searchable = true, autoNumber = false, onRowClick }: DataTableProps) {
+export function DataTable({ data, columns, pageSize: initialPageSize = 15, searchable = true, autoNumber = false, onRowClick }: DataTableProps) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+  const [pageInput, setPageInput] = useState('1');
+
 
   const filtered = useMemo(() => {
     let result = data;
