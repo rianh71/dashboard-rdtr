@@ -3,6 +3,7 @@ import { useMainData } from '@/hooks/useRDTRData';
 import { getClusterDistribution } from '@/lib/data-service';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { LoadingState } from '@/components/dashboard/LoadingState';
+import { ShareViewButton } from '@/components/dashboard/ShareViewButton';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,6 +12,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RDTRRecord } from '@/lib/data-service';
+
 
 const CLUSTER_META: Record<string, { dot: string; activeBg: string; activeBorder: string; badge: string; desc: string }> = {
   'A1': { dot: 'bg-sky-400',   activeBg: 'bg-sky-400',   activeBorder: 'border-sky-400',   badge: 'bg-sky-100 text-sky-700 border-sky-200',         desc: 'Permohonan Rekomendasi Revisi' },
