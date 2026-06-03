@@ -406,19 +406,21 @@ export default function MonitoringRDTR() {
             <Input placeholder="Nama RDTR / Provinsi..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} className="pl-9" />
           </div>
           {hasActiveFilter && (
-            <Button variant="outline" size="sm" onClick={resetAllFilters} className="gap-1.5 self-end">
+            <Button variant="outline" size="sm" onClick={resetAllFilters} className="gap-1.5 self-end transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <XCircle className="h-3.5 w-3.5" /> Reset Filter
             </Button>
           )}
           <div className="flex gap-2 ml-auto">
-            <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <FileText className="h-3.5 w-3.5" /> PDF
             </Button>
+            <ShareViewButton />
           </div>
         </div>
+
 
         {/* Table */}
         <div className="rounded-lg border bg-card overflow-x-auto">
