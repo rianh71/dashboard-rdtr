@@ -295,13 +295,15 @@ export default function DataRDTR() {
                 <FilterX className="h-3.5 w-3.5" /> Clear Filter
               </Button>
               <div className="flex gap-2 ml-auto">
-                <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <FileText className="h-3.5 w-3.5" /> PDF
                 </Button>
+                <ShareViewButton />
               </div>
+
             </div>
 
             <TooltipProvider delayDuration={200}>
