@@ -1,6 +1,7 @@
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { ThemeToggle } from './ThemeToggle';
 
 interface DashboardHeaderProps {
   lastUpdated: Date | null;
@@ -28,11 +29,12 @@ export function DashboardHeader({ lastUpdated, onRefresh, isRefreshing }: Dashbo
           size="sm"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="gap-1.5"
+          className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Refresh</span>
         </Button>
+        <ThemeToggle />
       </div>
     </header>
   );
