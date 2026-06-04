@@ -1,7 +1,6 @@
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { ThemeToggle } from './ThemeToggle';
 
 interface DashboardHeaderProps {
   lastUpdated: Date | null;

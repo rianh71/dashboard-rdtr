@@ -11,8 +11,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { ThemeToggle } from './ThemeToggle';
 
 const menuItems = [
   { title: 'Executive Summary', url: '/', icon: LayoutDashboard },
