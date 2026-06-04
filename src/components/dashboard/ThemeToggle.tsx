@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  collapsed?: boolean;
+}
+
+export function ThemeToggle({ collapsed }: ThemeToggleProps) {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') return 'light';
     const stored = localStorage.getItem('rdtr-theme');
     if (stored === 'dark' || stored === 'light') return stored;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'light';
   });
 
   useEffect(() => {
@@ -19,17 +23,32 @@ export function ThemeToggle() {
 
   const toggle = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
 
+  if (collapsed) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggle}
+        className="w-8 h-8 p-0 flex items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200"
+        aria-label="Toggle theme"
+        title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
+      >
+        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </Button>
+    );
+  }
+
   return (
     <Button
       variant="outline"
       size="sm"
       onClick={toggle}
-      className="gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      className="w-full gap-2 justify-start px-3 py-2 h-9 text-sm font-medium text-sidebar-foreground bg-transparent border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200"
       aria-label="Toggle theme"
       title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
     >
-      {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-      <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+      {theme === 'dark' ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+      <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
     </Button>
   );
 }
