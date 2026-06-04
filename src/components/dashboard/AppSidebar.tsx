@@ -11,8 +11,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { ThemeToggle } from './ThemeToggle';
 
 const menuItems = [
   { title: 'Executive Summary', url: '/', icon: LayoutDashboard },
@@ -67,6 +69,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="mt-auto border-t border-sidebar-border p-2">
+        <div className="flex justify-center">
+          <ThemeToggle collapsed={collapsed} />
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
