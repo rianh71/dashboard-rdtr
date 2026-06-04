@@ -71,7 +71,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="mt-auto border-t border-sidebar-border p-2">
         <div className="flex justify-center">
-          <ThemeToggle collapsed={collapsed} />
+          <ThemeToggle />
         </div>
       </SidebarFooter>
     </Sidebar>

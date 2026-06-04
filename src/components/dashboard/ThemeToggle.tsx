@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
-interface ThemeToggleProps {
-  collapsed?: boolean;
-}
-
-export function ThemeToggle({ collapsed }: ThemeToggleProps) {
+export function ThemeToggle() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') return 'light';
     const stored = localStorage.getItem('rdtr-theme');
@@ -21,34 +16,43 @@ export function ThemeToggle({ collapsed }: ThemeToggleProps) {
     localStorage.setItem('rdtr-theme', theme);
   }, [theme]);
 
-  const toggle = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
-
-  if (collapsed) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={toggle}
-        className="w-8 h-8 p-0 flex items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200"
-        aria-label="Toggle theme"
-        title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
-      >
-        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </Button>
-    );
-  }
+  const isDark = theme === 'dark';
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={toggle}
-      className="w-full gap-2 justify-start px-3 py-2 h-9 text-sm font-medium text-sidebar-foreground bg-transparent border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200"
-      aria-label="Toggle theme"
-      title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
-    >
-      {theme === 'dark' ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
-      <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-    </Button>
+    <div className="flex flex-col items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => setTheme('dark')}
+        aria-label="Aktifkan Dark Mode"
+        title="Dark Mode"
+        className={`
+          w-8 h-8 rounded-full flex items-center justify-center
+          transition-all duration-200 ease-out
+          ${isDark
+            ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm scale-105'
+            : 'bg-transparent text-sidebar-foreground/40 border border-sidebar-border hover:text-sidebar-foreground hover:border-sidebar-foreground/30'
+          }
+        `}
+      >
+        <Moon className="h-4 w-4" />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setTheme('light')}
+        aria-label="Aktifkan Light Mode"
+        title="Light Mode"
+        className={`
+          w-8 h-8 rounded-full flex items-center justify-center
+          transition-all duration-200 ease-out
+          ${!isDark
+            ? 'bg-orange text-orange-foreground shadow-sm scale-105'
+            : 'bg-transparent text-sidebar-foreground/40 border border-sidebar-border hover:text-sidebar-foreground hover:border-sidebar-foreground/30'
+          }
+        `}
+      >
+        <Sun className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
