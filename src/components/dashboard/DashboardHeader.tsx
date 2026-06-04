@@ -33,7 +33,6 @@ export function DashboardHeader({ lastUpdated, onRefresh, isRefreshing }: Dashbo
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Refresh</span>
         </Button>
-        <ThemeToggle />
       </div>
     </header>
   );
