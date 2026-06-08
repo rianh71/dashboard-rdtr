@@ -23,18 +23,18 @@ export function ThemeToggle() {
       <div
         role="group"
         aria-label="Theme toggle"
-        className="relative inline-flex items-center rounded-full bg-sidebar-foreground/10 p-0.5"
+        className="relative inline-flex items-center rounded-full bg-sidebar-foreground/10 px-2 py-1"
       >
         {/* Sliding indicator */}
         <span
           aria-hidden="true"
           className={`
-            absolute top-0.5 bottom-0.5 w-6 rounded-full
+            absolute top-1 bottom-1 w-8 rounded-full
             bg-sidebar-accent shadow-sm
             transition-transform duration-300 ease-out
-            ${isDark ? 'translate-x-6' : 'translate-x-0'}
+            ${isDark ? 'translate-x-8' : 'translate-x-0'}
           `}
-          style={{ left: '2px' }}
+          style={{ left: '8px' }}
         />
 
         <button
@@ -44,12 +44,12 @@ export function ThemeToggle() {
           aria-pressed={!isDark}
           title="Light Mode"
           className={`
-            relative z-10 w-6 h-6 rounded-full flex items-center justify-center
+            relative z-10 w-8 h-8 rounded-full flex items-center justify-center
             transition-colors duration-200
             ${!isDark ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'}
           `}
         >
-          <Sun className="h-3 w-3" />
+          <Sun className="h-4 w-4" />
         </button>
 
         <button
@@ -59,12 +59,12 @@ export function ThemeToggle() {
           aria-pressed={isDark}
           title="Dark Mode"
           className={`
-            relative z-10 w-6 h-6 rounded-full flex items-center justify-center
+            relative z-10 w-8 h-8 rounded-full flex items-center justify-center
             transition-colors duration-200
             ${isDark ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'}
           `}
         >
-          <Moon className="h-3 w-3" />
+          <Moon className="h-4 w-4" />
         </button>
       </div>
     </div>
