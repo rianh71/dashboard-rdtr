@@ -110,7 +110,7 @@ export default function ExecutiveSummary() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="bg-card rounded-2xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Timeline RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={timelineData}>
