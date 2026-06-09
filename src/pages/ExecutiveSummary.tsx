@@ -66,7 +66,7 @@ export default function ExecutiveSummary() {
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
-      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border rounded-b-2xl">
         <div>
           <h2 className="text-xl font-bold text-foreground">Executive Summary</h2>
           <p className="text-sm text-muted-foreground mt-1">Ringkasan data RDTR nasional</p>
@@ -84,7 +84,7 @@ export default function ExecutiveSummary() {
       <div className="p-4 md:px-6 space-y-6">
 
       {/* Report KPI - Cluster F */}
-      <div className="bg-card rounded-xl card-shadow p-5">
+      <div className="bg-card rounded-2xl card-shadow p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="kpi-gradient-purple rounded-lg p-2.5">
             <ClipboardList className="h-5 w-5 text-primary-foreground" />
@@ -99,7 +99,7 @@ export default function ExecutiveSummary() {
             <button
               key={idx}
               onClick={() => navigate(`/report?filter=${item.reportFilter}`)}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3 hover:bg-muted/60 transition-colors cursor-pointer text-left"
+              className="flex items-center justify-between gap-3 rounded-xl bg-muted/30 px-4 py-3 hover:bg-muted/50 hover:shadow-sm transition-all duration-200 cursor-pointer text-left"
             >
               <span className="text-sm text-foreground leading-tight">{item.label}</span>
               <span className="text-lg font-bold text-foreground flex-shrink-0">{item.jumlah}</span>
@@ -110,7 +110,7 @@ export default function ExecutiveSummary() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="bg-card rounded-2xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Timeline RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={timelineData}>
@@ -123,7 +123,7 @@ export default function ExecutiveSummary() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="bg-card rounded-2xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Penambahan RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={timelineData}>
@@ -138,7 +138,7 @@ export default function ExecutiveSummary() {
       </div>
 
       {/* Indonesia Map */}
-      <div className="bg-card rounded-xl card-shadow p-5">
+      <div className="bg-card rounded-2xl card-shadow p-5">
         <h3 className="font-semibold text-foreground mb-4">Peta Sebaran RDTR per Provinsi</h3>
         <IndonesiaMap
           data={provinsiData}
