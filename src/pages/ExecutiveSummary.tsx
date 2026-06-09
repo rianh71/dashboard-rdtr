@@ -84,7 +84,7 @@ export default function ExecutiveSummary() {
       <div className="p-4 md:px-6 space-y-6">
 
       {/* Report KPI - Cluster F */}
-      <div className="bg-card rounded-xl card-shadow p-5">
+      <div className="bg-card rounded-2xl card-shadow p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="kpi-gradient-purple rounded-lg p-2.5">
             <ClipboardList className="h-5 w-5 text-primary-foreground" />
