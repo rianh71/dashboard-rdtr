@@ -123,7 +123,7 @@ export default function ExecutiveSummary() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-xl card-shadow p-5">
+        <div className="bg-card rounded-2xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Penambahan RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={timelineData}>
