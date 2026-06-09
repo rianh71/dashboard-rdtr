@@ -99,7 +99,7 @@ export default function ExecutiveSummary() {
             <button
               key={idx}
               onClick={() => navigate(`/report?filter=${item.reportFilter}`)}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3 hover:bg-muted/60 transition-colors cursor-pointer text-left"
+              className="flex items-center justify-between gap-3 rounded-xl bg-muted/30 px-4 py-3 hover:bg-muted/50 hover:shadow-sm transition-all duration-200 cursor-pointer text-left"
             >
               <span className="text-sm text-foreground leading-tight">{item.label}</span>
               <span className="text-lg font-bold text-foreground flex-shrink-0">{item.jumlah}</span>
