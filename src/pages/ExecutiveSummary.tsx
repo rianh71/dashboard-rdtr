@@ -138,7 +138,7 @@ export default function ExecutiveSummary() {
       </div>
 
       {/* Indonesia Map */}
-      <div className="bg-card rounded-xl card-shadow p-5">
+      <div className="bg-card rounded-2xl card-shadow p-5">
         <h3 className="font-semibold text-foreground mb-4">Peta Sebaran RDTR per Provinsi</h3>
         <IndonesiaMap
           data={provinsiData}
