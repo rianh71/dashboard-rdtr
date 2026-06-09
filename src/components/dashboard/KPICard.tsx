@@ -29,7 +29,7 @@ export function KPICard({ title, value, icon: Icon, gradient, subtitle, linkTo, 
     <div
       onClick={handleClick}
       style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
-      className={`rounded-xl bg-card card-shadow p-5 animate-fade-in flex items-start gap-4 transition-all duration-200 ${
+      className={`rounded-2xl bg-card card-shadow p-5 animate-fade-in flex items-start gap-4 transition-all duration-200 ${
         linkTo ? 'cursor-pointer hover:bg-muted/50 hover:-translate-y-0.5 hover:shadow-lg' : ''
       }`}
     >
