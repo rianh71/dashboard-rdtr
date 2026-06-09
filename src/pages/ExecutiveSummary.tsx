@@ -7,7 +7,7 @@ import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { FileStack, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
 import {
-  LineChart, Line, BarChart, Bar,
+  AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
@@ -113,13 +113,19 @@ export default function ExecutiveSummary() {
         <div className="bg-card rounded-2xl card-shadow p-5">
           <h3 className="font-semibold text-foreground mb-4">Timeline RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={timelineData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 92%)" />
+            <AreaChart data={timelineData}>
+              <defs>
+                <linearGradient id="emeraldArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--chart-emerald))" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="hsl(var(--chart-sand))" stopOpacity={0.15} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-sand-strong))" />
               <XAxis dataKey="tahun" fontSize={12} />
               <YAxis fontSize={12} />
-              <Tooltip contentStyle={{ background: 'hsl(0, 0%, 100%)', border: '1px solid hsl(214, 20%, 92%)', borderRadius: '8px', fontSize: '12px' }} />
-              <Line type="monotone" dataKey="jumlahTerintegrasi" stroke="#2962FF" strokeWidth={2.5} dot={{ r: 4, fill: '#2962FF' }} name="Kumulatif" />
-            </LineChart>
+              <Tooltip contentStyle={{ background: 'hsl(0, 0%, 100%)', border: '1px solid hsl(var(--chart-sand-strong))', borderRadius: '8px', fontSize: '12px' }} />
+              <Area type="monotone" dataKey="jumlahTerintegrasi" stroke="hsl(var(--chart-emerald))" strokeWidth={2.5} fill="url(#emeraldArea)" dot={{ r: 4, fill: 'hsl(var(--chart-emerald))' }} name="Kumulatif" />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
 
@@ -127,11 +133,11 @@ export default function ExecutiveSummary() {
           <h3 className="font-semibold text-foreground mb-4">Penambahan RDTR Terintegrasi per Tahun</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={timelineData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 92%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-sand-strong))" />
               <XAxis dataKey="tahun" fontSize={12} />
               <YAxis fontSize={12} />
-              <Tooltip contentStyle={{ background: 'hsl(0, 0%, 100%)', border: '1px solid hsl(214, 20%, 92%)', borderRadius: '8px', fontSize: '12px' }} />
-              <Bar dataKey="penambahan" fill="#00897B" radius={[4, 4, 0, 0]} name="Penambahan" />
+              <Tooltip contentStyle={{ background: 'hsl(0, 0%, 100%)', border: '1px solid hsl(var(--chart-sand-strong))', borderRadius: '8px', fontSize: '12px' }} cursor={{ fill: 'hsl(var(--chart-sand))', opacity: 0.4 }} />
+              <Bar dataKey="penambahan" fill="hsl(var(--chart-emerald))" radius={[4, 4, 0, 0]} name="Penambahan" />
             </BarChart>
           </ResponsiveContainer>
         </div>
