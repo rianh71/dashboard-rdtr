@@ -66,7 +66,7 @@ export default function ExecutiveSummary() {
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
-      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border rounded-b-2xl">
         <div>
           <h2 className="text-xl font-bold text-foreground">Executive Summary</h2>
           <p className="text-sm text-muted-foreground mt-1">Ringkasan data RDTR nasional</p>
