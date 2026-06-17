@@ -10,7 +10,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ lastUpdated, onRefresh, isRefreshing }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b px-4 md:px-6 py-3 flex items-center justify-between gap-4 relative overflow-hidden">
+    <header className="bg-card/80 backdrop-blur-md border-b px-4 md:px-6 py-3 flex items-center justify-between gap-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/3 to-transparent pointer-events-none" />
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-foreground" />
