@@ -611,10 +611,10 @@ export default function PerubahanRDTR() {
           <p className="text-sm text-muted-foreground mt-1">Data Perubahan RDTR</p>
         </div>
 
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
-          <TabsTrigger value="update-kbli">RDTR Update KBLI ({kbliData.length})</TabsTrigger>
-          <TabsTrigger value="disintegrasi">RDTR Disintegrasi ({disQuery.data?.length || 0})</TabsTrigger>
-          <TabsTrigger value="logs">Logs Perubahan RDTR ({logsCountQuery.data?.length || 0})</TabsTrigger>
+        <TabsList className="flex flex-row flex-nowrap overflow-x-auto scrollbar-none w-full max-w-2xl gap-1 p-1">
+          <TabsTrigger value="update-kbli" className="px-4 py-2 whitespace-nowrap flex-shrink-0">RDTR Update KBLI ({kbliData.length})</TabsTrigger>
+          <TabsTrigger value="disintegrasi" className="px-4 py-2 whitespace-nowrap flex-shrink-0">RDTR Disintegrasi ({disQuery.data?.length || 0})</TabsTrigger>
+          <TabsTrigger value="logs" className="px-4 py-2 whitespace-nowrap flex-shrink-0">Logs Perubahan RDTR ({logsCountQuery.data?.length || 0})</TabsTrigger>
         </TabsList>
       </div>
 
