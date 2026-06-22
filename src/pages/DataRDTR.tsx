@@ -208,7 +208,7 @@ export default function DataRDTR() {
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
-      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+      <div className="bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {hasViewParam && (
