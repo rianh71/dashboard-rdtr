@@ -233,7 +233,7 @@ export default function MonitoringRDTR() {
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
-      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+      <div className="bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h2 className="text-xl font-bold text-foreground">Monitoring RDTR</h2>

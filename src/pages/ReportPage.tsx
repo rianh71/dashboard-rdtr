@@ -60,7 +60,7 @@ export default function ReportPage() {
 
   return (
     <div className="space-y-0 max-w-[1400px] mx-auto">
-      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+      <div className="bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
         <div className="flex items-center gap-3">
           {hasFilter && (
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">

@@ -605,7 +605,7 @@ export default function PerubahanRDTR() {
 
   return (
     <Tabs defaultValue="update-kbli" className="space-y-0 max-w-[1400px] mx-auto">
-      <div className="sticky top-0 z-10 bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
+      <div className="bg-background p-4 md:p-6 pb-4 space-y-4 border-b border-border">
         <div>
           <h2 className="text-xl font-bold text-foreground">Perubahan RDTR</h2>
           <p className="text-sm text-muted-foreground mt-1">Data Perubahan RDTR</p>
