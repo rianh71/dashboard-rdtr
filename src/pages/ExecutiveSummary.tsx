@@ -90,7 +90,7 @@ export default function ExecutiveSummary() {
             <ClipboardList className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">Rekap Report Darat RDTR Cluster F</h3>
+            <h3 className="font-semibold text-foreground">Rekap Report Darat RDTR Yang Siap Terintegrasi OSS (Cluster F)</h3>
             <p className="text-xs text-muted-foreground">Rincian keterangan RDTR Cluster F</p>
           </div>
         </div>
