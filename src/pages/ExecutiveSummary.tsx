@@ -101,7 +101,7 @@ export default function ExecutiveSummary() {
                 <li className="flex justify-between gap-4"><span>Perda / Perkada</span><span className="font-semibold">{kpi.docBreakdown.perdaPerkada} RDTR</span></li>
                 <li className="flex justify-between gap-4"><span>Permen</span><span className="font-semibold">{kpi.docBreakdown.permen} RDTR</span></li>
                 <li className="flex justify-between gap-4"><span>Perpres</span><span className="font-semibold">{kpi.docBreakdown.perpres} RDTR</span></li>
-                <li className="flex justify-between gap-4"><span>Perka</span><span className="font-semibold">{kpi.docBreakdown.perka} RDTR</span></li>
+                <li className="flex justify-between gap-4"><span>Perka OIKN</span><span className="font-semibold">{kpi.docBreakdown.perka} RDTR</span></li>
               </ul>
             </TooltipContent>
           </UITooltip>
