@@ -6,6 +6,7 @@ import { KPICard } from '@/components/dashboard/KPICard';
 import { IndonesiaMap } from '@/components/dashboard/IndonesiaMap';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { FileStack, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -31,7 +32,19 @@ export default function ExecutiveSummary() {
     // Terintegrasi = cluster G with "Integrasi OSS"
     const totalTerintegrasi = data.filter(r => r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss')).length;
     const totalBelumTerintegrasi = totalRDTR - totalTerintegrasi;
-    return { totalRDTR, totalTerintegrasi, totalBelumTerintegrasi };
+
+    // Breakdown dokumen hukum dari kolom nomorPerda
+    const docBreakdown = { perdaPerkada: 0, permen: 0, perpres: 0, perka: 0 };
+    data.forEach(r => {
+      const t = (r.nomorPerda || '').toLowerCase();
+      if (!t) return;
+      if (/\b(perda|perkada|perwako|perbup|perwali)\b/.test(t)) docBreakdown.perdaPerkada++;
+      else if (t.includes('permen')) docBreakdown.permen++;
+      else if (t.includes('perpres')) docBreakdown.perpres++;
+      else if (t.includes('perka')) docBreakdown.perka++;
+    });
+
+    return { totalRDTR, totalTerintegrasi, totalBelumTerintegrasi, docBreakdown };
   }, [data]);
   const provinsiData = useMemo(() => data ? getSebaranPerProvinsi(data) : [], [data]);
   const timelineData = useMemo(() => data ? getTimelineData(data) : [], [data]);
@@ -74,10 +87,46 @@ export default function ExecutiveSummary() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <KPICard index={0} title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" linkTo="/data-rdtr?view=total" />
-          <KPICard index={1} title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" linkTo="/data-rdtr?view=terintegrasi" />
-          <KPICard index={2} title="RDTR Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" linkTo="/data-rdtr?view=belum" />
+          <UITooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <KPICard index={0} title="Total RDTR" value={kpi.totalRDTR} icon={FileStack} gradient="blue" linkTo="/data-rdtr?view=total" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-semibold mb-1.5">Rincian Dokumen Hukum RDTR</p>
+              <ul className="space-y-1 text-xs">
+                <li className="flex justify-between gap-4"><span>Perda / Perkada</span><span className="font-semibold">{kpi.docBreakdown.perdaPerkada} RDTR</span></li>
+                <li className="flex justify-between gap-4"><span>Permen</span><span className="font-semibold">{kpi.docBreakdown.permen} RDTR</span></li>
+                <li className="flex justify-between gap-4"><span>Perpres</span><span className="font-semibold">{kpi.docBreakdown.perpres} RDTR</span></li>
+                <li className="flex justify-between gap-4"><span>Perka</span><span className="font-semibold">{kpi.docBreakdown.perka} RDTR</span></li>
+              </ul>
+            </TooltipContent>
+          </UITooltip>
 
+          <UITooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <KPICard index={1} title="RDTR Terintegrasi" value={kpi.totalTerintegrasi} icon={CheckCircle} gradient="emerald" linkTo="/data-rdtr?view=terintegrasi" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-semibold mb-1">Integrasi OSS: {kpi.totalTerintegrasi} RDTR</p>
+              <p className="text-xs text-muted-foreground">Jumlah total RDTR yang status keterangannya sudah 'Integrasi OSS' secara real-time.</p>
+            </TooltipContent>
+          </UITooltip>
+
+          <UITooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <KPICard index={2} title="RDTR Belum Terintegrasi" value={kpi.totalBelumTerintegrasi} icon={XCircle} gradient="orange" linkTo="/data-rdtr?view=belum" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-semibold mb-1">Belum Terintegrasi: {kpi.totalBelumTerintegrasi} RDTR</p>
+              <p className="text-xs text-muted-foreground">RDTR yang statusnya belum 'Integrasi dengan OSS' secara real-time yang menjadi konsen dalam agenda Monitoring dan Evaluasi Percepatan RDTR.</p>
+            </TooltipContent>
+          </UITooltip>
         </div>
       </div>
 
