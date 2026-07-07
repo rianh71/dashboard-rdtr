@@ -34,14 +34,16 @@ export default function ExecutiveSummary() {
     const totalBelumTerintegrasi = totalRDTR - totalTerintegrasi;
 
     // Breakdown dokumen hukum dari kolom nomorPerda
+    // Perka Otoritas IKN masuk kategori Perka; Perka lainnya masuk Perda/Perkada
     const docBreakdown = { perdaPerkada: 0, permen: 0, perpres: 0, perka: 0 };
     data.forEach(r => {
       const t = (r.nomorPerda || '').toLowerCase();
       if (!t) return;
-      if (/\b(perda|perkada|perwako|perbup|perwali)\b/.test(t)) docBreakdown.perdaPerkada++;
+      if (t.includes('perka otoritas ikn')) docBreakdown.perka++;
+      else if (/\b(perda|perkada|perwako|perbup|perwali)\b/.test(t)) docBreakdown.perdaPerkada++;
+      else if (t.includes('perka')) docBreakdown.perdaPerkada++;
       else if (t.includes('permen')) docBreakdown.permen++;
       else if (t.includes('perpres')) docBreakdown.perpres++;
-      else if (t.includes('perka')) docBreakdown.perka++;
     });
 
     return { totalRDTR, totalTerintegrasi, totalBelumTerintegrasi, docBreakdown };
