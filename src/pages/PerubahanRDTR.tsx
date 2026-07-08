@@ -113,6 +113,13 @@ function computeDampak(
   const lamaTier = lamaKey ? CLUSTER_TIER[lamaKey] : null;
   const baruTier = baruKey ? CLUSTER_TIER[baruKey] : null;
 
+  // Special: "Ditakeout Dari Cluster" from any valid cluster (A1/A2/B/C/D/E/F/G) → Memburuk
+  const takeoutRe = /ditakeout\s+dari\s+cluster/i;
+  const isTakeout = takeoutRe.test(clusterSekarang) || takeoutRe.test(nilaiBaru) || takeoutRe.test(keterangan);
+  if (isTakeout && lamaKey && ['A1', 'A2', 'B', 'C', 'D', 'E', 'F', 'G'].includes(lamaKey)) {
+    return 'Memburuk';
+  }
+
   // Special: G → H = Memburuk (Selesai balik ke bermasalah)
   if (lamaKey === 'G' && baruKey === 'H') return 'Memburuk';
 
