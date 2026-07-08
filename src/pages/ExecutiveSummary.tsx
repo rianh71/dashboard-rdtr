@@ -114,7 +114,7 @@ export default function ExecutiveSummary() {
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-xs">
               <p className="font-semibold mb-1">Integrasi OSS: {kpi.totalTerintegrasi} RDTR</p>
-              <p className="text-xs text-muted-foreground">Jumlah total RDTR yang status keterangannya sudah 'Integrasi OSS' secara real-time.</p>
+              <p className="text-xs text-muted-foreground">Jumlah total RDTR yang statusnya sudah Integrasi dengan OSS secara real-time.</p>
             </TooltipContent>
           </UITooltip>
 
