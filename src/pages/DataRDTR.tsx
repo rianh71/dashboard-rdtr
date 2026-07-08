@@ -162,7 +162,11 @@ export default function DataRDTR() {
 
   const clusterDistribution = useMemo(() => {
     if (!data) return [];
-    const allClusters = getClusterDistribution(data);
+    const present = new Map(getClusterDistribution(data).map(c => [c.cluster, c.jumlah]));
+    const allClusters = Object.keys(CLUSTER_META).map(cluster => ({
+      cluster,
+      jumlah: present.get(cluster) || 0,
+    }));
     const filteredWithoutCluster = data.filter(r => {
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
