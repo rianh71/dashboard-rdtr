@@ -7,7 +7,8 @@ import { ShareViewButton } from '@/components/dashboard/ShareViewButton';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSpreadsheet, FileText, ArrowLeft, FilterX, ArrowUp } from 'lucide-react';
+import { FileSpreadsheet, FileText, ArrowLeft, FilterX, ArrowUp, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -67,6 +68,7 @@ export default function DataRDTR() {
   const [viewMode, setViewMode] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<RDTRRecord | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const main = document.querySelector('main');
@@ -150,6 +152,13 @@ export default function DataRDTR() {
   }, [data, filterWilayah, filterPulau, filterProvinsi]);
 
 
+  const searchLower = search.trim().toLowerCase();
+  const matchesSearch = (r: RDTRRecord) => {
+    if (!searchLower) return true;
+    return [r.wilayah, r.pulau, r.provinsi, r.kabKota, r.namaRDTR, r.nomorPerda, String(r.tahun), r.cluster, r.tanggalIntegrasi, r.keterangan]
+      .some(v => String(v || '').toLowerCase().includes(searchLower));
+  };
+
   const filtered = useMemo(() => {
     if (!data) return [];
     return data.filter(r => {
@@ -170,37 +179,58 @@ export default function DataRDTR() {
       if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
+      if (!matchesSearch(r)) return false;
       return true;
     });
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterCluster, filterStatus, viewMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterCluster, filterStatus, viewMode, searchLower]);
 
   const clusterDistribution = useMemo(() => {
     if (!data) return [];
-    const present = new Map(getClusterDistribution(data).map(c => [c.cluster, c.jumlah]));
-    const allClusters = Object.keys(CLUSTER_META).map(cluster => ({
-      cluster,
-      jumlah: present.get(cluster) || 0,
-    }));
-    const filteredWithoutCluster = data.filter(r => {
+    // Reactive count: apply all filters (except cluster) + search
+    const base = data.filter(r => {
+      if (viewMode === 'terintegrasi') {
+        if (r.cluster !== 'G') return false;
+        if (!(r.keterangan || '').toLowerCase().includes('integrasi oss')) return false;
+      }
+      if (viewMode === 'belum') {
+        const isTerintegrasi = r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss');
+        if (isTerintegrasi) return false;
+      }
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
+      if (filterKabKota !== 'all' && r.kabKota !== filterKabKota) return false;
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
+      if (!matchesSearch(r)) return false;
       return true;
     });
-    const filteredCounts = new Map<string, number>();
-    filteredWithoutCluster.forEach(r => {
+    const counts = new Map<string, number>();
+    base.forEach(r => {
       const c = r.cluster || 'N/A';
-      filteredCounts.set(c, (filteredCounts.get(c) || 0) + 1);
+      counts.set(c, (counts.get(c) || 0) + 1);
     });
-    const hasActiveFilter = filterWilayah !== 'all' || filterPulau !== 'all' || filterProvinsi !== 'all' || filterStatus !== 'all';
-    return allClusters.map(c => ({
-      ...c,
-      filteredCount: filteredCounts.get(c.cluster) || 0,
-      hasActiveFilter,
+    return Object.keys(CLUSTER_META).map(cluster => ({
+      cluster,
+      jumlah: counts.get(cluster) || 0,
     }));
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterStatus, viewMode, searchLower]);
+
+  // Auto-sync dropdowns when search narrows to a single value
+  useEffect(() => {
+    if (!searchLower || filtered.length === 0) return;
+    const uniq = (key: keyof RDTRRecord) => {
+      const s = new Set(filtered.map(r => String(r[key] || '')).filter(Boolean));
+      return s.size === 1 ? Array.from(s)[0] : null;
+    };
+    const w = uniq('wilayah'); if (w && filterWilayah === 'all') setFilterWilayah(w);
+    const p = uniq('pulau'); if (p && filterPulau === 'all') setFilterPulau(p);
+    const pr = uniq('provinsi'); if (pr && filterProvinsi === 'all') setFilterProvinsi(pr);
+    const k = uniq('kabKota'); if (k && filterKabKota === 'all') setFilterKabKota(k);
+  }, [searchLower, filtered, filterWilayah, filterPulau, filterProvinsi, filterKabKota]);
+
 
 
   if (isLoading) return <LoadingState />;
@@ -349,11 +379,6 @@ export default function DataRDTR() {
                           <span className={`text-sm ${isActive ? 'text-white/80' : 'text-muted-foreground'}`}>
                             ({c.jumlah})
                           </span>
-                          {c.hasActiveFilter && (
-                            <span className={`text-xs ${isActive ? 'text-white/70' : 'text-muted-foreground/60'}`}>
-                              / {c.filteredCount} filtered
-                            </span>
-                          )}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="max-w-xs">
@@ -370,7 +395,26 @@ export default function DataRDTR() {
       </div>
 
       <div className="p-4 md:px-6 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari data..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Bersihkan pencarian"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">
               Menampilkan <span className="font-semibold text-foreground">{filtered.length.toLocaleString('id-ID')}</span> data RDTR
             </p>
@@ -380,12 +424,14 @@ export default function DataRDTR() {
             columns={MAIN_COLUMNS}
             pageSize={20}
             autoNumber
+            searchable={false}
             onRowClick={(row) => {
               const record = filtered.find(r => r.namaRDTR === row.namaRDTR && r.kabKota === row.kabKota);
               if (record) setSelectedRow(record);
             }}
           />
       </div>
+
 
       {/* Detail Row Dialog */}
       <Dialog open={!!selectedRow} onOpenChange={() => setSelectedRow(null)}>
