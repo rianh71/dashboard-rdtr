@@ -246,7 +246,7 @@ export default function DataRDTR() {
             <div className="flex flex-wrap gap-3 items-end">
               <div className="w-40">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
-                <Select value={filterWilayah} onValueChange={setFilterWilayah}>
+                <Select value={filterWilayah} onValueChange={(v) => { setFilterWilayah(v); setFilterPulau('all'); setFilterProvinsi('all'); setFilterKabKota('all'); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
