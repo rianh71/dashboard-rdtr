@@ -379,11 +379,6 @@ export default function DataRDTR() {
                           <span className={`text-sm ${isActive ? 'text-white/80' : 'text-muted-foreground'}`}>
                             ({c.jumlah})
                           </span>
-                          {c.hasActiveFilter && (
-                            <span className={`text-xs ${isActive ? 'text-white/70' : 'text-muted-foreground/60'}`}>
-                              / {c.filteredCount} filtered
-                            </span>
-                          )}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="max-w-xs">
