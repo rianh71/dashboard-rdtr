@@ -248,7 +248,7 @@ export default function DataRDTR() {
               </div>
               <div className="w-40">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Pulau</label>
-                <Select value={filterPulau} onValueChange={setFilterPulau}>
+                <Select value={filterPulau} onValueChange={(v) => { setFilterPulau(v); setFilterProvinsi('all'); setFilterKabKota('all'); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
