@@ -68,6 +68,7 @@ export default function DataRDTR() {
   const [viewMode, setViewMode] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<RDTRRecord | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const main = document.querySelector('main');
