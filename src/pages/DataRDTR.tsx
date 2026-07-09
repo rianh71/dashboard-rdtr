@@ -128,19 +128,27 @@ export default function DataRDTR() {
 
 
   const wilayahOptions = useMemo(() => data ? [...new Set(data.map(r => r.wilayah).filter(Boolean))].sort() : [], [data]);
-  const pulauOptions = useMemo(() => data ? [...new Set(data.map(r => r.pulau).filter(Boolean))].sort() : [], [data]);
+  const pulauOptions = useMemo(() => {
+    if (!data) return [];
+    const src = filterWilayah !== 'all' ? data.filter(r => r.wilayah === filterWilayah) : data;
+    return [...new Set(src.map(r => r.pulau).filter(Boolean))].sort();
+  }, [data, filterWilayah]);
   const provinsiOptions = useMemo(() => {
     if (!data) return [];
-    const src = filterPulau !== 'all' ? data.filter(r => r.pulau === filterPulau) : data;
+    let src = data;
+    if (filterWilayah !== 'all') src = src.filter(r => r.wilayah === filterWilayah);
+    if (filterPulau !== 'all') src = src.filter(r => r.pulau === filterPulau);
     return [...new Set(src.map(r => r.provinsi).filter(Boolean))].sort();
-  }, [data, filterPulau]);
+  }, [data, filterWilayah, filterPulau]);
   const kabKotaOptions = useMemo(() => {
     if (!data) return [];
     let src = data;
+    if (filterWilayah !== 'all') src = src.filter(r => r.wilayah === filterWilayah);
     if (filterPulau !== 'all') src = src.filter(r => r.pulau === filterPulau);
     if (filterProvinsi !== 'all') src = src.filter(r => r.provinsi === filterProvinsi);
     return [...new Set(src.map(r => r.kabKota).filter(Boolean))].sort();
-  }, [data, filterPulau, filterProvinsi]);
+  }, [data, filterWilayah, filterPulau, filterProvinsi]);
+
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -238,7 +246,7 @@ export default function DataRDTR() {
             <div className="flex flex-wrap gap-3 items-end">
               <div className="w-40">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Wilayah</label>
-                <Select value={filterWilayah} onValueChange={setFilterWilayah}>
+                <Select value={filterWilayah} onValueChange={(v) => { setFilterWilayah(v); setFilterPulau('all'); setFilterProvinsi('all'); setFilterKabKota('all'); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
