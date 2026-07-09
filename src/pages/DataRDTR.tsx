@@ -152,6 +152,13 @@ export default function DataRDTR() {
   }, [data, filterWilayah, filterPulau, filterProvinsi]);
 
 
+  const searchLower = search.trim().toLowerCase();
+  const matchesSearch = (r: RDTRRecord) => {
+    if (!searchLower) return true;
+    return [r.wilayah, r.pulau, r.provinsi, r.kabKota, r.namaRDTR, r.nomorPerda, String(r.tahun), r.cluster, r.tanggalIntegrasi, r.keterangan]
+      .some(v => String(v || '').toLowerCase().includes(searchLower));
+  };
+
   const filtered = useMemo(() => {
     if (!data) return [];
     return data.filter(r => {
@@ -172,37 +179,58 @@ export default function DataRDTR() {
       if (filterCluster !== 'all' && r.cluster !== filterCluster) return false;
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
+      if (!matchesSearch(r)) return false;
       return true;
     });
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterCluster, filterStatus, viewMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterCluster, filterStatus, viewMode, searchLower]);
 
   const clusterDistribution = useMemo(() => {
     if (!data) return [];
-    const present = new Map(getClusterDistribution(data).map(c => [c.cluster, c.jumlah]));
-    const allClusters = Object.keys(CLUSTER_META).map(cluster => ({
-      cluster,
-      jumlah: present.get(cluster) || 0,
-    }));
-    const filteredWithoutCluster = data.filter(r => {
+    // Reactive count: apply all filters (except cluster) + search
+    const base = data.filter(r => {
+      if (viewMode === 'terintegrasi') {
+        if (r.cluster !== 'G') return false;
+        if (!(r.keterangan || '').toLowerCase().includes('integrasi oss')) return false;
+      }
+      if (viewMode === 'belum') {
+        const isTerintegrasi = r.cluster === 'G' && (r.keterangan || '').toLowerCase().includes('integrasi oss');
+        if (isTerintegrasi) return false;
+      }
       if (filterWilayah !== 'all' && r.wilayah !== filterWilayah) return false;
       if (filterPulau !== 'all' && r.pulau !== filterPulau) return false;
       if (filterProvinsi !== 'all' && r.provinsi !== filterProvinsi) return false;
+      if (filterKabKota !== 'all' && r.kabKota !== filterKabKota) return false;
       if (filterStatus === 'terintegrasi' && (!r.tanggalIntegrasi || r.tanggalIntegrasi === 'Belum Terintegrasi')) return false;
       if (filterStatus === 'belum' && r.tanggalIntegrasi && r.tanggalIntegrasi !== 'Belum Terintegrasi') return false;
+      if (!matchesSearch(r)) return false;
       return true;
     });
-    const filteredCounts = new Map<string, number>();
-    filteredWithoutCluster.forEach(r => {
+    const counts = new Map<string, number>();
+    base.forEach(r => {
       const c = r.cluster || 'N/A';
-      filteredCounts.set(c, (filteredCounts.get(c) || 0) + 1);
+      counts.set(c, (counts.get(c) || 0) + 1);
     });
-    const hasActiveFilter = filterWilayah !== 'all' || filterPulau !== 'all' || filterProvinsi !== 'all' || filterStatus !== 'all';
-    return allClusters.map(c => ({
-      ...c,
-      filteredCount: filteredCounts.get(c.cluster) || 0,
-      hasActiveFilter,
+    return Object.keys(CLUSTER_META).map(cluster => ({
+      cluster,
+      jumlah: counts.get(cluster) || 0,
     }));
-  }, [data, filterWilayah, filterPulau, filterProvinsi, filterStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, filterWilayah, filterPulau, filterProvinsi, filterKabKota, filterStatus, viewMode, searchLower]);
+
+  // Auto-sync dropdowns when search narrows to a single value
+  useEffect(() => {
+    if (!searchLower || filtered.length === 0) return;
+    const uniq = (key: keyof RDTRRecord) => {
+      const s = new Set(filtered.map(r => String(r[key] || '')).filter(Boolean));
+      return s.size === 1 ? Array.from(s)[0] : null;
+    };
+    const w = uniq('wilayah'); if (w && filterWilayah === 'all') setFilterWilayah(w);
+    const p = uniq('pulau'); if (p && filterPulau === 'all') setFilterPulau(p);
+    const pr = uniq('provinsi'); if (pr && filterProvinsi === 'all') setFilterProvinsi(pr);
+    const k = uniq('kabKota'); if (k && filterKabKota === 'all') setFilterKabKota(k);
+  }, [searchLower, filtered, filterWilayah, filterPulau, filterProvinsi, filterKabKota]);
+
 
 
   if (isLoading) return <LoadingState />;
